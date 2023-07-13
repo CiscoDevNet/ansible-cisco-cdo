@@ -61,7 +61,7 @@ Please read and familiarize yourself with this document.
 
 ## Release notes
 <!--Add a link to a changelog.md file or an external docsite to cover this information. -->
-Release notes are available [here](https://github.com/CiscoDevNet/ansible-cisco-cdo/CHANGELOG.rst).
+Release notes are available [here](https://github.com/CiscoDevNet/ansible-cisco-cdo/blob/main/CHANGELOG.rst).
 
 ## Roadmap
 Additional modules will be added in future releases. These include:
