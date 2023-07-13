@@ -49,7 +49,7 @@ collections:
 ```
 ## Using the collection
 **"Show don't tell"**  
-See the samples directory and README for practical usage of this collection.
+See the docs directory and README for practical usage of this collection.
 
 ## Contributing to this collection
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco Defense Orchestrator collection repository](https://github.com/CiscoDevNet/ansible-cisco-cdo). See [Contributing to Ansible-maintained collections](https://docs.ansible.com/ansible/devel/community/contributing_maintained_collections.html#contributing-maintained-collections) for complete details.
