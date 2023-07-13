@@ -180,7 +180,7 @@ def add_asa_ios(module_params: dict, http_session: requests.session, endpoint: s
 
     lar_list = get_lar_list(module_params, http_session, endpoint)
     if len(lar_list) != 1:
-        raise (SDCNotFound(f"Could not find SDC"))
+        raise (SDCNotFound("Could not find SDC"))
     else:
         lar = lar_list[0]
 

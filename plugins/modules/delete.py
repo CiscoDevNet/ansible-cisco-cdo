@@ -181,8 +181,8 @@ def delete_device(module_params: dict, http_session: requests.session, endpoint:
             "queueTriggerState": "PENDING_DELETE_FTDC",
             "stateMachineContext": {"ftdCDeviceIDs": f"{device['uid']}"}
         }
-        result = CDORequests.put(http_session, f"https://{endpoint}",
-                                 path=f"{CDOAPI.FMC.value}/{cdfmc_specific_device['uid']}", data=data)
+        CDORequests.put(http_session, f"https://{endpoint}",
+                        path=f"{CDOAPI.FMC.value}/{cdfmc_specific_device['uid']}", data=data)
 
 
 def main():
