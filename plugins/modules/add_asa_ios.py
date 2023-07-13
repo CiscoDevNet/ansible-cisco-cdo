@@ -107,13 +107,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     APIError,
     CredentialsFailure
 )
-from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
-    SDCNotFound,
-    InvalidCertificate,
-    DeviceUnreachable,
-    APIError,
-    CredentialsFailure
-)
 
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     ADD_ASA_IOS_SPEC,
