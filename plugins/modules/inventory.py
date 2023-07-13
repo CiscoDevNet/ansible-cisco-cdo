@@ -24,7 +24,7 @@ options:
         type: str
     region:
         description:
-            - The region where the CDO tenant exists 
+            - The region where the CDO tenant exists
         choices: [us, eu, apj]
         default: us
         required: true
@@ -39,7 +39,7 @@ author:
 requirements:
   - pycryptodome
   - requests
-  
+
 '''
 
 EXAMPLES = r'''
@@ -60,7 +60,7 @@ EXAMPLES = r'''
           "{{ inventory.stdout }}"
 '''
 
-# fmt: off 
+# fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.common import inventory
@@ -91,8 +91,10 @@ def main():
                            REQUIRED_ONE_OF], mutually_exclusive=MUTUALLY_EXCLUSIVE, required_if=REQUIRED_IF)
 
     endpoint = CDORegions.get_endpoint(module.params.get('region'))
-    http_session = CDORequests.create_session(module.params.get('api_key'), __version__)
-    result['stdout'] = inventory(module.params.get('inventory'),  http_session, endpoint)
+    http_session = CDORequests.create_session(
+        module.params.get('api_key'), __version__)
+    result['stdout'] = inventory(module.params.get(
+        'inventory'),  http_session, endpoint)
     result['changed'] = False
     module.exit_json(**result)
 

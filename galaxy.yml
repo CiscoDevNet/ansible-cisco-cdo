@@ -1,12 +1,10 @@
 namespace: cisco
 name: cdo
-version: 1.0.0
+version: 1.0.1
 readme: README.md
 authors:
   - Aaron Hackney (@aaronhackney)
 description: A collection for automating Cisco Defense Orchestrator
-license:
-  - Apache-2.0
 license_file: 'LICENSE'
 tags:
 - cdo
@@ -38,4 +36,3 @@ repository: https://github.com/CiscoDevNet/ansible-cisco-cdo
 documentation: https://github.com/CiscoDevNet/ansible-cisco-cdo/docs
 homepage: ''
 issues: https://github.com/CiscoDevNet/ansible-cisco-cdo/issues
-
