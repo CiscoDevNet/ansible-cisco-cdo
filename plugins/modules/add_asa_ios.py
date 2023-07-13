@@ -14,7 +14,7 @@ short_description: This module is to add inventory (ASA, IOS devices) on Cisco D
 
 version_added: "1.0.0"
 
-description: This module is to add inventory (ASA, IOS devices) on Cisco Defense Orchestrator (CDO). 
+description: This module is to add inventory (ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
 options:
     api_key:
         description:
@@ -23,7 +23,7 @@ options:
         type: str
     region:
         description:
-            - The region where the CDO tenant exists 
+            - The region where the CDO tenant exists
         choices: [us, eu, apj]
         default: us
         required: true
@@ -49,7 +49,7 @@ author:
 requirements:
   - pycryptodome
   - requests
-  
+
 '''
 
 EXAMPLES = r'''
@@ -88,9 +88,9 @@ EXAMPLES = r'''
           username: 'myuser'
           password: 'abc123'
           ignore_cert: true
-      register: added_device    
+      register: added_device
 '''
-# fmt: off 
+# fmt: off
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.crypto import CDOCrypto
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
@@ -133,7 +133,8 @@ def connectivity_poll(module_params: dict, http_session: requests.session, endpo
         device = get_device(http_session, endpoint, uid)
         if device['connectivityState'] == -2:
             if module_params['ignore_cert']:
-                update_device(http_session, endpoint, uid, data={"ignoreCertificate": True})
+                update_device(http_session, endpoint, uid,
+                              data={"ignoreCertificate": True})
                 return True
             else:
                 # TODO: Delete the device we just attempted to add....
@@ -172,7 +173,8 @@ def ios_credentials_polling(module_params: dict, http_session: requests.session,
             raise CredentialsFailure(device['connectivityError'])
         elif device['connectivityState'] > 0:
             return True
-    raise CredentialsFailure(f"Device remains in connectivity state {device['connectivityState']}")
+    raise CredentialsFailure(
+        f"Device remains in connectivity state {device['connectivityState']}")
 
 
 def update_device(http_session: requests.session, endpoint: str, uid: str, data: dict):
@@ -203,24 +205,31 @@ def add_asa_ios(module_params: dict, http_session: requests.session, endpoint: s
 
     try:
         path = CDOAPI.DEVICES.value
-        device = CDORequests.post(http_session, f"https://{endpoint}", path=path, data=asa_ios_device.asdict())
+        device = CDORequests.post(
+            http_session, f"https://{endpoint}", path=path, data=asa_ios_device.asdict())
         connectivity_poll(module_params, http_session, endpoint, device['uid'])
     except DuplicateObject as e:
         raise e
 
-    creds_crypto = CDOCrypto.encrypt_creds(module_params['username'], module_params['password'], lar)
+    creds_crypto = CDOCrypto.encrypt_creds(
+        module_params['username'], module_params['password'], lar)
 
     if module_params['device_type'].upper() == "ASA":
         creds_crypto['state'] = "CERT_VALIDATED"
-        specific_device = get_specific_device(http_session, endpoint, device['uid'])
+        specific_device = get_specific_device(
+            http_session, endpoint, device['uid'])
         path = f"{CDOAPI.ASA_CONFIG.value}/{specific_device['uid']}"
-        CDORequests.put(http_session, f"https://{endpoint}", path=path, data=creds_crypto)
-        asa_credentails_polling(module_params, http_session, endpoint, specific_device['uid'])
+        CDORequests.put(
+            http_session, f"https://{endpoint}", path=path, data=creds_crypto)
+        asa_credentails_polling(
+            module_params, http_session, endpoint, specific_device['uid'])
     elif module_params['device_type'].upper() == "IOS":
         creds_crypto['stateMachineContext'] = {"acceptCert": True}
         path = f"{CDOAPI.DEVICES.value}/{device['uid']}"
-        CDORequests.put(http_session, f"https://{endpoint}", path=path, data=creds_crypto)
-        ios_credentials_polling(module_params, http_session, endpoint, device['uid'])
+        CDORequests.put(
+            http_session, f"https://{endpoint}", path=path, data=creds_crypto)
+        ios_credentials_polling(
+            module_params, http_session, endpoint, device['uid'])
     return f"{module_params['device_type'].upper()} {module_params['name']} added to CDO"
 
 
@@ -238,7 +247,8 @@ def main():
     module = AnsibleModule(argument_spec=ADD_ASA_IOS_SPEC, required_one_of=[
                            REQUIRED_ONE_OF], mutually_exclusive=MUTUALLY_EXCLUSIVE, required_if=REQUIRED_IF)
     endpoint = CDORegions.get_endpoint(module.params.get('region'))
-    http_session = CDORequests.create_session(module.params.get('api_key'), __version__)
+    http_session = CDORequests.create_session(
+        module.params.get('api_key'), __version__)
     module_params = module.params.get('add_asa_ios')
 
     try:
