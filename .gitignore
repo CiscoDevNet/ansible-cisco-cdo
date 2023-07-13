@@ -1,0 +1,12 @@
+*.pyc
+.vscode*
+/dist/
+/pip-wheel-metadata/
+/*.egg-info
+/*.egg
+.eggs/
+build/
+/.mypy_cache/
+/.tox/
+MANIFEST
+.DS_Store
