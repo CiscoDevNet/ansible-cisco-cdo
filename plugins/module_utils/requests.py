@@ -6,6 +6,17 @@ import requests
 from enum import Enum
 from functools import wraps
 from .errors import DuplicateObject, APIError, DeviceNotFound
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('requests')
+fh = logging.FileHandler('/tmp/requests.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("Query Logger started......")
+# fmt: on
 
 
 class CDORegions(Enum):
@@ -61,7 +72,8 @@ class CDORequests:
     def get(http_session: requests.Session, url: str, path: str = None, query: dict = None) -> str:
         """ Given the CDO endpoint, path, and query, return the json payload from the API """
         uri = url if path is None else f"{url}/{path}"
-        result = http_session.get(url=uri, headers=http_session.headers, params=query)
+        result = http_session.get(
+            url=uri, headers=http_session.headers, params=query)
         result.raise_for_status()
         if result.text:
             return result.json()
@@ -85,7 +97,8 @@ class CDORequests:
     def put(http_session: requests.Session, url: str, path: str = None, data: dict = None, query: dict = None) -> str:
         """ Given the CDO endpoint, path, and query, return the json payload from the API """
         uri = url if path is None else f"{url}/{path}"
-        result = http_session.put(url=uri, headers=http_session.headers, params=query, json=data)
+        result = http_session.put(
+            url=uri, headers=http_session.headers, params=query, json=data)
         result.raise_for_status()
         if result.text and result.status_code in range(200, 300):
             return result.json()
@@ -95,5 +108,6 @@ class CDORequests:
     @CDOAPIWrapper()
     @staticmethod
     def delete(http_session: requests.Session, url: str, path: str = None) -> None:
-        result = http_session.delete(url=f"{url}/{path}", headers=http_session.headers)
+        result = http_session.delete(
+            url=f"{url}/{path}", headers=http_session.headers)
         result.raise_for_status()

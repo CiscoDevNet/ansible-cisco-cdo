@@ -8,13 +8,25 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('net_obj')
+fh = logging.FileHandler('/tmp/cdo.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("Logger started......")
+# fmt: on
+
 DOCUMENTATION = r"""
 ---
-module: inventory
+module: net_objects
 
-short_description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
+short_description: This module is to mange network objcets and object-groups on Cisco Defense Orchestrator (CDO).
 
-version_added: "1.0.0"
+version_added: "1.1.0"
 
 description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
 options:
@@ -30,15 +42,14 @@ options:
         default: us
         required: true
         type: str
-    inventory:
+    net_objects:
         description:
-            - Return a dictionary of json device objects in the current tenant's inventory
+            - Operations on network objects
         required: false
         type: dict
 author:
     - Aaron Hackney (@aaronhackney)
 requirements:
-  - pycryptodome
   - requests
 
 """
@@ -51,28 +62,22 @@ EXAMPLES = r"""
       cisco.cdo.cdo_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
-        inventory:
-          device_type: "all"
-      register: inventory
 
-    - name: Print All Results for all devices, all fields
-      ansible.builtin.debug:
-        msg:
-          "{{ inventory.stdout }}"
 """
 
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
+from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
+from ansible_collections.cisco.cdo.plugins.module_utils.common import get_net_objs
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.common import inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
-    INVENTORY_ARGUMENT_SPEC,
-    INVENTORY_REQUIRED_ONE_OF,
-    INVENTORY_MUTUALLY_EXCLUSIVE,
-    INVENTORY_REQUIRED_IF
+    NET_OBJS_ARGUMENT_SPEC,
+    NET_OBJS_REQUIRED,
+    NET_OBJS_MUTUALLY_EXCLUSIVE,
+    NET_OBJS_REQUIRED_IF
 )
 from ansible.module_utils.basic import AnsibleModule
-
 # fmt: on
 
 
@@ -80,16 +85,16 @@ def main():
     result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
 
     module = AnsibleModule(
-        argument_spec=INVENTORY_ARGUMENT_SPEC,
-        required_one_of=[INVENTORY_REQUIRED_ONE_OF],
-        mutually_exclusive=INVENTORY_MUTUALLY_EXCLUSIVE,
-        required_if=INVENTORY_REQUIRED_IF,
+        argument_spec=NET_OBJS_ARGUMENT_SPEC,
+        required_one_of=[NET_OBJS_REQUIRED],
+        mutually_exclusive=NET_OBJS_MUTUALLY_EXCLUSIVE,
+        required_if=NET_OBJS_REQUIRED_IF,
     )
 
     endpoint = CDORegions.get_endpoint(module.params.get("region"))
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
-    result["stdout"] = inventory(module.params.get("inventory"), http_session, endpoint)
-    result["changed"] = False
+    result["stdout"] = get_net_objs(module.params.get("net_objects"), http_session, endpoint)
+
     module.exit_json(**result)
 
 

@@ -4,11 +4,12 @@
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
 
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: add_ftd
 
@@ -41,9 +42,9 @@ requirements:
   - pycryptodome
   - requests
 
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Add FTD CDO inventory (CLI Method)
   hosts: localhost
   tasks:
@@ -84,7 +85,7 @@ EXAMPLES = r'''
             - MALWARE
             - PLUS
       register: added_device
-'''
+"""
 
 # fmt: off
 import requests
@@ -100,73 +101,76 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotF
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     ADD_FTD_SPEC,
-    REQUIRED_ONE_OF,
-    MUTUALLY_EXCLUSIVE,
-    REQUIRED_IF
+    ADD_FTD_REQUIRED_ONE_OF,
+    ADD_FTD_MUTUALLY_EXCLUSIVE,
+    ADD_FTD_REQUIRED_IF
 )
 
 # fmt: on
 
 
 def new_ftd_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str):
-    """ Check that the new FTD specific device has been created before attempting move to the onboarding step """
-    for i in range(module_params['retry']):
+    """Check that the new FTD specific device has been created before attempting move to the onboarding step"""
+    for i in range(module_params["retry"]):
         try:
             return get_specific_device(http_session, endpoint, uid)
         except DeviceNotFound:
-            sleep(module_params['delay'])
+            sleep(module_params["delay"])
             continue
     raise AddDeviceFailure(f"Failed to add FTD {module_params['name']}")
 
 
 def update_ftd_device(http_session: requests.session, endpoint: str, uid: str, data: dict):
-    """ Update an FTD object """
+    """Update an FTD object"""
     return CDORequests.put(http_session, f"https://{endpoint}", path=f"{CDOAPI.FTDS.value}/{uid}", data=data)
 
 
 def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: str, ftd_device: FTDModel, fmc_uid: str):
-    """ Onboard an FTD to cdFMC using LTP (serial number onboarding)"""
-    if (not inventory_count(http_session, endpoint, filter=f"serial:{module_params['serial']}") and
-            not inventory_count(http_session, endpoint, filter=f"name:{module_params['serial']}")):
+    """Onboard an FTD to cdFMC using LTP (serial number onboarding)"""
+    if not inventory_count(http_session, endpoint, filter=f"serial:{module_params['serial']}") and not inventory_count(
+        http_session, endpoint, filter=f"name:{module_params['serial']}"
+    ):
         ftd_device.larType = "CDG"
-        ftd_device.name = module_params['serial']
-        ftd_device.serial = module_params['serial']
+        ftd_device.name = module_params["serial"]
+        ftd_device.serial = module_params["serial"]
         ftd_device.sseDeviceSerialNumberRegistration = dict(
             initialProvisionData=(
-                base64.b64encode(f'{{"nkey": "{module_params["password"]}"}}'.encode(
-                    'ascii')).decode('ascii')
+                base64.b64encode(f'{{"nkey": "{module_params["password"]}"}}'.encode("ascii")).decode("ascii")
             ),
-            sudiSerialNumber=module_params['serial']
+            sudiSerialNumber=module_params["serial"],
         )
         ftd_device.sseEnabled = True
 
-        new_ftd_device = CDORequests.post(http_session, f"https://{endpoint}",
-                                          path=CDOAPI.DEVICES.value, data=ftd_device.asdict())
-        ftd_specific_device = get_specific_device(
-            http_session, endpoint, new_ftd_device['uid'])  # required polling?
-        new_ftd_device = get_device(
-            http_session, endpoint, new_ftd_device['uid'])  # refresh device
-        CDORequests.put(http_session, f"https://{endpoint}",
-                        path=f"{CDOAPI.FTDS.value}/{ftd_specific_device['uid']}",
-                        data={"queueTriggerState": "SSE_CLAIM_DEVICE"}
-                        )  # Trigger device claiming
+        new_ftd_device = CDORequests.post(
+            http_session, f"https://{endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device.asdict()
+        )
+        ftd_specific_device = get_specific_device(http_session, endpoint, new_ftd_device["uid"])  # required polling?
+        new_ftd_device = get_device(http_session, endpoint, new_ftd_device["uid"])  # refresh device
+        CDORequests.put(
+            http_session,
+            f"https://{endpoint}",
+            path=f"{CDOAPI.FTDS.value}/{ftd_specific_device['uid']}",
+            data={"queueTriggerState": "SSE_CLAIM_DEVICE"},
+        )  # Trigger device claiming
         return ftd_device
 
     else:
-        raise DuplicateObject(
-            f"Device with serial number {module_params['serial']} exists in tenant")
+        raise DuplicateObject(f"Device with serial number {module_params['serial']} exists in tenant")
 
 
 def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
-    """ Add an FTD to CDO via CLI or LTP process """
+    """Add an FTD to CDO via CLI or LTP process"""
 
     try:
         cdfmc = get_cdfmc(http_session, endpoint)
-        cdfmc_specific_device = get_specific_device(
-            http_session, endpoint, cdfmc['uid'])
+        cdfmc_specific_device = get_specific_device(http_session, endpoint, cdfmc["uid"])
         access_policy = get_cdfmc_access_policy_list(
-            http_session, endpoint, cdfmc['host'], cdfmc_specific_device['domainUid'],
-            access_list_name=module_params['access_control_policy'])
+            http_session,
+            endpoint,
+            cdfmc["host"],
+            cdfmc_specific_device["domainUid"],
+            access_list_name=module_params["access_control_policy"],
+        )
     except DeviceNotFound as e:
         raise e
     except ObjectNotFound as e:
@@ -175,63 +179,55 @@ def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
     # TODO: Get these from the fmc collection when it supports cdFMC
 
     ftd_device = FTDModel(
-        name=module_params['name'],
-        associatedDeviceUid=cdfmc['uid'],
+        name=module_params["name"],
+        associatedDeviceUid=cdfmc["uid"],
         metadata=FTDMetaData(
-            accessPolicyName=access_policy['items'][0]['name'],
-            accessPolicyUuid=access_policy['items'][0]['id'],
-            license_caps=','.join(module_params['license']),
-            performanceTier=module_params['performance_tier']
-        )
+            accessPolicyName=access_policy["items"][0]["name"],
+            accessPolicyUuid=access_policy["items"][0]["id"],
+            license_caps=",".join(module_params["license"]),
+            performanceTier=module_params["performance_tier"],
+        ),
     )
-    if module_params['onboard_method'].lower() == "ltp":
-        ftd_device = add_ftd_ltp(
-            module_params, http_session, endpoint, ftd_device, cdfmc['uid'])
+    if module_params["onboard_method"].lower() == "ltp":
+        ftd_device = add_ftd_ltp(module_params, http_session, endpoint, ftd_device, cdfmc["uid"])
         return f"Serial number {module_params['serial']} ready for LTP onboarding into CDO"
     else:
-        new_device = CDORequests.post(http_session, f"https://{endpoint}",
-                                      path=CDOAPI.DEVICES.value, data=ftd_device.asdict())
-        result = new_ftd_polling(
-            module_params, http_session, endpoint, new_device['uid'])
-        update_ftd_device(http_session, endpoint, result['uid'], {
-                          "queueTriggerState": "INITIATE_FTDC_ONBOARDING"})
-        result = CDORequests.get(http_session, f"https://{endpoint}",
-                                 path=f"{CDOAPI.DEVICES.value}/{new_device['uid']}")
+        new_device = CDORequests.post(
+            http_session, f"https://{endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device.asdict()
+        )
+        result = new_ftd_polling(module_params, http_session, endpoint, new_device["uid"])
+        update_ftd_device(http_session, endpoint, result["uid"], {"queueTriggerState": "INITIATE_FTDC_ONBOARDING"})
+        result = CDORequests.get(
+            http_session, f"https://{endpoint}", path=f"{CDOAPI.DEVICES.value}/{new_device['uid']}"
+        )
         return f"{module_params['name']} CLI Command: {result['metadata']['generatedCommand']}"
 
 
 def main():
-    result = dict(
-        msg='',
-        stdout='',
-        stdout_lines=[],
-        stderr='',
-        stderr_lines=[],
-        rc=0,
-        failed=False,
-        changed=False
+    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
+
+    module = AnsibleModule(
+        argument_spec=ADD_FTD_SPEC,
+        required_one_of=[ADD_FTD_REQUIRED_ONE_OF],
+        mutually_exclusive=ADD_FTD_MUTUALLY_EXCLUSIVE,
+        required_if=ADD_FTD_REQUIRED_IF,
     )
 
-    module = AnsibleModule(argument_spec=ADD_FTD_SPEC, required_one_of=[
-                           REQUIRED_ONE_OF], mutually_exclusive=MUTUALLY_EXCLUSIVE, required_if=REQUIRED_IF)
-
-    endpoint = CDORegions.get_endpoint(module.params.get('region'))
-    http_session = CDORequests.create_session(
-        module.params.get('api_key'), __version__)
+    endpoint = CDORegions.get_endpoint(module.params.get("region"))
+    http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
     try:
-        result['stdout'] = add_ftd(module.params.get(
-            'add_ftd'), http_session, endpoint)
-        result['changed'] = True
+        result["stdout"] = add_ftd(module.params.get("add_ftd"), http_session, endpoint)
+        result["changed"] = True
     except AddDeviceFailure as e:
-        result['stderr'] = f"ERROR: {e.message}"
+        result["stderr"] = f"ERROR: {e.message}"
     except DuplicateObject as e:
-        result['stderr'] = f"ERROR: {e.message}"
+        result["stderr"] = f"ERROR: {e.message}"
     except DeviceNotFound as e:
-        result['stderr'] = f"ERROR: {e.message}"
+        result["stderr"] = f"ERROR: {e.message}"
     except ObjectNotFound as e:
-        result['stderr'] = f"ERROR: {e.message}"
+        result["stderr"] = f"ERROR: {e.message}"
     module.exit_json(**result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

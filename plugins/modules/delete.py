@@ -4,10 +4,11 @@
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
 
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
-DOCUMENTATION = r'''
+DOCUMENTATION = r"""
 ---
 module: delete
 
@@ -51,9 +52,9 @@ requirements:
   - pycryptodome
   - requests
 
-'''
+"""
 
-EXAMPLES = r'''
+EXAMPLES = r"""
 - name: Add FTD CDO inventory
   hosts: localhost
   tasks:
@@ -128,7 +129,7 @@ EXAMPLES = r'''
       ansible.builtin.debug:
         msg:
           "{{ inventory.stdout }}"
-'''
+"""
 
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
@@ -137,9 +138,9 @@ from ansible_collections.cisco.cdo.plugins.module_utils.common import working_se
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     DELETE_SPEC,
-    REQUIRED_ONE_OF,
-    MUTUALLY_EXCLUSIVE,
-    REQUIRED_IF
+    DELETE_REQUIRED_ONE_OF,
+    DELETE_MUTUALLY_EXCLUSIVE,
+    DELETE_REQUIRED_IF
 )
 from ansible.module_utils.basic import AnsibleModule
 import ansible_collections.cisco.cdo.plugins.module_utils.errors as cdo_errors
@@ -148,66 +149,55 @@ import requests
 
 
 def find_device_for_deletion(module_params: dict, http_session: requests.session, endpoint: str):
-    """ Find the object we intend to delete """
-    if module_params['device_type'].upper() == "FTD":
+    """Find the object we intend to delete"""
+    if module_params["device_type"].upper() == "FTD":
         extra_filter = "AND (deviceType:FTDC)"
     else:
         extra_filter = f"AND (deviceType:{module_params['device_type'].upper()})"
-    module_params['filter'] = module_params['name']
-    device_list = inventory(module_params, http_session,
-                            endpoint, extra_filter=extra_filter)
+    module_params["filter"] = module_params["name"]
+    device_list = inventory(module_params, http_session, endpoint, extra_filter=extra_filter)
     if len(device_list) < 1:
-        raise cdo_errors.DeviceNotFound(
-            f"Cannot delete {module_params['name']} - device by that name not found")
+        raise cdo_errors.DeviceNotFound(f"Cannot delete {module_params['name']} - device by that name not found")
     elif len(device_list) > 1:
-        raise cdo_errors.TooManyMatches(
-            f"Cannot delete {module_params['name']} - more than 1 device matches name")
+        raise cdo_errors.TooManyMatches(f"Cannot delete {module_params['name']} - more than 1 device matches name")
     else:
         return device_list[0]
 
 
 def delete_device(module_params: dict, http_session: requests.session, endpoint: str):
-    """ Orchestrate deleting the device """
+    """Orchestrate deleting the device"""
     device = find_device_for_deletion(module_params, http_session, endpoint)
-    working_set(http_session, endpoint, device['uid'])
-    if module_params['device_type'].upper() == "ASA" or module_params['device_type'].upper() == "IOS":
-        CDORequests.delete(
-            http_session, f"https://{endpoint}", path=f"{CDOAPI.DEVICES.value}/{device['uid']}")
-    elif module_params['device_type'].upper() == "FTD":
+    working_set(http_session, endpoint, device["uid"])
+    if module_params["device_type"].upper() == "ASA" or module_params["device_type"].upper() == "IOS":
+        CDORequests.delete(http_session, f"https://{endpoint}", path=f"{CDOAPI.DEVICES.value}/{device['uid']}")
+    elif module_params["device_type"].upper() == "FTD":
         cdfmc = get_cdfmc(http_session, endpoint)
-        cdfmc_specific_device = get_specific_device(
-            http_session, endpoint, cdfmc['uid'])
+        cdfmc_specific_device = get_specific_device(http_session, endpoint, cdfmc["uid"])
         data = {
             "queueTriggerState": "PENDING_DELETE_FTDC",
-            "stateMachineContext": {"ftdCDeviceIDs": f"{device['uid']}"}
+            "stateMachineContext": {"ftdCDeviceIDs": f"{device['uid']}"},
         }
-        CDORequests.put(http_session, f"https://{endpoint}",
-                        path=f"{CDOAPI.FMC.value}/{cdfmc_specific_device['uid']}", data=data)
+        CDORequests.put(
+            http_session, f"https://{endpoint}", path=f"{CDOAPI.FMC.value}/{cdfmc_specific_device['uid']}", data=data
+        )
 
 
 def main():
-    result = dict(
-        msg='',
-        stdout='',
-        stdout_lines=[],
-        stderr='',
-        stderr_lines=[],
-        rc=0,
-        failed=False,
-        changed=False
+    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
+
+    module = AnsibleModule(
+        argument_spec=DELETE_SPEC,
+        required_one_of=[DELETE_REQUIRED_ONE_OF],
+        mutually_exclusive=DELETE_MUTUALLY_EXCLUSIVE,
+        required_if=DELETE_REQUIRED_IF,
     )
 
-    module = AnsibleModule(argument_spec=DELETE_SPEC, required_one_of=[
-                           REQUIRED_ONE_OF], mutually_exclusive=MUTUALLY_EXCLUSIVE, required_if=REQUIRED_IF)
-
-    endpoint = CDORegions.get_endpoint(module.params.get('region'))
-    http_session = CDORequests.create_session(
-        module.params.get('api_key'), __version__)
-    result['stdout'] = delete_device(
-        module.params.get('delete'), http_session, endpoint)
-    result['changed'] = True
+    endpoint = CDORegions.get_endpoint(module.params.get("region"))
+    http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
+    result["stdout"] = delete_device(module.params.get("delete"), http_session, endpoint)
+    result["changed"] = True
     module.exit_json(**result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
