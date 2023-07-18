@@ -40,19 +40,19 @@ def connectivity_poll(module_params: dict, http_session: requests.session, endpo
     )
 
 
-def asa_credentails_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str) -> bool:
+def asa_credentails_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str) -> dict:
     """Check credentials have been used successfully  or fail after retry attempts have expired"""
     for i in range(module_params["retry"]):
         result = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.ASA_CONFIG.value}/{uid}")
         if result["state"] == "BAD_CREDENTIALS":
             raise CredentialsFailure(f"Credentials provided for device {module_params['name']} were rejected.")
         elif result["state"] == "PENDING_GET_CONFIG_DONE" or result["state"] == "DONE" or result["state"] == "IDLE":
-            return True
+            return result
         sleep(module_params["delay"])
     raise APIError(f"Credentials for device {module_params['name']} were sent but we never reached a known good state.")
 
 
-def ios_credentials_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str) -> bool:
+def ios_credentials_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str) -> dict:
     """Check to see if the supplied credentials are accepted by the live device"""
     for i in range(module_params["retry"]):
         device = get_device(http_session, endpoint, uid)
@@ -61,7 +61,7 @@ def ios_credentials_polling(module_params: dict, http_session: requests.session,
         elif device["connectivityError"] is not None:
             raise CredentialsFailure(device["connectivityError"])
         elif device["connectivityState"] > 0:
-            return True
+            return device
     raise CredentialsFailure(f"Device remains in connectivity state {device['connectivityState']}")
 
 
@@ -107,9 +107,10 @@ def add_asa_ios(module_params: dict, http_session: requests.session, endpoint: s
         path = f"{CDOAPI.ASA_CONFIG.value}/{specific_device['uid']}"
         CDORequests.put(http_session, f"https://{endpoint}", path=path, data=creds_crypto)
         asa_credentails_polling(module_params, http_session, endpoint, specific_device["uid"])
+        return get_device(http_session, endpoint, device["uid"])
     elif module_params["device_type"].upper() == "IOS":
         creds_crypto["stateMachineContext"] = {"acceptCert": True}
         path = f"{CDOAPI.DEVICES.value}/{device['uid']}"
         CDORequests.put(http_session, f"https://{endpoint}", path=path, data=creds_crypto)
-        ios_credentials_polling(module_params, http_session, endpoint, device["uid"])
-    return f"{module_params['device_type'].upper()} {module_params['name']} added to CDO"
+        return ios_credentials_polling(module_params, http_session, endpoint, device["uid"])
+    # return f"{module_params['device_type'].upper()} {module_params['name']} added to CDO"

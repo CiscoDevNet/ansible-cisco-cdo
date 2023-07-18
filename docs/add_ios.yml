@@ -22,4 +22,4 @@
     - name: Print results
       ansible.builtin.debug:
         msg:
-          "{{ added_device }}"
+          "{{ added_device.stdout['metadata'] }}"

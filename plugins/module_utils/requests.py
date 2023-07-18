@@ -118,6 +118,7 @@ class CDORequests:
 
     @CDOAPIWrapper()
     @staticmethod
-    def delete(http_session: requests.Session, url: str, path: str = None) -> None:
+    def delete(http_session: requests.Session, url: str, path: str = None) -> int:
         result = http_session.delete(url=f"{url}/{path}", headers=http_session.headers)
         result.raise_for_status()
+        return result.status_code

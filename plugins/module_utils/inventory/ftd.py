@@ -60,7 +60,8 @@ def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: s
             path=f"{CDOAPI.FTDS.value}/{ftd_specific_device['uid']}",
             data={"queueTriggerState": "SSE_CLAIM_DEVICE"},
         )  # Trigger device claiming
-        return ftd_device
+        # return ftd_device
+        return new_ftd_device
 
     else:
         raise DuplicateObject(f"Device with serial number {module_params['serial']} exists in tenant")
@@ -102,9 +103,8 @@ def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
         new_device = CDORequests.post(
             http_session, f"https://{endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device.asdict()
         )
-        result = new_ftd_polling(module_params, http_session, endpoint, new_device["uid"])
-        update_ftd_device(http_session, endpoint, result["uid"], {"queueTriggerState": "INITIATE_FTDC_ONBOARDING"})
-        result = CDORequests.get(
-            http_session, f"https://{endpoint}", path=f"{CDOAPI.DEVICES.value}/{new_device['uid']}"
+        specific_ftd_device = new_ftd_polling(module_params, http_session, endpoint, new_device["uid"])
+        update_ftd_device(
+            http_session, endpoint, specific_ftd_device["uid"], {"queueTriggerState": "INITIATE_FTDC_ONBOARDING"}
         )
-        return f"{module_params['name']} CLI Command: {result['metadata']['generatedCommand']}"
+        return CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.DEVICES.value}/{new_device['uid']}")

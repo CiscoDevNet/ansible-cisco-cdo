@@ -8,6 +8,17 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+# fmt: off
+# Remove for publishing....
+import logging
+logger = logging.getLogger('inventory_module')
+logging.basicConfig()
+fh = logging.FileHandler('/tmp/inventory.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+# fmt: on
+
 DOCUMENTATION = r"""
 ---
 module: inventory
@@ -196,7 +207,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     INVENTORY_REQUIRED_IF
 )
 from ansible.module_utils.basic import AnsibleModule
-
+import json
 # fmt: on
 
 
@@ -211,42 +222,41 @@ def main():
     endpoint = CDORegions.get_endpoint(module.params.get("region"))
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
 
+    # Get inventory from CDO and return a list of dict(s) - Devices and attributes
     if module.params.get("gather"):
         result["stdout"] = gather_inventory(module.params.get("gather"), http_session, endpoint)
         result["changed"] = False
+
+    # Add devices to CDO inventory and return a json dictionary of the new device attributes
     if module.params.get("add"):
         if module.params.get("add", {}).get("ftd"):
             try:
                 result["stdout"] = add_ftd(module.params.get("add", {}).get("ftd"), http_session, endpoint)
                 result["changed"] = True
-            except AddDeviceFailure as e:
-                result["stderr"] = f"ERROR: {e.message}"
-            except DuplicateObject as e:
-                result["stderr"] = f"ERROR: {e.message}"
-            except DeviceNotFound as e:
-                result["stderr"] = f"ERROR: {e.message}"
-            except ObjectNotFound as e:
+            except (AddDeviceFailure, DuplicateObject, DeviceNotFound, ObjectNotFound) as e:
                 result["stderr"] = f"ERROR: {e.message}"
         if module.params.get("add", {}).get("asa_ios"):
             try:
                 result["stdout"] = add_asa_ios(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
                 result["changed"] = True
-            except SDCNotFound as e:
+            except (
+                SDCNotFound,
+                InvalidCertificate,
+                DeviceUnreachable,
+                CredentialsFailure,
+                DuplicateObject,
+                APIError,
+            ) as e:
                 result["stderr"] = f"ERROR: {e.message}"
-            except InvalidCertificate as e:
-                result["stderr"] = f"ERROR: {e.message}"
-            except DeviceUnreachable as e:
-                result["stderr"] = f"ERROR: {e.message}"
-            except CredentialsFailure as e:
-                result["stderr"] = f"ERROR: {e.message}"
-            except DuplicateObject as e:
-                result["stderr"] = f"ERROR: {e.message}"
-            except APIError as e:
-                result["stderr"] = f"ERROR: {e.message}"
+
+    # Delete an ASA, FTD, or IOS device from CDO/cdFMC
     if module.params.get("delete"):
-        # TODO: add error handling for delete
-        result["stdout"] = delete_device(module.params.get("delete"), http_session, endpoint)
-        result["changed"] = True
+        try:
+            result["stdout"] = delete_device(module.params.get("delete"), http_session, endpoint)
+            result["changed"] = True
+        except DeviceNotFound as e:
+            result["stderr"] = f"ERROR: {e.message}"
+
     module.exit_json(**result)
 
 
