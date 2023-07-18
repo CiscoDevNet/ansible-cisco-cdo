@@ -1,0 +1,11 @@
+---
+- name: Add network object
+  hosts: localhost
+  tasks:
+    - name: Add a network object for this CDO tenant
+      cisco.cdo.net_objects:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "us"
+        net_objects: {}
+      register: net_objs
+      failed_when: (net_objs.stderr is defined) and (net_objs.stderr | length > 0)
