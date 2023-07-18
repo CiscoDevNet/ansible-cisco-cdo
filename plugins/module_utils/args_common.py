@@ -5,33 +5,12 @@ COMMON_SPEC = {
     "region": {"default": "us", "choices": ["us", "eu", "apj"], "type": "str"},
 }
 
-
-#############################
-# Network Objects
-NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
-    "net_objects": {
-        "type": "dict",
-        "options": {
-            "filter": {"type": "str"},
-            "tags": {"type": "str"},
-            "limit": {"default": 50, "type": "int"},
-            "offset": {"default": 0, "type": "int"},
-            "network": {"type": "str"},
-        },
-    },
-}
-NET_OBJS_REQUIRED = ["net_objects"]
-NET_OBJS_MUTUALLY_EXCLUSIVE = []
-NET_OBJS_REQUIRED_TOGETHER = []
-NET_OBJS_REQUIRED_IF = []
-
 #############################
 # Inventory
 INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
     "gather": {
         "type": "dict",
         "options": {
-            # Get inventory Details
             "filter": {"type": "str"},
             "device_type": {"default": "all", "choices": ["all", "asa", "ios", "ftd", "fmc"]},
         },

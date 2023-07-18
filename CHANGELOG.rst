@@ -13,7 +13,7 @@ New Modules
 - add_ftd - Add FTD devices to CDO using both "configure manager" cli method and low touch provisioning
 - delete - delete devices from CDO and cdFMC, incuding, ASA, IOS, and FTD devices
 
-v1.1.0
+v1.0.2
 ======
 - Moved all inventory function into the inventory module and updated the argument spec
 - Updated the sample playbooks in /docs
