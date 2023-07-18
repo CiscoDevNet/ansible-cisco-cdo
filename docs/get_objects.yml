@@ -19,12 +19,22 @@
         jmesquery: >-
           objects[*].{name:name, elements:elements, objectType:objectType, contents:contents, description:description, tags:tags}
 
-    - name: Get all network objects that match filter
+    - name: Get all network objects that match the exact filter
       cisco.cdo.net_objects:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         net_objects: {
           filter: "foo"
+        }
+      register: net_objs
+      failed_when: (net_objs.stderr is defined) and (net_objs.stderr | length > 0)
+
+    - name: Get all network objects that match the wildcard filter
+      cisco.cdo.net_objects:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "us"
+        net_objects: {
+          filter: "*foo*"
         }
       register: net_objs
       failed_when: (net_objs.stderr is defined) and (net_objs.stderr | length > 0)

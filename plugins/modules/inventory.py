@@ -8,6 +8,18 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('inventory')
+fh = logging.FileHandler('/tmp/inventory.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("Logger started......")
+# fmt: on
+
 DOCUMENTATION = r"""
 ---
 module: inventory
@@ -64,7 +76,21 @@ EXAMPLES = r"""
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.common import inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.inventory.ftd import add_ftd
+from ansible_collections.cisco.cdo.plugins.module_utils.inventory.asa import add_asa_ios
+from ansible_collections.cisco.cdo.plugins.module_utils.inventory.delete import delete_device
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
+    DeviceNotFound,
+    AddDeviceFailure,
+    DuplicateObject,
+    ObjectNotFound,
+    SDCNotFound,
+    InvalidCertificate,
+    DeviceUnreachable,
+    APIError,
+    CredentialsFailure
+)
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     INVENTORY_ARGUMENT_SPEC,
     INVENTORY_REQUIRED_ONE_OF,
@@ -78,18 +104,52 @@ from ansible.module_utils.basic import AnsibleModule
 
 def main():
     result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
-
     module = AnsibleModule(
         argument_spec=INVENTORY_ARGUMENT_SPEC,
         required_one_of=[INVENTORY_REQUIRED_ONE_OF],
         mutually_exclusive=INVENTORY_MUTUALLY_EXCLUSIVE,
         required_if=INVENTORY_REQUIRED_IF,
     )
-
     endpoint = CDORegions.get_endpoint(module.params.get("region"))
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
-    result["stdout"] = inventory(module.params.get("inventory"), http_session, endpoint)
-    result["changed"] = False
+
+    if module.params.get("gather"):
+        result["stdout"] = gather_inventory(module.params.get("gather"), http_session, endpoint)
+        result["changed"] = False
+    if module.params.get("add"):
+        if module.params.get("add", {}).get("ftd"):
+            try:
+                result["stdout"] = add_ftd(module.params.get("add", {}).get("ftd"), http_session, endpoint)
+                result["changed"] = True
+            except AddDeviceFailure as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except DuplicateObject as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except DeviceNotFound as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except ObjectNotFound as e:
+                result["stderr"] = f"ERROR: {e.message}"
+        if module.params.get("add", {}).get("asa_ios"):
+            try:
+                result["stdout"] = add_asa_ios(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
+                result["changed"] = True
+            except SDCNotFound as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except InvalidCertificate as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except DeviceUnreachable as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except CredentialsFailure as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except DuplicateObject as e:
+                result["stderr"] = f"ERROR: {e.message}"
+            except APIError as e:
+                result["stderr"] = f"ERROR: {e.message}"
+    if module.params.get("delete"):
+        # TODO: add error handling for delete
+        logger.debug(f"Deleting device {module.params.get('delete')}")
+        result["stdout"] = delete_device(module.params.get("delete"), http_session, endpoint)
+        result["changed"] = True
     module.exit_json(**result)
 
 

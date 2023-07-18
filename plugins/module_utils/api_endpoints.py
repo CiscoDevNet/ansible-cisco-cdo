@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class CDOAPI(Enum):
-    SVCS = "aegis/rest/v1/services/"
+    SVCS = "aegis/rest/v1/services"
     DEVICES = f"{SVCS}/targets/devices"
     WORKSET = f"{SVCS}/common/workingset"
     FTDS = f"{SVCS}/firepower/ftds"

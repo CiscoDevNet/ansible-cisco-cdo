@@ -68,7 +68,7 @@ def working_set(http_session: requests.session, endpoint: str, uid: str):
     return CDORequests.post(http_session, f"https://{endpoint}", path=f"{CDOAPI.WORKSET.value}", data=data)
 
 
-def inventory(
+def gather_inventory(
     module_params: dict,
     http_session: requests.session,
     endpoint: str,
@@ -104,32 +104,3 @@ def get_cdfmc_access_policy_list(
         if access_list_name is not None:
             raise ObjectNotFound(f"Access Policy {access_list_name} not found on cdFMC.")
     return response
-
-
-def get_net_objs(module_params: dict, http_session: requests.session, endpoint: str) -> str:
-    # TODO: return only network objects
-    q = CDOQuery.net_obj_query(
-        filter=module_params["filter"],
-        tags=module_params["tags"],
-        limit=module_params["limit"],
-        offset=module_params["offset"],
-    )
-    logger.debug(f"query: {q}")
-    count = CDORequests.get(http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, query=q | {"agg": "count"})
-    obj_list = CDORequests.get(
-        http_session,
-        f"https://{endpoint}",
-        path=CDOAPI.OBJS.value,
-        query=CDOQuery.net_obj_query(
-            filter=module_params["filter"],
-            tags=module_params["tags"],
-            limit=module_params["limit"],
-            offset=module_params["offset"],
-        ),
-    )
-    return dict(
-        count=count["aggregationQueryResult"],
-        limit=module_params["limit"],
-        offset=module_params["offset"],
-        objects=obj_list,
-    )

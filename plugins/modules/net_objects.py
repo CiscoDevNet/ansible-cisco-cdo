@@ -69,7 +69,7 @@ EXAMPLES = r"""
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
-from ansible_collections.cisco.cdo.plugins.module_utils.common import get_net_objs
+from ansible_collections.cisco.cdo.plugins.module_utils.objects import get_net_objs
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     NET_OBJS_ARGUMENT_SPEC,

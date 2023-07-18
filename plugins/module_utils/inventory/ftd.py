@@ -3,112 +3,20 @@
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
 
-
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-
-DOCUMENTATION = r"""
----
-module: add_ftd
-
-short_description: This module is to add inventory (FTD devices) on Cisco Defense Orchestrator (CDO).
-
-version_added: "1.0.0"
-
-description: This module is to add inventory (FTD devices) on Cisco Defense Orchestrator (CDO).
-options:
-    api_key:
-        description:
-            - API key for the tenant on which we wish to operate
-        required: true
-        type: str
-    region:
-        description:
-            - The region where the CDO tenant exists
-        choices: [us, eu, apj]
-        default: us
-        required: true
-        type: str
-    add_ftd:
-        description: This is the message to send to the test module.
-        required: false
-        type: dict
-
-author:
-    - Aaron Hackney (@aaronhackney)
-requirements:
-  - pycryptodome
-  - requests
-
-"""
-
-EXAMPLES = r"""
-- name: Add FTD CDO inventory (CLI Method)
-  hosts: localhost
-  tasks:
-    - name: Add FTD to CDO and cdFMC
-      cisco.cdo.cdo_add_ftd:
-        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: 'us'
-        add_ftd:
-          onboard_method: 'cli'
-          access_control_policy: 'Default Access Control Policy'
-          name: 'ElPaso'
-          is_virtual: true
-          performance_tier: FTDv10
-          license:
-            - BASE
-            - THREAT
-            - URLFilter
-            - MALWARE
-            - PLUS
-      register: added_device
-
-- name: Add FTD CDO inventory (LTP Method)
-  hosts: localhost
-  tasks:
-    - name: Add FTD to CDO and cdFMC
-      cisco.cdo.cdo_add_ftd:
-        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: 'us'
-        add_ftd:
-          onboard_method: 'ltp'
-          serial: 'JAD245008W2'
-          access_control_policy: 'Default Access Control Policy'
-          name: 'ElPaso'
-          license:
-            - BASE
-            - THREAT
-            - URLFilter
-            - MALWARE
-            - PLUS
-      register: added_device
-"""
-
 # fmt: off
 import requests
 import base64
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
-from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.devices import FTDModel, FTDMetaData
 from ansible_collections.cisco.cdo.plugins.module_utils.common import inventory_count, get_device, get_cdfmc
 from ansible_collections.cisco.cdo.plugins.module_utils.common import get_cdfmc_access_policy_list, get_specific_device
-from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, AddDeviceFailure, DuplicateObject, ObjectNotFound
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
-    ADD_FTD_SPEC,
-    ADD_FTD_REQUIRED_ONE_OF,
-    ADD_FTD_MUTUALLY_EXCLUSIVE,
-    ADD_FTD_REQUIRED_IF
-)
+
 
 # fmt: on
-
-
 def new_ftd_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str):
     """Check that the new FTD specific device has been created before attempting move to the onboarding step"""
     for i in range(module_params["retry"]):
@@ -160,7 +68,6 @@ def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: s
 
 def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
     """Add an FTD to CDO via CLI or LTP process"""
-
     try:
         cdfmc = get_cdfmc(http_session, endpoint)
         cdfmc_specific_device = get_specific_device(http_session, endpoint, cdfmc["uid"])
@@ -201,33 +108,3 @@ def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
             http_session, f"https://{endpoint}", path=f"{CDOAPI.DEVICES.value}/{new_device['uid']}"
         )
         return f"{module_params['name']} CLI Command: {result['metadata']['generatedCommand']}"
-
-
-def main():
-    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
-
-    module = AnsibleModule(
-        argument_spec=ADD_FTD_SPEC,
-        required_one_of=[ADD_FTD_REQUIRED_ONE_OF],
-        mutually_exclusive=ADD_FTD_MUTUALLY_EXCLUSIVE,
-        required_if=ADD_FTD_REQUIRED_IF,
-    )
-
-    endpoint = CDORegions.get_endpoint(module.params.get("region"))
-    http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
-    try:
-        result["stdout"] = add_ftd(module.params.get("add_ftd"), http_session, endpoint)
-        result["changed"] = True
-    except AddDeviceFailure as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except DuplicateObject as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except DeviceNotFound as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except ObjectNotFound as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    module.exit_json(**result)
-
-
-if __name__ == "__main__":
-    main()

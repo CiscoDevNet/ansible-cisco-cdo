@@ -1,4 +1,5 @@
 import urllib.parse
+
 # fmt: off
 # Remove for publishing....
 import logging
@@ -52,17 +53,19 @@ class CDOQuery:
 
     @staticmethod
     def get_lar_query(module_params: dict) -> str | None:
-        # TODO Search for exact match vs the wildcard below
+        """return a query to retrieve the SDC details"""
         filter = module_params["sdc"]
         if filter is not None:
-            return f"name:*{filter}* OR ipv4:*{filter}*"
+            return f"name:{filter} OR ipv4:{filter}"
 
     @staticmethod
     def get_cdfmc_query() -> str | None:
+        """Return a query string to retrieve cdFMC informaton"""
         return {"q": "deviceType:FMCE"}
 
     @staticmethod
     def get_cdfmc_policy_query(limit: int, offset: int, access_list_name: str) -> str:
+        """Return a query to retrieve the given access list name"""
         if access_list_name is not None:
             return f"name={urllib.parse.quote(access_list_name)}"
         else:
@@ -74,10 +77,7 @@ class CDOQuery:
         # TODO: return both network objects and network object-groups
         q = "((cdoInternal:false) AND (isReadOnly:false) AND (objectType:NETWORK_OBJECT))"
         if filter is not None:
-            q = (
-                f"(name:{filter} OR elements:{filter} OR searchableDetails:{filter} OR "
-                f"overrides.overrideElements:{filter}) AND {q}"
-            )
+            q = f"{q} AND ((name:{filter} OR " f"overrides.overrideElements:{filter}))"
         if tags is not None:
             tag_query = " OR ".join(f'tags.labels:"{t}"' for t in tags)
             q = f"{q} AND (({tag_query}))"

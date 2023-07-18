@@ -3,7 +3,7 @@
   hosts: localhost
   tasks:
     - name: Delete ASA from CDO inventory
-      cisco.cdo.delete:
+      cisco.cdo.inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: 'us'
         delete:

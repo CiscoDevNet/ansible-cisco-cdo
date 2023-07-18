@@ -3,95 +3,6 @@
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
 
-from __future__ import absolute_import, division, print_function
-
-__metaclass__ = type
-
-DOCUMENTATION = r"""
----
-module: add_asa_ios
-
-short_description: This module is to add inventory (ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
-
-version_added: "1.0.0"
-
-description: This module is to add inventory (ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
-options:
-    api_key:
-        description:
-            - API key for the tenant on which we wish to operate
-        required: true
-        type: str
-    region:
-        description:
-            - The region where the CDO tenant exists
-        choices: [us, eu, apj]
-        default: us
-        required: true
-        type: str
-    inventory:
-        description:
-            - Return a dictionary of json device objects in the current tenant's inventory
-        required: false
-        type: dict
-    add_ftd:
-        description: This is the message to send to the test module.
-        required: false
-        type: dict
-    add_asa:
-        description:
-            - Control to demo if the result of this module is changed or not.
-            - Parameter description can be a list as well.
-        required: false
-        type: bool
-
-author:
-    - Aaron Hackney (@aaronhackney)
-requirements:
-  - pycryptodome
-  - requests
-
-"""
-
-EXAMPLES = r"""
-- name: Add ASA to CDO inventory
-  hosts: localhost
-  tasks:
-    - name: Add ASA to CDO
-      cisco.cdo.cdo_inventory:
-        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: 'us'
-        add_asa:
-          sdc: 'CDO_cisco_aahackne-SDC-1'
-          name: 'Austin'
-          ipv4: '172.30.4.101'
-          port: 8443
-          device_type: 'asa'
-          username: 'myuser'
-          password: 'abc123'
-          ignore_cert: true
-      register: added_device
-
----
-- name: Add IOS to CDO inventory
-  hosts: localhost
-  tasks:
-    - name: Add IOS to CDO
-      cisco.cdo.cdo_inventory:
-        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: 'us'
-        add_asa_ios:
-          sdc: 'CDO_cisco_aahackne-SDC-1'
-          name: 'Austin-CSR-1000v'
-          ipv4: '172.30.4.250'
-          port: 22
-          device_type: 'ios'
-          username: 'myuser'
-          password: 'abc123'
-          ignore_cert: true
-      register: added_device
-"""
-# fmt: off
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.crypto import CDOCrypto
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
@@ -99,26 +10,15 @@ from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegio
 from ansible_collections.cisco.cdo.plugins.module_utils.devices import ASAIOSModel
 from ansible_collections.cisco.cdo.plugins.module_utils.common import get_lar_list, get_specific_device, get_device
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     SDCNotFound,
     InvalidCertificate,
     DeviceUnreachable,
     DuplicateObject,
     APIError,
-    CredentialsFailure
+    CredentialsFailure,
 )
-
-from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
-    ADD_ASA_IOS_SPEC,
-    ADD_ASA_IOS_REQUIRED_ONE_OF,
-    ADD_ASA_IOS_MUTUALLY_EXCLUSIVE,
-    ADD_ASA_IOS_REQUIRED_IF
-)
-
-from ansible.module_utils.basic import AnsibleModule
 import requests
-# fmt: on
 
 
 def connectivity_poll(module_params: dict, http_session: requests.session, endpoint: str, uid: str) -> bool:
@@ -214,38 +114,3 @@ def add_asa_ios(module_params: dict, http_session: requests.session, endpoint: s
         CDORequests.put(http_session, f"https://{endpoint}", path=path, data=creds_crypto)
         ios_credentials_polling(module_params, http_session, endpoint, device["uid"])
     return f"{module_params['device_type'].upper()} {module_params['name']} added to CDO"
-
-
-def main():
-    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
-    module = AnsibleModule(
-        argument_spec=ADD_ASA_IOS_SPEC,
-        required_one_of=[ADD_ASA_IOS_REQUIRED_ONE_OF],
-        mutually_exclusive=ADD_ASA_IOS_MUTUALLY_EXCLUSIVE,
-        required_if=ADD_ASA_IOS_REQUIRED_IF,
-    )
-    endpoint = CDORegions.get_endpoint(module.params.get("region"))
-    http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
-    module_params = module.params.get("add_asa_ios")
-
-    try:
-        result["stdout"] = add_asa_ios(module_params, http_session, endpoint)
-        result["changed"] = True
-    except SDCNotFound as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except InvalidCertificate as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except DeviceUnreachable as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except CredentialsFailure as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except DuplicateObject as e:
-        result["stderr"] = f"ERROR: {e.message}"
-    except APIError as e:
-        result["stderr"] = f"ERROR: {e.message}"
-
-    module.exit_json(**result)
-
-
-if __name__ == "__main__":
-    main()

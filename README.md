@@ -27,19 +27,16 @@ This module is for interacting with the Cisco Defense Orcestrator (CDO) platform
 ## Included content
 <!--start collection content-->
 ### Modules
-Name | Description
---- | ---
-add_asa_ios | Add an ASA or IOS device to CDO
-add_ftd | Add an FTD to CDO by `configure manager` or `low touch provisioning`
-delete | Remove an FTD, ASA, or IOS device from CDO
-inventory | Get device details from CDO
+| Name      | Description                                             |
+| --------- | ------------------------------------------------------- |
+| inventory | gather, add, or delete an FTD, ASA or IOS device to CDO |
 <!--end collection content-->
-   
+
 ## Installing this collection
 You can install the Cisco CDO collection with the Ansible Galaxy CLI:
 
     ansible-galaxy collection install cisco.cdo
-    
+
 You can also include it in a `requirements.yml` file and install it with `ansible-galaxy collection install -r requirements.yml`, using the format:
 
 ```yaml
@@ -48,7 +45,7 @@ collections:
   - name: cisco.cdo
 ```
 ## Using the collection
-**"Show don't tell"**  
+**"Show don't tell"**
 See the docs directory and README for practical usage of this collection.
 
 ## Contributing to this collection
