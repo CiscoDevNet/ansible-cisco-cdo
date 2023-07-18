@@ -87,14 +87,14 @@ options:
             delay:
                 type: int
                 default: 1
-        delete:
-            name:
-                type: str
-                required: True
-            device_type:
-                type: str
-                required: True
-                choices: [asa, ios, ftd]
+    delete:
+        name:
+            type: str
+            required: True
+        device_type:
+            type: str
+            required: True
+            choices: [asa, ios, ftd]
 
 author:
     - Aaron Hackney (@aaronhackney)
