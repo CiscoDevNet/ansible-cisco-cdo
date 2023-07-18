@@ -6,10 +6,9 @@
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.crypto import CDOCrypto
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
-from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.devices import ASAIOSModel
 from ansible_collections.cisco.cdo.plugins.module_utils.common import get_lar_list, get_specific_device, get_device
-from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     SDCNotFound,
     InvalidCertificate,

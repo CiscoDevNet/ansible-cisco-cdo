@@ -7,7 +7,6 @@
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.common import working_set, get_cdfmc, get_specific_device, gather_inventory
-from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 import ansible_collections.cisco.cdo.plugins.module_utils.errors as cdo_errors
 import requests
 # fmt: on
