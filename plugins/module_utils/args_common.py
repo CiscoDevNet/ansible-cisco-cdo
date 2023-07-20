@@ -69,3 +69,37 @@ INVENTORY_REQUIRED_ONE_OF = ["gather", "add", "delete"]
 INVENTORY_MUTUALLY_EXCLUSIVE = ["gather", "add", "delete"]
 INVENTORY_REQUIRED_TOGETHER = []
 INVENTORY_REQUIRED_IF = []
+
+#############################
+# Network Objects
+NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
+    "gather": {
+        "type": "dict",
+        "options": {
+            "filter": {"type": "str"},
+            "tags": {"type": "str"},
+            "limit": {"default": 50, "type": "int"},
+            "offset": {"default": 0, "type": "int"},
+            "network": {"type": "str"},
+        },
+    },
+    "add": {
+        "type": "dict",
+        "options": {
+            "name": {"required": True, "type": "str"},
+            "value": {"required": True, "type": "str"},
+        },
+    },
+    "update": {"type": "dict", "options": {"name": {"default": "ftd", "type": "str"}}},
+    "delete": {
+        "type": "dict",
+        "options": {
+            "name": {"required": True, "type": "str"},
+            "device_type": {"required": True, "choices": ["asa", "ios", "ftd"], "type": "str"},
+        },
+    },
+}
+NET_OBJS_REQUIRED = ["gather", "add", "update", "delete"]
+NET_OBJS_MUTUALLY_EXCLUSIVE = []
+NET_OBJS_REQUIRED_TOGETHER = []
+NET_OBJS_REQUIRED_IF = []

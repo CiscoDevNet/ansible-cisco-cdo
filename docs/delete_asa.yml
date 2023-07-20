@@ -1,5 +1,5 @@
 ---
-- name: Delete IOS Device from CDO inventory
+- name: Delete ASA Device from CDO inventory
   hosts: localhost
   tasks:
     - name: Delete IOS Device from CDO inventory

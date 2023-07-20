@@ -1,5 +1,5 @@
 ---
-- name: Add FTD CDO inventory
+- name: Add FTD CDO inventory via CLI
   hosts: localhost
   tasks:
     - name: Add FTD to CDO and cdFMC
