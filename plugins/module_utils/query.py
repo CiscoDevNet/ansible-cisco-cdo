@@ -1,3 +1,12 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
+
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 import urllib.parse
 
 # fmt: off
@@ -72,13 +81,15 @@ class CDOQuery:
             return f"limit={limit}&offset={offset}"
 
     @staticmethod
-    def net_obj_query(limit: int = 50, offset: int = 0, filter=None, tags: list = None) -> str:
-        """Return a query string for network objects given a list of tags and/or limits and offsets"""
-        # TODO: return both network objects and network object-groups
-        q = "((cdoInternal:false) AND (isReadOnly:false) AND (objectType:NETWORK_OBJECT))"
-        if filter is not None:
-            q = f"{q} AND ((name:{filter} OR " f"overrides.overrideElements:{filter}))"
+    def net_obj_query(name: str = None, network: str = None, tags: list = None) -> str:
+        """Return a query string for network objects given a name, network, or a list of tags"""
+        q_part, q = "", ""
+        if network is not None:
+            q_part = f'(elements:{network.replace("/", "?")})' if "/" in network else f"(elements:{network}?32)"
+        if name is not None:
+            q_part = f"{q_part} AND (name:{name})" if q_part else f"(name:{name})"
+        q = f"(NOT deviceType:FMCE) AND ({q_part})" if q_part else f"(NOT deviceType:FMCE)"
         if tags is not None:
-            tag_query = " OR ".join(f'tags.labels:"{t}"' for t in tags)
+            tag_query = " AND ".join(f'tags.labels:"{t}"' for t in tags)
             q = f"{q} AND (({tag_query}))"
-        return {"q": q, "limit": limit, "offset": offset}
+        return {"q": q}

@@ -1,9 +1,17 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
+# Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
+
 from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 import requests
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import DuplicateObject
 
 __metaclass__ = type
 
@@ -20,73 +28,63 @@ logger.debug("Logger started......")
 # fmt: on
 
 
-# Just toying with the idea of modeling the data
-# @dataclass
-# class NetObjContentModel:
-#     sourceElement: str
-#     destinationElement: str = None
-#     type: str = "NetworkContent"
-#
-#     def asdict(self):
-#         contents = asdict(self)
-#         contents["@type"] = contents["type"]
-#         del contents["type"]
-#         return contents
-#
-#
-# @dataclass
-# class NetObjModel:
-#     typeName: str
-#     name: str
-#     description: str
-#     stateMachineContext: dict
-#     contents: NetObjContentModel
-#     deviceType: str
-#     objectType: str = "NETWORK_OBJECT"
-#
-#     def asdict(self):
-#         net_obj = asdict(self)
-#         net_obj["@typeName"] = net_obj["typeName"]
-#         del net_obj["typeName"]
-#         return net_obj
+def get_net_objs_count(query: dict, http_session: requests.session, endpoint: str) -> int:
+    return CDORequests.get(
+        http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, query=query | {"agg": "count"}
+    ).get("aggregationQueryResult")
 
 
 def get_net_objs(module_params: dict, http_session: requests.session, endpoint: str) -> str:
+    # TODO: Handle paging (limit, offset)
     q = CDOQuery.net_obj_query(
-        filter=module_params["filter"],
-        tags=module_params["tags"],
-        limit=module_params["limit"],
-        offset=module_params["offset"],
+        name=module_params.get("name"),
+        network=module_params.get("network"),
+        tags=module_params.get("tags"),
     )
-    count = CDORequests.get(http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, query=q | {"agg": "count"})
-    obj_list = CDORequests.get(
-        http_session,
-        f"https://{endpoint}",
-        path=CDOAPI.OBJS.value,
-        query=CDOQuery.net_obj_query(
-            filter=module_params["filter"],
-            tags=module_params["tags"],
-            limit=module_params["limit"],
-            offset=module_params["offset"],
-        ),
+    count = get_net_objs_count(q | {"agg": "count"}, http_session, endpoint)
+    if count:
+        obj_list = CDORequests.get(
+            http_session,
+            f"https://{endpoint}",
+            path=CDOAPI.OBJS.value,
+            query=q | {"limit": module_params.get("limit"), "offset": module_params.get("offset")},
+        )
+        logger.debug(f"Return: {obj_list}")
+        logger.debug
+        return dict(
+            count=count,
+            limit=module_params.get("limit"),
+            offset=module_params.get("offset"),
+            objects=obj_list,
+        )
+    else:
+        return {}
+
+
+def is_object_exists(module_params: dict, http_session: requests.session, endpoint: str):
+    q = CDOQuery.net_obj_query(
+        name=module_params.get("name"),
+        network=module_params.get("network"),
+        tags=module_params.get("tags"),
     )
-    return dict(
-        count=count["aggregationQueryResult"],
-        limit=module_params["limit"],
-        offset=module_params["offset"],
-        objects=obj_list,
-    )
+    return True if get_net_objs_count(q | {"agg": "count"}, http_session, endpoint) else False
 
 
 def add_net_objs(module_params: dict, http_session: requests.session, endpoint: str):
-    net_obj = {
-        "@typeName": "LocalObject",
-        "objectType": "NETWORK_OBJECT",
-        "stateMachineContext": {},
-        "contents": [
-            {"@type": "NetworkContent", "sourceElement": module_params.get("value"), "destinationElement": None}
-        ],
-        "name": module_params.get("name"),
-        "deviceType": "ASA",
-    }
-    return CDORequests.post(http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, data=net_obj)
+    # TODO: Raise error if object exists
+    if not is_object_exists(module_params, http_session, endpoint):
+        net_obj = {
+            "@typeName": "LocalObject",
+            "objectType": "NETWORK_OBJECT",
+            "stateMachineContext": {},
+            "contents": [
+                {"@type": "NetworkContent", "sourceElement": module_params.get("network"), "destinationElement": None}
+            ],
+            "name": module_params.get("name"),
+            "deviceType": "ASA",
+        }
+        return CDORequests.post(http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, data=net_obj)
+    else:
+        raise DuplicateObject(
+            f'Network Object named {module_params.get("name")} with value {module_params.get("network")} already exists'
+        )

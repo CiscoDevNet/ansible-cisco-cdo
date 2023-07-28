@@ -1,3 +1,12 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#
+# Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
+
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 #############################
 # Common to all modules
 COMMON_SPEC = {
@@ -76,18 +85,18 @@ NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
     "gather": {
         "type": "dict",
         "options": {
-            "filter": {"type": "str"},
-            "tags": {"type": "str"},
+            "name": {"type": "str"},
+            "network": {"type": "str"},
+            "tags": {"type": "list"},
             "limit": {"default": 50, "type": "int"},
             "offset": {"default": 0, "type": "int"},
-            "network": {"type": "str"},
         },
     },
     "add": {
         "type": "dict",
         "options": {
             "name": {"required": True, "type": "str"},
-            "value": {"required": True, "type": "str"},
+            "network": {"required": True, "type": "str"},
         },
     },
     "update": {"type": "dict", "options": {"name": {"default": "ftd", "type": "str"}}},

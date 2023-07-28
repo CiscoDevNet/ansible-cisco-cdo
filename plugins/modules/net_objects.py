@@ -71,6 +71,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDO
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.objects.net_objs import get_net_objs, add_net_objs
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import DuplicateObject
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     NET_OBJS_ARGUMENT_SPEC,
     NET_OBJS_REQUIRED,
@@ -96,7 +97,10 @@ def main():
     if module.params.get("gather") is not None:
         result["stdout"] = get_net_objs(module.params.get("gather"), http_session, endpoint)
     elif module.params.get("add") is not None:
-        result["stdout"] = add_net_objs(module.params.get("add"), http_session, endpoint)
+        try:
+            result["stdout"] = add_net_objs(module.params.get("add"), http_session, endpoint)
+        except DuplicateObject as e:
+            result["stderr"] = f"ERROR: {e.message}"
     elif module.params.get("update") is not None:
         pass
     elif module.params.get("delete") is not None:

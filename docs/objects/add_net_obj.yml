@@ -3,12 +3,13 @@
   hosts: localhost
   tasks:
     - name: Add a network host object for this CDO tenant
+      ignore_errors: true
       cisco.cdo.net_objects:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         add:
           name: "ansible-test-host"
-          value: "192.168.255.254"
+          network: "192.168.255.254"
       register: new_obj
       failed_when: (new_obj.stderr is defined) and (new_obj.stderr | length > 0)
 
@@ -18,12 +19,13 @@
           "{{ new_obj.stdout }}"
 
     - name: Add a network object for this CDO tenant
+      ignore_errors: true
       cisco.cdo.net_objects:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         add:
           name: "ansible-test-network"
-          value: "192.168.255.0/24"
+          network: "192.168.255.0/24"
       register: new_obj
       failed_when: (new_obj.stderr is defined) and (new_obj.stderr | length > 0)
 

@@ -3,6 +3,10 @@
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
 
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
