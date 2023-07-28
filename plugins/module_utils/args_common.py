@@ -97,6 +97,7 @@ NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
         "options": {
             "name": {"required": True, "type": "str"},
             "network": {"required": True, "type": "str"},
+            "description": {"required": True, "type": "str"},
         },
     },
     "update": {"type": "dict", "options": {"name": {"default": "ftd", "type": "str"}}},

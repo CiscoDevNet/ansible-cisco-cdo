@@ -71,7 +71,7 @@ def is_object_exists(module_params: dict, http_session: requests.session, endpoi
 
 
 def add_net_objs(module_params: dict, http_session: requests.session, endpoint: str):
-    # TODO: Raise error if object exists
+    logger.debug(f'Description is {module_params.get("description")}')
     if not is_object_exists(module_params, http_session, endpoint):
         net_obj = {
             "@typeName": "LocalObject",
@@ -81,6 +81,7 @@ def add_net_objs(module_params: dict, http_session: requests.session, endpoint: 
                 {"@type": "NetworkContent", "sourceElement": module_params.get("network"), "destinationElement": None}
             ],
             "name": module_params.get("name"),
+            "description": module_params.get("description"),
             "deviceType": "ASA",
         }
         return CDORequests.post(http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, data=net_obj)
