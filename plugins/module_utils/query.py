@@ -93,3 +93,15 @@ class CDOQuery:
             tag_query = " AND ".join(f'tags.labels:"{t}"' for t in tags)
             q = f"{q} AND (({tag_query}))"
         return {"q": q}
+
+    @staticmethod
+    def pending_changes_query(name: str = "", device_type: str = "", agg: bool = False) -> str:
+        # TODO: Be able to query by device type and/or by device name
+        q = (
+            "((device.configState:NOT_SYNCED) AND (device.model:false)) AND ((NOT device.deviceType:FTDC) AND "
+            "(NOT device.deviceType:FMC_MANAGED_DEVICE))"
+        )
+        if agg:
+            return {"agg": "count", "q": q}
+        else:
+            return {"q": q}

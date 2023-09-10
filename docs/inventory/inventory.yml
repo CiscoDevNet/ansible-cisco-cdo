@@ -7,7 +7,7 @@
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         gather:
-            device_type: "all"
+          device_type: "all"
       register: inventory
       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
 

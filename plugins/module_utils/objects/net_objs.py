@@ -9,6 +9,7 @@ __metaclass__ = type
 
 import requests
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
+from ansible_collections.cisco.cdo.plugins.module_utils.objects.objects import get_objs_count, get_objs
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DuplicateObject
@@ -28,10 +29,10 @@ logger.debug("Logger started......")
 # fmt: on
 
 
-def get_net_objs_count(query: dict, http_session: requests.session, endpoint: str) -> int:
-    return CDORequests.get(
-        http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, query=query | {"agg": "count"}
-    ).get("aggregationQueryResult")
+# def get_net_objs_count(query: dict, http_session: requests.session, endpoint: str) -> int:
+#     return CDORequests.get(
+#         http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, query=query | {"agg": "count"}
+#     ).get("aggregationQueryResult")
 
 
 def get_net_objs(module_params: dict, http_session: requests.session, endpoint: str) -> str:
@@ -41,24 +42,7 @@ def get_net_objs(module_params: dict, http_session: requests.session, endpoint: 
         network=module_params.get("network"),
         tags=module_params.get("tags"),
     )
-    count = get_net_objs_count(q | {"agg": "count"}, http_session, endpoint)
-    if count:
-        obj_list = CDORequests.get(
-            http_session,
-            f"https://{endpoint}",
-            path=CDOAPI.OBJS.value,
-            query=q | {"limit": module_params.get("limit"), "offset": module_params.get("offset")},
-        )
-        logger.debug(f"Return: {obj_list}")
-        logger.debug
-        return dict(
-            count=count,
-            limit=module_params.get("limit"),
-            offset=module_params.get("offset"),
-            objects=obj_list,
-        )
-    else:
-        return {}
+    return get_objs(q, http_session, endpoint, limit=module_params.get("limit"), offset=module_params.get("offset"))
 
 
 def is_object_exists(module_params: dict, http_session: requests.session, endpoint: str):
@@ -67,7 +51,7 @@ def is_object_exists(module_params: dict, http_session: requests.session, endpoi
         network=module_params.get("network"),
         tags=module_params.get("tags"),
     )
-    return True if get_net_objs_count(q | {"agg": "count"}, http_session, endpoint) else False
+    return True if get_objs_count(q, http_session, endpoint) else False
 
 
 def add_net_objs(module_params: dict, http_session: requests.session, endpoint: str):

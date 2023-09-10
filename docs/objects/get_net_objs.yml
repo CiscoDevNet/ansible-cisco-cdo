@@ -59,7 +59,7 @@
       register: exact_net_objs
       failed_when: (exact_net_objs.stderr is defined) and (exact_net_objs.stderr | length > 0)
 
-    - name: Results for exact match
+    - name: Results for all network objects that match the exact filter but no matches
       ansible.builtin.debug:
         msg:
           "Exact Matches: {{ exact_net_objs.stdout }}"

@@ -10,7 +10,6 @@
         add:
           name: "ansible-test-host"
           network: "192.168.255.254"
-          description: "Ansible Test Host Addition"
       register: new_obj
       failed_when: (new_obj.stderr is defined) and (new_obj.stderr | length > 0)
 
@@ -27,7 +26,6 @@
         add:
           name: "ansible-test-network"
           network: "192.168.255.0/24"
-          description: "Ansible Test Network Addition"
       register: new_obj
       failed_when: (new_obj.stderr is defined) and (new_obj.stderr | length > 0)
 

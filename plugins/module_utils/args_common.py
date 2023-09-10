@@ -97,7 +97,8 @@ NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
         "options": {
             "name": {"required": True, "type": "str"},
             "network": {"required": True, "type": "str"},
-            "description": {"required": True, "type": "str"},
+            # Descriptions will be reworked in future CDO work fall of 2023 so omitting for meow
+            # "description": {"required": True, "type": "str"},
         },
     },
     "update": {"type": "dict", "options": {"name": {"default": "ftd", "type": "str"}}},
@@ -113,3 +114,24 @@ NET_OBJS_REQUIRED = ["gather", "add", "update", "delete"]
 NET_OBJS_MUTUALLY_EXCLUSIVE = []
 NET_OBJS_REQUIRED_TOGETHER = []
 NET_OBJS_REQUIRED_IF = []
+
+#############################
+# Deploy Changes
+DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
+    "deploy": {
+        "type": "dict",
+        "options": {
+            "device_type": {"default": "all", "choices": ["all", "asa", "ios"]},
+        },
+    },
+    "pending": {
+        "type": "dict",
+        "options": {
+            "device_type": {"default": "all", "choices": ["all", "asa", "ios"]},
+        },
+    },
+}
+DEPLOY_REQUIRED = ["deploy", "pending"]
+DEPLOY_MUTUALLY_EXCLUSIVE = []
+DEPLOY_REQUIRED_TOGETHER = []
+DEPLOY_REQUIRED_IF = []

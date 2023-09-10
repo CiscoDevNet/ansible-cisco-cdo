@@ -21,3 +21,4 @@ class CDOAPI(Enum):
     ASA_CONFIG = f"{SVCS}/asa/configs"
     SPECIFIC_DEVICE = "aegis/rest/v1/device/{uid}/specific-device"
     FMC_ACCESS_POLICY = "fmc/api/fmc_config/v1/domain/{domain_uid}/policy/accesspolicies"
+    DEPLOY = "aegis/rest/v1/services/targets/device-changelog"
