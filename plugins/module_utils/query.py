@@ -95,13 +95,22 @@ class CDOQuery:
         return {"q": q}
 
     @staticmethod
-    def pending_changes_query(name: str = "", device_type: str = "", agg: bool = False) -> str:
+    def pending_changes_query(agg: bool = False, limit: int = 100, offset: int = 0) -> str:
         # TODO: Be able to query by device type and/or by device name
         q = (
             "((device.configState:NOT_SYNCED) AND (device.model:false)) AND ((NOT device.deviceType:FTDC) AND "
             "(NOT device.deviceType:FMC_MANAGED_DEVICE))"
         )
+        r = "[targets/device-changelog.{changeLogInstance}]"
         if agg:
             return {"agg": "count", "q": q}
         else:
-            return {"q": q}
+            return {"limit": limit, "offset": offset, "q": q, "resolve": r}
+
+    @staticmethod
+    def pending_changes_diff_query(uid: str):
+        """Given a UID of an Object Reference, generate a query to return the diff details of the config"""
+        q = f"(objectReference.uid:{uid})+AND+(changeLogState:ACTIVE)"
+        r = "%5Bchangelogs%2Fquery.%7Buid,lastEventTimestamp,changeLogState,events,objectReference%7D%5D"
+        a = "limit=1&offset=0"
+        return {"q": q, "resolve": r, "limit": 1, "offset": 0}
