@@ -22,3 +22,4 @@ class CDOAPI(Enum):
     SPECIFIC_DEVICE = "aegis/rest/v1/device/{uid}/specific-device"
     FMC_ACCESS_POLICY = "fmc/api/fmc_config/v1/domain/{domain_uid}/policy/accesspolicies"
     DEPLOY = "aegis/rest/v1/services/targets/device-changelog"
+    JOBS = "aegis/rest/v1/services/state-machines/jobs"

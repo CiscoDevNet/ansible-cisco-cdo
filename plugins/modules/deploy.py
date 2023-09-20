@@ -59,6 +59,7 @@ EXAMPLES = r""" """
 # fmt: off
 import requests
 import urllib.parse
+from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
@@ -72,9 +73,40 @@ from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
+
 # TODO: accept input for specific device deploy
 # TODO: accept input for types of devices to deploy
 # TODO: Document and Link with cdFMC Ansible module to deploy staged FTD configs
+
+
+def poll_deploy_job(http_session: requests.session, endpoint: str, job_uid: str, retry, interval):
+    """Poll the doplay job for a successful completion"""
+    while retry > 0:
+        job_status = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.JOBS.value}/{job_uid}")
+        state_uid = job_status.get("objRefs")[0].get("uid")
+        if job_status.get("stateMachinesProgress").get(state_uid).get("progressStatus") == "DONE":
+            logger.debug(f'Job Status: {job_status.get("stateMachinesProgress").get(state_uid).get("progressStatus")}')
+            return job_status
+        logger.debug(f'Job Status: {job_status.get("stateMachinesProgress").get(state_uid).get("progressStatus")}')
+        sleep(interval)
+        retry -= 1
+
+
+def deploy_changes(
+    module_params: dict, http_session: requests.session, endpoint: str, config_uid: str, retry=10, interval=2
+):
+    # TODO: Move retry and interval to module_params playbook
+    """Given the config uid, deploy the pending config changes to the device"""
+    payload = {
+        "action": "WRITE",
+        "overallProgress": "PENDING",
+        "triggerState": "PENDING_ORCHESTRATION",
+        "schedule": None,
+        "objRefs": [{"uid": config_uid, "namespace": "targets", "type": "devices"}],
+        "jobContext": None,
+    }
+    job = CDORequests.post(http_session, f"https://{endpoint}", path=f"{CDOAPI.JOBS.value}", data=payload)
+    return poll_deploy_job(http_session, endpoint, job.get("uid"), retry, interval)
 
 
 def get_pending_deploy(
@@ -85,16 +117,16 @@ def get_pending_deploy(
     pending_change = list()
     for item in result:
         staged_config = dict()
+        staged_config["deploy_uid"] = item.get("changeLogInstance").get("objectReference").get("uid")
+        staged_config["device"] = item.get("changeLogInstance").get("name")
+        staged_config["diff"] = list()
         for event in item.get("changeLogInstance").get("events"):
-            staged_config["diff"] = event.get("details")
-            staged_config["diff"].pop("_class", None)
+            event.get("details").pop("_class")
+            staged_config["diff"].append(event.get("details"))
             staged_config["user"] = event.get("user")
             staged_config["date"] = event.get("eventDate")
             staged_config["action"] = event.get("action")
-            staged_config["change_log_entities"] = list()
-            for change_log_path in event.get("changeLogPath").get("enteries"):
-                staged_config["change_log_entities"].append(change_log_path.get("name"))
-            pending_change.append(staged_config)
+        pending_change.append(staged_config)
     return pending_change
 
 
@@ -112,7 +144,11 @@ def main():
 
     # Deploy pending configuration changes to devices
     if module.params.get("deploy"):
-        result["stdout"] = "deploy selected"
+        # Testing with static value....
+        deploy = deploy_changes(
+            module.params.get("deploy"), http_session, endpoint, "659599a7-7dcc-4a21-96b6-53065e82cdee"
+        )
+        result["stdout"] = deploy
 
     # Get pending changes for devices
     if module.params.get("pending"):
