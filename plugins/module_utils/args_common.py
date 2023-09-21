@@ -121,13 +121,16 @@ DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
     "deploy": {
         "type": "dict",
         "options": {
-            "device_type": {"default": "all", "choices": ["all", "asa", "ios"]},
+            "device_type": {"default": "all", "choices": ["all", "asa"]},
+            "timeout": {"default": 20, "required": False, "type": "int"},
+            "interval": {"default": 2, "required": False, "type": "int"},
         },
     },
     "pending": {
         "type": "dict",
         "options": {
-            "device_type": {"default": "all", "choices": ["all", "asa", "ios"]},
+            "device_type": {"default": "all", "choices": ["all", "asa"]},
+            "device_name": {"required": False, "type": "str"},
         },
     },
 }

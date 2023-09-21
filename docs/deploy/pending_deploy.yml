@@ -2,16 +2,46 @@
 - name: Get pending device changes
   hosts: localhost
   tasks:
-    - name: Get the pending deploy for devices in this tenant
+    - name: Get the pending deploy for all devices in this tenant
       cisco.cdo.deploy:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         pending:
-          device_type: "all"
+          device_type: all
       register: pending_deploy
       failed_when: (pending_deploy.stderr is defined) and (pending_deploy.stderr | length > 0)
 
-    - name: Print All Results for all devices, all fields
+    - name: Print All Results for all devices
+      ansible.builtin.debug:
+        msg:
+          "{{ pending_deploy }}"
+
+    - name: Get the pending deploy for a specific device in this tenant
+      cisco.cdo.deploy:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "us"
+        pending:
+          device_type: all
+          device_name: "austin"
+      register: pending_deploy
+      failed_when: (pending_deploy.stderr is defined) and (pending_deploy.stderr | length > 0)
+
+    - name: Print All Results for this specific devices
+      ansible.builtin.debug:
+        msg:
+          "{{ pending_deploy }}"
+
+    - name: Get the pending deploy for another specific device in this tenant
+      cisco.cdo.deploy:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "us"
+        pending:
+          device_type: all
+          device_name: "Amarillo"
+      register: pending_deploy
+      failed_when: (pending_deploy.stderr is defined) and (pending_deploy.stderr | length > 0)
+
+    - name: Print All Results for this specific devices
       ansible.builtin.debug:
         msg:
           "{{ pending_deploy }}"

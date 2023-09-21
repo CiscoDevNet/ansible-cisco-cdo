@@ -92,10 +92,7 @@ def poll_deploy_job(http_session: requests.session, endpoint: str, job_uid: str,
         retry -= 1
 
 
-def deploy_changes(
-    module_params: dict, http_session: requests.session, endpoint: str, config_uid: str, retry=10, interval=2
-):
-    # TODO: Move retry and interval to module_params playbook
+def deploy_changes(module_params: dict, http_session: requests.session, endpoint: str, config_uid: str):
     """Given the config uid, deploy the pending config changes to the device"""
     payload = {
         "action": "WRITE",
@@ -106,7 +103,9 @@ def deploy_changes(
         "jobContext": None,
     }
     job = CDORequests.post(http_session, f"https://{endpoint}", path=f"{CDOAPI.JOBS.value}", data=payload)
-    return poll_deploy_job(http_session, endpoint, job.get("uid"), retry, interval)
+    return poll_deploy_job(
+        http_session, endpoint, job.get("uid"), module_params.get("timeout"), module_params.get("interval")
+    )
 
 
 def get_pending_deploy(
@@ -116,6 +115,11 @@ def get_pending_deploy(
     result = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.DEPLOY.value}", query=q)
     pending_change = list()
     for item in result:
+        # Optionally to only get the pending changes for a specific device
+        if module_params.get("device_name"):
+            if module_params.get("device_name").lower() != item.get("changeLogInstance").get("name").lower():
+                logger.debug(f'{module_params.get("device_name")} != {item.get("changeLogInstance").get("name")}')
+                continue
         staged_config = dict()
         staged_config["deploy_uid"] = item.get("changeLogInstance").get("objectReference").get("uid")
         staged_config["device"] = item.get("changeLogInstance").get("name")
@@ -152,6 +156,7 @@ def main():
 
     # Get pending changes for devices
     if module.params.get("pending"):
+        logger.debug(f'{module.params.get("pending")}')
         pending_deploy = get_pending_deploy(module.params.get("pending"), http_session, endpoint)
         result["stdout"] = pending_deploy
 

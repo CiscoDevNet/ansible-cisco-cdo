@@ -8,12 +8,12 @@
         region: "us"
         deploy:
           device_type: "all"
-          # timeout: 20
-          # interval: 2
+          timeout: 20
+          interval: 2
       register: deploy
       failed_when: (deploy.stderr is defined) and (deploy.stderr | length > 0)
 
-    - name: Print All Results for all devices, all fields
+    - name: Print All Results
       ansible.builtin.debug:
         msg:
           "{{ deploy }}"
