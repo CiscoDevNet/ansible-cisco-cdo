@@ -1,18 +1,18 @@
 ---
-- name: Add ASA CDO inventory
+- name: Add IOS Device to CDO inventory
   hosts: localhost
   tasks:
-    - name: Add ASA to CDO
-      cisco.cdo.inventory:
+    - name: Add IOS Device to CDO
+      cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: 'us'
         add:
           asa_ios:
             sdc: 'CDO_cisco_aahackne-SDC-1'
-            name: 'Austin'
-            ipv4: '172.30.4.101'
-            port: 8443
-            device_type: 'asa'
+            name: 'Austin-CSR-1000v'
+            ipv4: '172.30.4.250'
+            port: 22
+            device_type: 'ios'
             username: 'myuser'
             password: 'abc123'
             ignore_cert: true
@@ -22,4 +22,4 @@
     - name: Print results
       ansible.builtin.debug:
         msg:
-          "{{ added_device.stdout }}"
+          "{{ added_device.stdout['metadata'] }}"

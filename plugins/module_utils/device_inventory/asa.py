@@ -6,7 +6,7 @@
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.crypto import CDOCrypto
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
-from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.devices import ASAIOSModel
 from ansible_collections.cisco.cdo.plugins.module_utils.common import get_lar_list, get_specific_device, get_device
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
@@ -35,8 +35,8 @@ def connectivity_poll(module_params: dict, http_session: requests.session, endpo
             return True
         sleep(module_params["delay"])
     raise DeviceUnreachable(
-        f"Device {module_params['name']} was not reachable at "
-        f"{module_params['ipv4']}:{module_params['port']} by CDO"
+        f"Device {module_params['device_name']} was not reachable at "
+        f"{module_params['ipv4']}:{module_params['mgmt_port']} by CDO"
     )
 
 
@@ -45,11 +45,13 @@ def asa_credentails_polling(module_params: dict, http_session: requests.session,
     for i in range(module_params["retry"]):
         result = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.ASA_CONFIG.value}/{uid}")
         if result["state"] == "BAD_CREDENTIALS":
-            raise CredentialsFailure(f"Credentials provided for device {module_params['name']} were rejected.")
+            raise CredentialsFailure(f"Credentials provided for device {module_params['device_name']} were rejected.")
         elif result["state"] == "PENDING_GET_CONFIG_DONE" or result["state"] == "DONE" or result["state"] == "IDLE":
             return result
         sleep(module_params["delay"])
-    raise APIError(f"Credentials for device {module_params['name']} were sent but we never reached a known good state.")
+    raise APIError(
+        f"Credentials for device {module_params['device_name']} were sent but we never reached a known good state."
+    )
 
 
 def ios_credentials_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str) -> dict:
@@ -82,11 +84,11 @@ def add_asa_ios(module_params: dict, http_session: requests.session, endpoint: s
     asa_ios_device = ASAIOSModel(
         deviceType=module_params["device_type"].upper(),
         host=module_params["ipv4"],
-        ipv4=f"{module_params['ipv4']}:{module_params['port']}",
+        ipv4=f"{module_params['ipv4']}:{module_params['mgmt_port']}",
         larType="CDG" if lar["cdg"] else "SDC",
         larUid=lar["uid"],
         model=False,
-        name=module_params["name"],
+        name=module_params["device_name"],
     )
 
     if module_params["ignore_cert"]:
@@ -113,4 +115,3 @@ def add_asa_ios(module_params: dict, http_session: requests.session, endpoint: s
         path = f"{CDOAPI.DEVICES.value}/{device['uid']}"
         CDORequests.put(http_session, f"https://{endpoint}", path=path, data=creds_crypto)
         return ios_credentials_polling(module_params, http_session, endpoint, device["uid"])
-    # return f"{module_params['device_type'].upper()} {module_params['name']} added to CDO"

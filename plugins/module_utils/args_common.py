@@ -30,7 +30,7 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
             "ftd": {
                 "type": "dict",
                 "options": {
-                    "name": {"default": "ftd", "type": "str"},
+                    "device_name": {"default": "ftd", "type": "str"},
                     "is_virtual": {"default": False, "type": "bool"},
                     "onboard_method": {"default": "cli", "choices": ["cli", "ltp"], "type": "str"},
                     "access_control_policy": {"default": "Default Access Control Policy", "type": "str"},
@@ -51,9 +51,9 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
             "asa_ios": {
                 "type": "dict",
                 "options": {
-                    "name": {"default": "", "type": "str"},
+                    "device_name": {"default": "", "type": "str"},
                     "ipv4": {"default": "", "type": "str"},
-                    "port": {"default": 443, "type": "int"},
+                    "mgmt_port": {"default": 443, "type": "int"},
                     "sdc": {"default": "", "type": "str"},
                     "username": {"default": "", "type": "str"},
                     "password": {"default": "", "type": "str"},
@@ -68,7 +68,7 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
     "delete": {
         "type": "dict",
         "options": {
-            "name": {"required": True, "type": "str"},
+            "device_name": {"required": True, "type": "str"},
             "device_type": {"required": True, "choices": ["asa", "ios", "ftd"], "type": "str"},
         },
     },
@@ -85,7 +85,7 @@ NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
     "gather": {
         "type": "dict",
         "options": {
-            "name": {"type": "str"},
+            "device_name": {"type": "str"},
             "network": {"type": "str"},
             "tags": {"type": "list"},
             "limit": {"default": 50, "type": "int"},
@@ -95,17 +95,17 @@ NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
     "add": {
         "type": "dict",
         "options": {
-            "name": {"required": True, "type": "str"},
+            "device_name": {"required": True, "type": "str"},
             "network": {"required": True, "type": "str"},
             # Descriptions will be reworked in future CDO work fall of 2023 so omitting for meow
             # "description": {"required": True, "type": "str"},
         },
     },
-    "update": {"type": "dict", "options": {"name": {"default": "ftd", "type": "str"}}},
+    "update": {"type": "dict", "options": {"device_name": {"default": "ftd", "type": "str"}}},
     "delete": {
         "type": "dict",
         "options": {
-            "name": {"required": True, "type": "str"},
+            "device_name": {"required": True, "type": "str"},
             "device_type": {"required": True, "choices": ["asa", "ios", "ftd"], "type": "str"},
         },
     },
@@ -122,6 +122,7 @@ DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
         "type": "dict",
         "options": {
             "device_type": {"default": "all", "choices": ["all", "asa"]},
+            "device_name": {"required": True, "type": "str"},
             "timeout": {"default": 20, "required": False, "type": "int"},
             "interval": {"default": 2, "required": False, "type": "int"},
         },

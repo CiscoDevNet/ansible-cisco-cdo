@@ -1,0 +1,23 @@
+---
+# TODO: Move credentials to vault
+CDO_cisco_aahackne:
+  hosts:
+    Austin:
+      ipv4: 172.30.4.101
+      mgmt_port: 8443
+      sdc: CDO_cisco_aahackne-SDC-1
+      device_type: asa
+      username: "cisco"
+      password: "P@$$w0rd1!"
+      ignore_cert: true
+      region: us
+    Amarillo:
+      device_name: Amarillo
+      ipv4: 172.30.4.119
+      mgmt_port: 8443
+      sdc: CDO_cisco_aahackne-SDC-1
+      device_type: asa
+      username: "cisco"
+      password: "P@$$w0rd1!"
+      ignore_cert: true
+      region: us

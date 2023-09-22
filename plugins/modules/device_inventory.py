@@ -67,7 +67,7 @@ options:
                 type: str
                 default: ''
         asa_ios:
-            name:
+            device_name:
                 type: str
                 default: ''
             ipv4:
@@ -99,7 +99,7 @@ options:
                 type: int
                 default: 1
     delete:
-        name:
+        device_name:
             type: str
             required: True
         device_type:
@@ -119,7 +119,7 @@ EXAMPLES = r"""
 - name: Gather inventory from CDO
   hosts: localhost
   tasks:
-    - name: Get all network objects for this CDO tenant
+    - device_name: Get all network objects for this CDO tenant
       cisco.cdo.net_objects:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
@@ -131,7 +131,7 @@ EXAMPLES = r"""
   hosts: localhost
   tasks:
     - name: Add FTD to CDO and cdFMC
-      cisco.cdo.inventory:
+      cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: 'us'
         add:
@@ -154,13 +154,13 @@ EXAMPLES = r"""
   hosts: localhost
   tasks:
     - name: Add ASA to CDO
-      cisco.cdo.inventory:
+      cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: 'us'
         add:
           asa_ios:
             sdc: 'CDO_cisco_aahackne-SDC-1'
-            name: 'Austin'
+            device_name: 'Austin'
             ipv4: '172.30.4.101'
             port: 8443
             device_type: 'asa'
@@ -174,21 +174,21 @@ EXAMPLES = r"""
   hosts: localhost
   tasks:
     - name: Delete ASA from CDO inventory
-      cisco.cdo.inventory:
+      cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: 'us'
         delete:
-          name: 'ElPaso'
+          device_name: 'ElPaso'
           device_type: 'ftd'
 """
 
 # fmt: off
-from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORegions, CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory
-from ansible_collections.cisco.cdo.plugins.module_utils.inventory.ftd import add_ftd
-from ansible_collections.cisco.cdo.plugins.module_utils.inventory.asa import add_asa_ios
-from ansible_collections.cisco.cdo.plugins.module_utils.inventory.delete import delete_device
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import add_ftd
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import add_asa_ios
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import delete_device
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     DeviceNotFound,
     AddDeviceFailure,
@@ -207,7 +207,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     INVENTORY_REQUIRED_IF
 )
 from ansible.module_utils.basic import AnsibleModule
-import json
 # fmt: on
 
 

@@ -9,7 +9,7 @@ __metaclass__ = type
 
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
-from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, ObjectNotFound
 import urllib.parse
 import requests

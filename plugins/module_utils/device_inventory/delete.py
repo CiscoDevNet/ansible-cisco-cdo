@@ -9,7 +9,7 @@ __metaclass__ = type
 
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
-from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.common import working_set, get_cdfmc, get_specific_device, gather_inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches
 import requests
@@ -22,12 +22,12 @@ def find_device_for_deletion(module_params: dict, http_session: requests.session
         extra_filter = "AND (deviceType:FTDC)"
     else:
         extra_filter = f"AND (deviceType:{module_params['device_type'].upper()})"
-    module_params["filter"] = module_params["name"]
+    module_params["filter"] = module_params["device_name"]
     device_list = gather_inventory(module_params, http_session, endpoint, extra_filter=extra_filter)
     if len(device_list) < 1:
-        raise DeviceNotFound(f"Cannot delete {module_params['name']} - device by that name not found")
+        raise DeviceNotFound(f"Cannot delete {module_params['device_name']} - device by that name not found")
     elif len(device_list) > 1:
-        raise TooManyMatches(f"Cannot delete {module_params['name']} - more than 1 device matches name")
+        raise TooManyMatches(f"Cannot delete {module_params['device_name']} - more than 1 device matches name")
     else:
         return device_list[0]
 
