@@ -117,6 +117,7 @@ def get_pending_deploy(
     pending_change = list()
     for item in result:
         # Optionally to only get the pending changes for a specific device
+        # remove....we will use the inventory for for this....
         if module_params.get("device_name"):
             if module_params.get("device_name").lower() != item.get("changeLogInstance").get("name").lower():
                 logger.debug(f'{module_params.get("device_name")} != {item.get("changeLogInstance").get("name")}')

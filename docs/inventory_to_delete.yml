@@ -1,0 +1,19 @@
+---
+# TODO: Move credentials to vault. Here for demo purposes
+CDO_cisco_aahackne:
+  hosts:
+    Austin:
+      device_type: asa
+      region: us
+    Amarillo:
+      device_type: asa
+      region: us
+    Austin-CSR-1000v:
+      device_type: ios
+      region: us
+    ElPaso:
+      device_type: ftd
+      region: us
+    Galveston:
+      device_type: ftd
+      region: us

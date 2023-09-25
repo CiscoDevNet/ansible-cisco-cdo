@@ -27,9 +27,10 @@ This module is for interacting with the Cisco Defense Orcestrator (CDO) platform
 ## Included content
 <!--start collection content-->
 ### Modules
-| Name      | Description                                             |
-| --------- | ------------------------------------------------------- |
-| inventory | gather, add, or delete an FTD, ASA or IOS device to CDO |
+| Name             | Description                                             |
+| ---------------- | ------------------------------------------------------- |
+| device_inventory | gather, add, or delete an FTD, ASA or IOS device to CDO |
+| deploy           | Deploy staged ASA or IOS configurations to live devices |
 <!--end collection content-->
 
 ## Installing this collection

@@ -3,7 +3,7 @@
   hosts: localhost
   tasks:
     - name: Get the CDO inventory for this tenant
-      cisco.cdo.inventory:
+      cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         gather:

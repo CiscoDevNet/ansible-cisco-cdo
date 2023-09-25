@@ -89,7 +89,6 @@ def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
         raise e
 
     # TODO: Get these from the fmc collection when it supports cdFMC
-
     ftd_device = FTDModel(
         name=module_params["device_name"],
         associatedDeviceUid=cdfmc["uid"],
