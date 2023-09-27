@@ -76,13 +76,12 @@ def gather_inventory(
     module_params: dict,
     http_session: requests.session,
     endpoint: str,
-    extra_filter: str = None,
     limit: int = 50,
     offset: int = 0,
 ) -> str:
     """Get CDO inventory"""
     # TODO: Support paging
-    query = CDOQuery.get_inventory_query(module_params, extra_filter=extra_filter)
+    query = CDOQuery.get_inventory_query(module_params)
     q = urllib.parse.quote_plus(query["q"])
     r = urllib.parse.quote_plus(query["r"])
     path = f"{CDOAPI.DEVICES.value}?limit={limit}&offset={offset}&q={q}&resolve={r}"

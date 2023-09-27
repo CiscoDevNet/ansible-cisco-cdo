@@ -26,10 +26,10 @@ class CDOQuery:
     """Helpers for building complex inventory queries"""
 
     @staticmethod
-    def get_inventory_query(module_params: dict, extra_filter=None) -> dict:
+    def get_inventory_query(module_params: dict) -> dict:
         """Build the inventory query based on what the user is looking for"""
-        device_type = module_params["device_type"]
-        filter = module_params["filter"]
+        device_type = module_params.get("device_type")
+        filter = module_params.get("filter")
         r = (
             "[targets/devices.{name,customLinks,healthStatus,sseDeviceRegistrationToken,"
             "sseDeviceSerialNumberRegistration,sseEnabled,sseDeviceData,state,ignoreCertificate,deviceType,"
@@ -40,10 +40,8 @@ class CDOQuery:
         )
 
         # Build q query
-        if filter is not None and filter != "":
+        if filter:
             q = f"( (model:false) AND ( (name:{filter}) OR (ipv4:{filter}) OR (serial:{filter}))) AND (NOT deviceType:FMCE)"
-            if extra_filter is not None:
-                q = f"{q} {extra_filter}"
         elif device_type is None or device_type == "all":
             q = "(model:false)"
         elif device_type == "asa" or device_type == "ios":
@@ -95,17 +93,17 @@ class CDOQuery:
         return {"q": q}
 
     @staticmethod
-    def pending_changes_query(agg: bool = False, limit: int = 100, offset: int = 0) -> str:
-        # TODO: Be able to query by device type and/or by device name
+    def pending_changes_query(module_params: dict) -> str:
+        logger.debug(f"PARAMS: {module_params}")
         q = (
-            "((device.configState:NOT_SYNCED) AND (device.model:false)) AND ((NOT device.deviceType:FTDC) AND "
-            "(NOT device.deviceType:FMC_MANAGED_DEVICE))"
+            f"device.name:{module_params.get('device_name')} AND device.configState:NOT_SYNCED AND device.model:false"
+            " AND NOT device.deviceType:FTDC AND NOT device.deviceType:FMC_MANAGED_DEVICE"
         )
         r = "[targets/device-changelog.{changeLogInstance}]"
-        if agg:
+        if module_params.get("agg"):
             return {"agg": "count", "q": q}
         else:
-            return {"limit": limit, "offset": offset, "q": q, "resolve": r}
+            return {"limit": module_params.get("limit"), "offset": module_params.get("offset"), "q": q, "resolve": r}
 
     @staticmethod
     def pending_changes_diff_query(uid: str):

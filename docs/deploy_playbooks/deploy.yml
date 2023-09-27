@@ -7,7 +7,7 @@
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         deploy:
-          device_type: "all"
+          device_name: Amarillo
           timeout: 20
           interval: 2
       register: deploy

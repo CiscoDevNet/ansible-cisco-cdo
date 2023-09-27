@@ -130,8 +130,10 @@ DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
     "pending": {
         "type": "dict",
         "options": {
-            "device_type": {"default": "all", "choices": ["all", "asa"]},
+            "device_type": {"default": "all", "choices": ["all", "asa"], "type": "str"},
             "device_name": {"required": False, "type": "str"},
+            "limit": {"default": 50, "type": "int"},
+            "offset": {"default": 0, "type": "int"},
         },
     },
 }

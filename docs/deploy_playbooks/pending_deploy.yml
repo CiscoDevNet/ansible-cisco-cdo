@@ -8,7 +8,7 @@
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "{{ hostvars[inventory_hostname].region }}"
         pending:
-          device_type: hostvars[inventory_hostname].device_type
+          device_type: "{{ hostvars[inventory_hostname].device_type }}"
           device_name: "{{ inventory_hostname }}"
       register: pending_deploy
       failed_when: (pending_deploy.stderr is defined) and (pending_deploy.stderr | length > 0)
