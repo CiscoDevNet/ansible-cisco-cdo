@@ -12,7 +12,7 @@ import requests
 import base64
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
-from ansible_collections.cisco.cdo.plugins.module_utils.api_requests  import CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.devices import FTDModel, FTDMetaData
 from ansible_collections.cisco.cdo.plugins.module_utils.common import inventory_count, get_device, get_cdfmc
 from ansible_collections.cisco.cdo.plugins.module_utils.common import get_cdfmc_access_policy_list, get_specific_device

@@ -51,7 +51,7 @@ import requests
 import time
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
-from ansible_collections.cisco.cdo.plugins.module_utils.api_requests  import CDORegions, CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     DEPLOY_ARGUMENT_SPEC,
