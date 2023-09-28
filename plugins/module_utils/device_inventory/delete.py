@@ -20,7 +20,6 @@ def find_device_for_deletion(module_params: dict, http_session: requests.session
     """Find the object we intend to delete"""
     module_params["filter"] = module_params.get("device_name")
     device_list = gather_inventory(module_params, http_session, endpoint)
-
     if len(device_list) < 1:
         raise DeviceNotFound(f"Cannot delete {module_params.get('device_name')} - device by that name not found")
     elif len(device_list) > 1:

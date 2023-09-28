@@ -220,7 +220,8 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     InvalidCertificate,
     DeviceUnreachable,
     APIError,
-    CredentialsFailure
+    CredentialsFailure,
+    TooManyMatches
 )
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     INVENTORY_ARGUMENT_SPEC,
@@ -275,7 +276,7 @@ def main():
         try:
             result["stdout"] = delete_device(module.params.get("delete"), http_session, endpoint)
             result["changed"] = True
-        except DeviceNotFound as e:
+        except (DeviceNotFound, TooManyMatches) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)

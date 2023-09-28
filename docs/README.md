@@ -8,6 +8,11 @@ ansible-playbook -i inventory.yml -e 'ansible_python_interpreter=/Users/my_user/
 - `add_asa_ios.yml` is the playbook to run against the inventory
 - `-e 'ansible_python_interpreter=/Users/my_user/envs/CDOAnsible/bin/python3'` ensures that ansible uses the correct python3 libraries. You may not need this command, but if in doubt, you can always add it with the path to your python3 binary.
 
+### Limit playbook to a single host
+Often you may want to run a deploy or delete operation against 1 device and not the entire inventory. Rather than create specialized inventory files or playbooks, you can limit the playbook to a specific host with the following parameter:
+`--limit=DeviceName`
+e.g. `--limit=Austin`
+
 ## Notes
 - Use the sample Ansible inventory file `inventory.yml` for inventory definition examples of devices to add to CDO and general operations
 - Use the sample Ansible inventory file `inventory_to_delete.yml` for inventory definition examples of devices to delete from CDO

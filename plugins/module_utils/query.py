@@ -75,7 +75,7 @@ class CDOQuery:
             q_part = f'(elements:{network.replace("/", "?")})' if "/" in network else f"(elements:{network}?32)"
         if name is not None:
             q_part = f"{q_part} AND (name:{name})" if q_part else f"(name:{name})"
-        q = f"(NOT deviceType:FMCE) AND ({q_part})" if q_part else f"(NOT deviceType:FMCE)"
+        q = f"(NOT deviceType:FMCE) AND ({q_part})" if q_part else "(NOT deviceType:FMCE)"
         if tags is not None:
             tag_query = " AND ".join(f'tags.labels:"{t}"' for t in tags)
             q = f"{q} AND (({tag_query}))"
@@ -98,5 +98,4 @@ class CDOQuery:
         """Given a UID of an Object Reference, generate a query to return the diff details of the config"""
         q = f"(objectReference.uid:{uid})+AND+(changeLogState:ACTIVE)"
         r = "%5Bchangelogs%2Fquery.%7Buid,lastEventTimestamp,changeLogState,events,objectReference%7D%5D"
-        a = "limit=1&offset=0"
         return {"q": q, "resolve": r, "limit": 1, "offset": 0}

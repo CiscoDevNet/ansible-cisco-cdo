@@ -17,7 +17,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.devices import FTDModel,
 from ansible_collections.cisco.cdo.plugins.module_utils.common import inventory_count, get_device, get_cdfmc
 from ansible_collections.cisco.cdo.plugins.module_utils.common import get_cdfmc_access_policy_list, get_specific_device
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, AddDeviceFailure, DuplicateObject, ObjectNotFound
-from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 
 
 # fmt: on
