@@ -1,13 +1,14 @@
 ---
 - name: Deploy pending device changes
-  hosts: localhost
+  hosts: all
+  connection: local
   tasks:
     - name: Deploy pending device changes
       cisco.cdo.deploy:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
         deploy:
-          device_name: Amarillo
+          device_name: "{{ inventory_hostname }}"
           timeout: 20
           interval: 2
       register: deploy

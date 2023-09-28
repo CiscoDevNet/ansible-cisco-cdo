@@ -93,15 +93,15 @@ class CDOQuery:
         return {"q": q}
 
     @staticmethod
-    def pending_changes_query(module_params: dict) -> str:
+    def pending_changes_query(module_params: dict, agg: bool = False) -> str:
         logger.debug(f"PARAMS: {module_params}")
         q = (
             f"device.name:{module_params.get('device_name')} AND device.configState:NOT_SYNCED AND device.model:false"
             " AND NOT device.deviceType:FTDC AND NOT device.deviceType:FMC_MANAGED_DEVICE"
         )
         r = "[targets/device-changelog.{changeLogInstance}]"
-        if module_params.get("agg"):
-            return {"agg": "count", "q": q}
+        if agg:
+            return {"agg": "count", "q": q, "resolve": r}
         else:
             return {"limit": module_params.get("limit"), "offset": module_params.get("offset"), "q": q, "resolve": r}
 

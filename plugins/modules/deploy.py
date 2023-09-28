@@ -95,14 +95,25 @@ def poll_deploy_job(http_session: requests.session, endpoint: str, job_uid: str,
 def deploy_changes(module_params: dict, http_session: requests.session, endpoint: str):
     """Given the device name, deploy the pending config changes to the device if there are any"""
 
-    # TODO: Check to see if there are any pending changes before deploying unnecessarily
+    # Check to see if there are any pending changes before deploying unnecessarily
+    q = CDOQuery.pending_changes_query(module_params, agg=True)
+    count = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.DEPLOY.value}", query=q).get(
+        "aggregationQueryResult"
+    )
+    if not count:
+        logger.debug(f"No changes pending...skipping deploy")
+        return
+
+    # collect the pending changes before deployment
+    pending_config = get_pending_deploy(module_params, http_session, endpoint)
+
+    # Deploy the pending config
     module_params["filter"] = module_params.get("device_name")
     device = gather_inventory(module_params, http_session, endpoint)
     if len(device) == 0:
         raise (DeviceNotFound(f"Could not find device {module_params.get('device_name')}"))
     elif len(device) == 0:
         raise (TooManyMatches(f"{len(device)} matched - {module_params.get('device_name')} not a unique device name"))
-
     payload = {
         "action": "WRITE",
         "overallProgress": "PENDING",
@@ -111,19 +122,24 @@ def deploy_changes(module_params: dict, http_session: requests.session, endpoint
         "objRefs": [{"uid": device[0].get("uid"), "namespace": "targets", "type": "devices"}],
         "jobContext": None,
     }
+
+    # Submit the job then return the completed job details after polling for deploy completion
     job = CDORequests.post(http_session, f"https://{endpoint}", path=f"{CDOAPI.JOBS.value}", data=payload)
-    return poll_deploy_job(
-        http_session, endpoint, job.get("uid"), module_params.get("timeout"), module_params.get("interval")
-    )
+
+    return {
+        "deploy_job": poll_deploy_job(
+            http_session, endpoint, job.get("uid"), module_params.get("timeout"), module_params.get("interval")
+        ),
+        "changes_deployed": pending_config,
+    }
 
 
 def get_pending_deploy(module_params: dict, http_session: requests.session, endpoint: str) -> str:
     """Given a device name, return the config staged in CDO to be deployed, if any"""
+    pending_change = list()
     q = CDOQuery.pending_changes_query(module_params)
     result = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.DEPLOY.value}", query=q)
-    pending_change = list()
     for item in result:
-        logger.debug(f"change payload {item}")
         staged_config = dict()
         staged_config["device_uid"] = item.get("changeLogInstance").get("objectReference").get("uid")
         staged_config["device"] = item.get("changeLogInstance").get("name")
@@ -157,7 +173,8 @@ def main():
         try:
             deploy = deploy_changes(module.params.get("deploy"), http_session, endpoint)
             result["stdout"] = deploy
-            result["changed"] = True
+            if result["stdout"]:
+                result["changed"] = True
         except (DeviceNotFound, TooManyMatches) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
