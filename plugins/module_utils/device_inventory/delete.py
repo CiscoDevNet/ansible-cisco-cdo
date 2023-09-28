@@ -16,15 +16,11 @@ import requests
 # fmt: on
 
 
-# TODO: replace extra filter....
 def find_device_for_deletion(module_params: dict, http_session: requests.session, endpoint: str):
     """Find the object we intend to delete"""
-    if module_params.get("device_type").upper() == "FTD":
-        extra_filter = "AND (deviceType:FTDC)"
-    else:
-        extra_filter = f"AND (deviceType:{module_params.get('device_type').upper()})"
-    module_params["filter"] = module_params.get(["device_name"])
-    device_list = gather_inventory(module_params, http_session, endpoint, extra_filter=extra_filter)
+    module_params["filter"] = module_params.get("device_name")
+    device_list = gather_inventory(module_params, http_session, endpoint)
+
     if len(device_list) < 1:
         raise DeviceNotFound(f"Cannot delete {module_params.get('device_name')} - device by that name not found")
     elif len(device_list) > 1:

@@ -1,6 +1,7 @@
 ---
-- name: Get device inventory details from CDO irrespective of the Ansible inventory
-  hosts: localhost
+- name: Get device inventory details from CDO based on the devices in Ansible inventory
+  hosts: all
+  connection: local
   tasks:
     - name: Get the CDO inventory for this tenant
       cisco.cdo.device_inventory:
@@ -8,16 +9,11 @@
         region: "us"
         gather:
           device_type: "all"
+          filter: "{{ inventory_hostname }}"
       register: inventory
       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
 
-    - name: Print All Results for all devices, all fields
-      ansible.builtin.debug:
-        msg:
-          "{{ inventory.stdout }}"
-
-    - name: Filter Results for desired data using json query
-      # Requires python3 package jmespath
+    - name: Filter Results for desired data using json query (python3 jmesquery module required)
       ansible.builtin.debug:
         msg:
           "{{ inventory.stdout | community.general.json_query(jmesquery) }}"

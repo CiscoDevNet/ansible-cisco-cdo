@@ -8,17 +8,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-# fmt: off
-# Remove for publishing....
-import logging
-logger = logging.getLogger('deploy_module')
-logging.basicConfig()
-fh = logging.FileHandler('/tmp/deploy.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug(f"Starting module load...")
-# fmt: on
 
 DOCUMENTATION = r"""
 ---
@@ -85,9 +74,7 @@ def poll_deploy_job(http_session: requests.session, endpoint: str, job_uid: str,
         job_status = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.JOBS.value}/{job_uid}")
         state_uid = job_status.get("objRefs")[0].get("uid")
         if job_status.get("stateMachinesProgress").get(state_uid).get("progressStatus") == "DONE":
-            logger.debug(f'Job Status: {job_status.get("stateMachinesProgress").get(state_uid).get("progressStatus")}')
             return job_status
-        logger.debug(f'Job Status: {job_status.get("stateMachinesProgress").get(state_uid).get("progressStatus")}')
         sleep(interval)
         retry -= 1
 
@@ -101,7 +88,6 @@ def deploy_changes(module_params: dict, http_session: requests.session, endpoint
         "aggregationQueryResult"
     )
     if not count:
-        logger.debug(f"No changes pending...skipping deploy")
         return
 
     # collect the pending changes before deployment

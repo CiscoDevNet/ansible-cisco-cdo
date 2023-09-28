@@ -1,5 +1,4 @@
 ---
-# TODO: Move credentials to vault. Here for demo purposes
 CDO_cisco_aahackne:
   hosts:
     Austin:

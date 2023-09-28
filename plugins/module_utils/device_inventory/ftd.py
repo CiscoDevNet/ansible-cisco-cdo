@@ -43,7 +43,6 @@ def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: s
         http_session, endpoint, filter=f"serial:{module_params.get('serial')}"
     ) and not inventory_count(http_session, endpoint, filter=f"name:{module_params.get('serial')}"):
         ftd_device.larType = "CDG"
-        # TODO: Change to actual inventory name
         ftd_device.name = module_params.get("device_name")
         ftd_device.serial = module_params.get("serial")
         ftd_device.sseDeviceSerialNumberRegistration = dict(
@@ -57,15 +56,14 @@ def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: s
         new_ftd_device = CDORequests.post(
             http_session, f"https://{endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device.asdict()
         )
-        ftd_specific_device = get_specific_device(http_session, endpoint, new_ftd_device["uid"])  # required polling?
-        new_ftd_device = get_device(http_session, endpoint, new_ftd_device["uid"])  # refresh device
+        ftd_specific_device = get_specific_device(http_session, endpoint, new_ftd_device["uid"])
+        new_ftd_device = get_device(http_session, endpoint, new_ftd_device["uid"])
         CDORequests.put(
             http_session,
             f"https://{endpoint}",
             path=f"{CDOAPI.FTDS.value}/{ftd_specific_device['uid']}",
             data={"queueTriggerState": "SSE_CLAIM_DEVICE"},
         )  # Trigger device claiming
-        # return ftd_device
         return new_ftd_device
 
     else:

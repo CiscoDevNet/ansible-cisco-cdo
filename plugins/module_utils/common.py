@@ -14,18 +14,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotF
 import urllib.parse
 import requests
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('net_obj')
-fh = logging.FileHandler('/tmp/common.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Logger started......")
-# fmt: on
-
 
 def get_lar_list(module_params: dict, http_session: requests.session, endpoint: str):
     """Return a list of lars (SDC/CDG from CDO)"""

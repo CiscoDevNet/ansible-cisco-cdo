@@ -12,18 +12,6 @@ from enum import Enum
 from functools import wraps
 from .errors import DuplicateObject, APIError, DeviceNotFound
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('requests')
-fh = logging.FileHandler('/tmp/requests.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Query Logger started......")
-# fmt: on
-
 
 class CDORegions(Enum):
     """CDO API Endpoints by Region"""
@@ -81,20 +69,15 @@ class CDORequests:
     @CDOAPIWrapper()
     @staticmethod
     def get(http_session: requests.Session, url: str, path: str = None, query: dict = None) -> str:
-        logger.debug(f"GET ENTER: {url} {path}")
-
         """Given the CDO endpoint, path, and query, return the json payload from the API"""
         # TODO: convert dictionary of query to encoded string with safe values..
         # params = urllib.parse.quote(query.encode('utf-8'), safe='()/')
         uri = url if path is None else f"{url}/{path}"
-        logger.debug(f"QUERY: {query}")
-
         result = http_session.get(
             url=uri,
             headers=http_session.headers,
             params=query,
         )
-        logger.debug(f"result: {result.url}")
         result.raise_for_status()
         if result.text:
             return result.json()

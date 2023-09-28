@@ -9,18 +9,6 @@ __metaclass__ = type
 
 import urllib.parse
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('query')
-fh = logging.FileHandler('/tmp/query.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Query Logger started......")
-# fmt: on
-
 
 class CDOQuery:
     """Helpers for building complex inventory queries"""
@@ -40,18 +28,19 @@ class CDOQuery:
         )
 
         # Build q query
-        if filter:
-            q = f"( (model:false) AND ( (name:{filter}) OR (ipv4:{filter}) OR (serial:{filter}))) AND (NOT deviceType:FMCE)"
-        elif device_type is None or device_type == "all":
-            q = "(model:false)"
+        if device_type is None or device_type == "all":
+            q = "((model:false))"
         elif device_type == "asa" or device_type == "ios":
             q = f"((model:false) AND (deviceType:{device_type.upper()})) AND (NOT deviceType:FMCE)"
         elif device_type == "ftd":
             q = (
-                "((model:false) AND ((deviceType:FTD) OR (deviceType:FMC_MANAGED_DEVICE) OR (deviceType:FTDC))) AND "
+                "((model:false) AND ((deviceType:FMC_MANAGED_DEVICE) OR (deviceType:FTDC))) AND "
                 "(NOT deviceType:FMCE)"
             )
-
+        if filter:
+            q = q.replace(
+                "(model:false)", f"(model:false) AND ((name:{filter}) OR (ipv4:{filter}) OR (serial:{filter}))"
+            )
         # TODO: add meraki and other types...
         # Build r query
         # if device_type == None or device_type == "meraki" or device_type == "all":
@@ -94,7 +83,6 @@ class CDOQuery:
 
     @staticmethod
     def pending_changes_query(module_params: dict, agg: bool = False) -> str:
-        logger.debug(f"PARAMS: {module_params}")
         q = (
             f"device.name:{module_params.get('device_name')} AND device.configState:NOT_SYNCED AND device.model:false"
             " AND NOT device.deviceType:FTDC AND NOT device.deviceType:FMC_MANAGED_DEVICE"
