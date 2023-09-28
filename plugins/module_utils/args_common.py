@@ -30,13 +30,14 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
             "ftd": {
                 "type": "dict",
                 "options": {
-                    "device_name": {"default": "ftd", "type": "str"},
-                    "is_virtual": {"default": False, "type": "bool"},
+                    "device_name": {"required": True, "type": "str"},
                     "onboard_method": {"default": "cli", "choices": ["cli", "ltp"], "type": "str"},
                     "access_control_policy": {"default": "Default Access Control Policy", "type": "str"},
+                    "is_virtual": {"default": False, "type": "bool"},
                     "license": {
                         "type": "list",
                         "choices": ["BASE", "THREAT", "URLFilter", "MALWARE", "CARRIER", "PLUS", "APEX", "VPNOnly"],
+                        "default": ["BASE"],
                     },
                     "performance_tier": {
                         "choices": ["FTDv", "FTDv5", "FTDv10", "FTDv20", "FTDv30", "FTDv50", "FTDv100"],
@@ -45,18 +46,18 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
                     "retry": {"default": 10, "type": "int"},
                     "delay": {"default": 1, "type": "int"},
                     "serial": {"type": "str"},
-                    "password": {"default": "", "type": "str"},
+                    "password": {"type": "str"},
                 },
             },
             "asa_ios": {
                 "type": "dict",
                 "options": {
-                    "device_name": {"default": "", "type": "str"},
-                    "ipv4": {"default": "", "type": "str"},
+                    "device_name": {"required": True, "type": "str"},
+                    "ipv4": {"type": "str"},
                     "mgmt_port": {"default": 443, "type": "int"},
-                    "sdc": {"default": "", "type": "str"},
-                    "username": {"default": "", "type": "str"},
-                    "password": {"default": "", "type": "str"},
+                    "sdc": {"type": "str"},
+                    "username": {"type": "str"},
+                    "password": {"type": "str"},
                     "ignore_cert": {"default": False, "type": "bool"},
                     "device_type": {"default": "asa", "choices": ["asa", "ios"], "type": "str"},
                     "retry": {"default": 10, "type": "int"},
@@ -75,7 +76,7 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
 }
 
 INVENTORY_REQUIRED_ONE_OF = ["gather", "add", "delete"]
-INVENTORY_MUTUALLY_EXCLUSIVE = ["gather", "add", "delete"]
+INVENTORY_MUTUALLY_EXCLUSIVE = []
 INVENTORY_REQUIRED_TOGETHER = []
 INVENTORY_REQUIRED_IF = []
 
@@ -123,15 +124,15 @@ DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
         "options": {
             "device_type": {"default": "all", "choices": ["all", "asa"]},
             "device_name": {"required": True, "type": "str"},
-            "timeout": {"default": 20, "required": False, "type": "int"},
-            "interval": {"default": 2, "required": False, "type": "int"},
+            "timeout": {"default": 20, "type": "int"},
+            "interval": {"default": 2, "type": "int"},
         },
     },
     "pending": {
         "type": "dict",
         "options": {
             "device_type": {"default": "all", "choices": ["all", "asa"], "type": "str"},
-            "device_name": {"required": False, "type": "str"},
+            "device_name": {"type": "str"},
             "limit": {"default": 50, "type": "int"},
             "offset": {"default": 0, "type": "int"},
         },

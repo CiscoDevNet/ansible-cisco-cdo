@@ -8,17 +8,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-# fmt: off
-# Remove for publishing....
-import logging
-logger = logging.getLogger('inventory_module')
-logging.basicConfig()
-fh = logging.FileHandler('/tmp/inventory.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-# fmt: on
-
 DOCUMENTATION = r"""
 ---
 module: inventory
@@ -39,6 +28,9 @@ options:
         default: us
     add:
         ftd:
+            device_name:
+                type: str
+                required: True
             onboard_method:
                 type: str
                 choices: [ltp, cli]
@@ -52,6 +44,7 @@ options:
             license:
                 type: list
                 choices: [BASE, THREAT, URLFilter, MALWARE, CARRIER, PLUS, APEX, VPNOnly]
+                default: [BASE]
             performance_tier:
                 type: str
                 choices: [FTDv, FTDv5, FTDv10, FTDv20, FTDv30, FTDv50, FTDv100]
@@ -65,32 +58,27 @@ options:
                 type: str
             password:
                 type: str
-                default: ''
         asa_ios:
             device_name:
                 type: str
-                default: ''
+                required: True
             ipv4:
                 type: str
-                default:''
             port:
                 type: int
                 default: 443
             sdc:
                 type: str
-                default: ''
             username:
                 type: str
-                default: ''
             password:
                 type: str
-                default: ''
             ignore_cert:
                 type: bool
                 default: False
             device_type:
                 type: str
-                choices: [asa ios]
+                choices: [asa, ios]
                 default: asa
             retry:
                 type: int
@@ -116,70 +104,104 @@ requirements:
 """
 
 EXAMPLES = r"""
-- name: Gather inventory from CDO
+---
+- name: Get device inventory details
   hosts: localhost
   tasks:
-    - device_name: Get all network objects for this CDO tenant
-      cisco.cdo.net_objects:
+    - name: Get the CDO inventory for this tenant
+      cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "us"
-        net_objects: {}
-      register: net_objs
-      failed_when: (net_objs.stderr is defined) and (net_objs.stderr | length > 0)
+        gather:
+          device_type: "all"
+      register: inventory
+      failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
 
-- name: Add FTD CDO inventory (Serial number onboarding)
-  hosts: localhost
+    - name: Print All Results for all devices, all fields
+      ansible.builtin.debug:
+        msg:
+          "{{ inventory.stdout }}"
+
+---
+- name: Add FTD CDO inventory via CLI or LTP
+  hosts: all
+  connection: local
   tasks:
-    - name: Add FTD to CDO and cdFMC
+    - name: Add FTD to CDO and cdFMC via CLI or LTP
+      when: hostvars[inventory_hostname].device_type == "ftd"
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: 'us'
+        region: "{{ hostvars[inventory_hostname].region }}"
         add:
           ftd:
-            onboard_method: 'ltp'
-            serial: 'JADXXXXXXXX'
-            access_control_policy: 'Default Access Control Policy'
-            is_virtual: true
-            performance_tier: FTDv10
-            license:
-              - BASE
-              - THREAT
-              - URLFilter
-              - MALWARE
-              - PLUS
+            device_name: "{{ inventory_hostname }}"
+            onboard_method: "{{ hostvars[inventory_hostname].onboard_method }}"
+            access_control_policy: "{{ hostvars[inventory_hostname].access_control_policy }}"
+            is_virtual: "{{ hostvars[inventory_hostname].is_virtual }}"
+            performance_tier: "{{ hostvars[inventory_hostname].performance_tier }}"
+            license: "{{ hostvars[inventory_hostname].license }}"
+            serial: "{{ hostvars[inventory_hostname].serial | default(omit) }}"
       register: added_device
       failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
 
-- name: Add ASA (or IOS) to CDO inventory
-  hosts: localhost
+    - name: Print CLI FTD results
+      when: added_device.stdout['metadata'] is defined and hostvars[inventory_hostname].device_type == "ftd"
+      ansible.builtin.debug:
+        msg:
+          "{{ added_device.stdout['metadata']['generatedCommand'] }}"
+
+    - name: Print LTP FTD results
+      when: added_device.stdout['metadata'] is not defined and hostvars[inventory_hostname].device_type == "ftd"
+      ansible.builtin.debug:
+        msg:
+          "{{ added_device.stdout }}"
+
+---
+- name: Add ansible inventory to CDO
+  hosts: all
+  connection: local
   tasks:
     - name: Add ASA to CDO
+      when:  hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: 'us'
+        region: "{{ hostvars[inventory_hostname].region }}"
         add:
           asa_ios:
-            sdc: 'CDO_cisco_aahackne-SDC-1'
-            device_name: 'Austin'
-            ipv4: '172.30.4.101'
-            port: 8443
-            device_type: 'asa'
-            username: 'myuser'
-            password: 'abc123'
-            ignore_cert: true
+            sdc: "{{ hostvars[inventory_hostname].sdc if hostvars[inventory_hostname].sdc is defined }}"
+            device_name: "{{ inventory_hostname }}"
+            ipv4: "{{ hostvars[inventory_hostname].ipv4 }}"
+            mgmt_port: "{{ hostvars[inventory_hostname].mgmt_port }}"
+            device_type: "{{ hostvars[inventory_hostname].device_type }}"
+            username: "{{ hostvars[inventory_hostname].username }}"
+            password: "{{ hostvars[inventory_hostname].password }}"
+            ignore_cert: "{{ hostvars[inventory_hostname].ignore_cert }}"
       register: added_device
       failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
 
-- name: Delete a device from CDO inventory
-  hosts: localhost
+    - name: Print results
+      ansible.builtin.debug:
+        msg: "{{ added_device }}"
+
+---
+- name: Delete devices from CDO inventory
+  hosts: all
+  connection: local
   tasks:
-    - name: Delete ASA from CDO inventory
+    - name: Delete devices from CDO inventory
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: 'us'
+        region: "{{ hostvars[inventory_hostname].region }}"
         delete:
-          device_name: 'ElPaso'
-          device_type: 'ftd'
+          device_name: "{{ inventory_hostname }}"
+          device_type:  "{{ hostvars[inventory_hostname].device_type }}"
+      register: deleted_device
+      failed_when: (deleted_device.stderr is defined) and (deleted_device.stderr | length > 0)
+
+    - name: Print results
+      ansible.builtin.debug:
+        msg:
+          "{{ deleted_device }}"
 """
 
 # fmt: off

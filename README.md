@@ -16,13 +16,9 @@ The needed python libraries are in requirements.txt
 ```
 pip3 install -r requirements.txt
 ```
-or
-```
-pip3 install pycryptodome requests jmespath
-```
 
 ### Cisco Defense Orcestrator API Key
-This module is for interacting with the Cisco Defense Orcestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which the user wishes to operate. It is STRONGLY recommneded that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
+This module is for interacting with the Cisco Defense Orcestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommneded that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
 
 ## Included content
 <!--start collection content-->
@@ -63,9 +59,10 @@ Release notes are available [here](https://github.com/CiscoDevNet/ansible-cisco-
 
 ## Roadmap
 Additional modules will be added in future releases. These include:
-- objects and object-groups
-- multi-tenant
-- policy
+- objects and object-groups operations
+- multi-tenant operations
+- policy operations
+- Log searching operations
 - others tbd
 <!-- Optional. Include the roadmap for this collection, and the proposed release/versioning strategy so users can anticipate the upgrade/update cycle. -->
 ## Licensing

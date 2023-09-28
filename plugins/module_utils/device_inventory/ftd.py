@@ -23,13 +23,13 @@ from ansible_collections.cisco.cdo.plugins.module_utils._version import __versio
 # fmt: on
 def new_ftd_polling(module_params: dict, http_session: requests.session, endpoint: str, uid: str):
     """Check that the new FTD specific device has been created before attempting move to the onboarding step"""
-    for i in range(module_params["retry"]):
+    for i in range(module_params.get("retry")):
         try:
             return get_specific_device(http_session, endpoint, uid)
         except DeviceNotFound:
-            sleep(module_params["delay"])
+            sleep(module_params.get("delay"))
             continue
-    raise AddDeviceFailure(f"Failed to add FTD {module_params['device_name']}")
+    raise AddDeviceFailure(f"Failed to add FTD {module_params.get('device_name')}")
 
 
 def update_ftd_device(http_session: requests.session, endpoint: str, uid: str, data: dict):
@@ -39,17 +39,18 @@ def update_ftd_device(http_session: requests.session, endpoint: str, uid: str, d
 
 def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: str, ftd_device: FTDModel, fmc_uid: str):
     """Onboard an FTD to cdFMC using LTP (serial number onboarding)"""
-    if not inventory_count(http_session, endpoint, filter=f"serial:{module_params['serial']}") and not inventory_count(
-        http_session, endpoint, filter=f"name:{module_params['serial']}"
-    ):
+    if not inventory_count(
+        http_session, endpoint, filter=f"serial:{module_params.get('serial')}"
+    ) and not inventory_count(http_session, endpoint, filter=f"name:{module_params.get('serial')}"):
         ftd_device.larType = "CDG"
-        ftd_device.name = module_params["serial"]
-        ftd_device.serial = module_params["serial"]
+        # TODO: Change to actual inventory name
+        ftd_device.name = module_params.get("device_name")
+        ftd_device.serial = module_params.get("serial")
         ftd_device.sseDeviceSerialNumberRegistration = dict(
             initialProvisionData=(
-                base64.b64encode(f'{{"nkey": "{module_params["password"]}"}}'.encode("ascii")).decode("ascii")
+                base64.b64encode(f'{{"nkey": "{module_params.get("password")}"}}'.encode("ascii")).decode("ascii")
             ),
-            sudiSerialNumber=module_params["serial"],
+            sudiSerialNumber=module_params.get("serial"),
         )
         ftd_device.sseEnabled = True
 
@@ -68,7 +69,7 @@ def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: s
         return new_ftd_device
 
     else:
-        raise DuplicateObject(f"Device with serial number {module_params['serial']} exists in tenant")
+        raise DuplicateObject(f"Device with serial number {module_params.get('serial')} exists in tenant")
 
 
 def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
@@ -81,7 +82,7 @@ def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
             endpoint,
             cdfmc["host"],
             cdfmc_specific_device["domainUid"],
-            access_list_name=module_params["access_control_policy"],
+            access_list_name=module_params.get("access_control_policy"),
         )
     except DeviceNotFound as e:
         raise e
@@ -90,18 +91,18 @@ def add_ftd(module_params: dict, http_session: requests.session, endpoint: str):
 
     # TODO: Get these from the fmc collection when it supports cdFMC
     ftd_device = FTDModel(
-        name=module_params["device_name"],
+        name=module_params.get("device_name"),
         associatedDeviceUid=cdfmc["uid"],
         metadata=FTDMetaData(
             accessPolicyName=access_policy["items"][0]["name"],
             accessPolicyUuid=access_policy["items"][0]["id"],
-            license_caps=",".join(module_params["license"]),
-            performanceTier=module_params["performance_tier"],
+            license_caps=",".join(module_params.get("license")),
+            performanceTier=module_params.get("performance_tier"),
         ),
     )
-    if module_params["onboard_method"].lower() == "ltp":
+    if module_params.get("onboard_method").lower() == "ltp":
         ftd_device = add_ftd_ltp(module_params, http_session, endpoint, ftd_device, cdfmc["uid"])
-        return f"Serial number {module_params['serial']} ready for LTP onboarding into CDO"
+        return f"Serial number {module_params.get('serial')} ready for LTP onboarding into CDO"
     else:
         new_device = CDORequests.post(
             http_session, f"https://{endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device.asdict()

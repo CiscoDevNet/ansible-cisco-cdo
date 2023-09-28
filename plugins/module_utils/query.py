@@ -61,7 +61,7 @@ class CDOQuery:
     @staticmethod
     def get_lar_query(module_params: dict) -> str | None:
         """return a query to retrieve the SDC details"""
-        filter = module_params["sdc"]
+        filter = module_params.get("sdc")
         if filter is not None:
             return f"name:{filter} OR ipv4:{filter}"
 
