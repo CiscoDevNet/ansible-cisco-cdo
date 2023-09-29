@@ -1,26 +1,18 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
+# Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
-from ansible_collections.cisco.cdo.plugins.module_utils.requests import CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, ObjectNotFound
 import urllib.parse
 import requests
-
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('net_obj')
-fh = logging.FileHandler('/tmp/common.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Logger started......")
-# fmt: on
 
 
 def get_lar_list(module_params: dict, http_session: requests.session, endpoint: str):
@@ -72,13 +64,12 @@ def gather_inventory(
     module_params: dict,
     http_session: requests.session,
     endpoint: str,
-    extra_filter: str = None,
     limit: int = 50,
     offset: int = 0,
 ) -> str:
     """Get CDO inventory"""
     # TODO: Support paging
-    query = CDOQuery.get_inventory_query(module_params, extra_filter=extra_filter)
+    query = CDOQuery.get_inventory_query(module_params)
     q = urllib.parse.quote_plus(query["q"])
     r = urllib.parse.quote_plus(query["r"])
     path = f"{CDOAPI.DEVICES.value}?limit={limit}&offset={offset}&q={q}&resolve={r}"

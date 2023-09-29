@@ -1,27 +1,59 @@
 ---
-- name: Get device inventory details
-  hosts: localhost
-  tasks:
-    - name: Get the CDO inventory for this tenant
-      cisco.cdo.inventory:
-        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: "us"
-        gather:
-            device_type: "all"
-      register: inventory
-      failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
-
-    - name: Print All Results for all devices, all fields
-      ansible.builtin.debug:
-        msg:
-          "{{ inventory.stdout }}"
-
-    - name: Filter Results for desired data using json query
-      # Requires python3 package jmespath
-      ansible.builtin.debug:
-        msg:
-          "{{ inventory.stdout | community.general.json_query(jmesquery) }}"
-      vars:
-        jmesquery: >-
-          [*].{name: name, serial:serial, chassisSerial:chassisSerial, softwareVersion: softwareVersion, type:type,
-          deviceType:deviceType, uid:uid, ipv4:ipv4, port:port, ignoreCertificate:ignoreCertificate}
+# TODO: Move credentials to vault. Here for demo purposes
+CDO_cisco_aahackne:
+  hosts:
+    Austin:
+      device_type: asa
+      ipv4: 172.30.4.101
+      mgmt_port: 8443
+      sdc: CDO_cisco_aahackne-SDC-1
+      username: cisco
+      password: P@$$w0rd1!
+      ignore_cert: true
+      region: us
+    Amarillo:
+      device_type: asa
+      ipv4: 172.30.4.119
+      mgmt_port: 8443
+      sdc: CDO_cisco_aahackne-SDC-1
+      username: cisco
+      password: P@$$w0rd1!
+      ignore_cert: true
+      region: us
+    Austin-CSR-1000v:
+      device_type: ios
+      ipv4: 172.30.4.101
+      mgmt_port: 22
+      sdc: CDO_cisco_aahackne-SDC-1
+      username: cisco
+      password: P@$$w0rd1!
+      ignore_cert: true
+      region: us
+    ElPaso:
+      device_type: ftd
+      onboard_method: cli
+      access_control_policy: Default Access Control Policy
+      is_virtual: true
+      performance_tier: FTDv10
+      region: us
+      license:
+        - BASE
+        - THREAT
+        - URLFilter
+        - MALWARE
+        - PLUS
+    Galveston:
+      device_type: ftd
+      onboard_method: ltp
+      serial: "JADXXXXXXXX"
+      password: "Sanfran210!"
+      access_control_policy: Default Access Control Policy
+      is_virtual: true
+      performance_tier: FTDv10
+      region: us
+      license:
+        - BASE
+        - THREAT
+        - URLFilter
+        - MALWARE
+        - PLUS

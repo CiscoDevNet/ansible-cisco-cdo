@@ -1,4 +1,8 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
+#
+# Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -6,19 +10,7 @@ __metaclass__ = type
 import requests
 from enum import Enum
 from functools import wraps
-from .errors import DuplicateObject, APIError, DeviceNotFound
-
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('requests')
-fh = logging.FileHandler('/tmp/requests.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Query Logger started......")
-# fmt: on
+from .errors import DuplicateObject, APIError, DeviceNotFound, CredentialsFailure
 
 
 class CDORegions(Enum):
@@ -42,7 +34,6 @@ class CDOAPIWrapper(object):
     (400, {'errorCode': 'abc123', 'errorMessage': 'error text', 'errorType': 'error type', 'furtherDetails': None})
     """
 
-    # TODO: catch more specific errors
     # Add handler for bad certificate
     def __call__(self, fn):
         @wraps(fn)
@@ -52,6 +43,8 @@ class CDOAPIWrapper(object):
             except requests.HTTPError as ex:
                 if ex.response.status_code == 404:
                     raise DeviceNotFound("404 Device Not Found")
+                elif ex.response.status_code == 401:
+                    raise CredentialsFailure("API Key was rejected by CDO API")
                 elif ex.response.status_code in range(400, 600):
                     if "Duplicate" in ex.response.text:
                         raise DuplicateObject(ex.response.text)
@@ -118,6 +111,7 @@ class CDORequests:
 
     @CDOAPIWrapper()
     @staticmethod
-    def delete(http_session: requests.Session, url: str, path: str = None) -> None:
+    def delete(http_session: requests.Session, url: str, path: str = None) -> int:
         result = http_session.delete(url=f"{url}/{path}", headers=http_session.headers)
         result.raise_for_status()
+        return result.status_code
