@@ -61,7 +61,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
 )
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory
-from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches, APIError,CredentialsFailure
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches, APIError, CredentialsFailure
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
