@@ -61,7 +61,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
 )
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory
-from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches, APIError,CredentialsFailure
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
@@ -161,13 +161,16 @@ def main():
             result["stdout"] = deploy
             if result["stdout"]:
                 result["changed"] = True
-        except (DeviceNotFound, TooManyMatches) as e:
+        except (DeviceNotFound, TooManyMatches, APIError, CredentialsFailure) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     # Get pending changes for devices
     if module.params.get("pending"):
-        pending_deploy = get_pending_deploy(module.params.get("pending"), http_session, endpoint)
-        result["stdout"] = pending_deploy
+        try:
+            pending_deploy = get_pending_deploy(module.params.get("pending"), http_session, endpoint)
+            result["stdout"] = pending_deploy
+        except (DeviceNotFound, APIError, CredentialsFailure) as e:
+            result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)
 

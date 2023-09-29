@@ -24,3 +24,7 @@ v1.1.0
 - New module: Deploy - to view and deploy staged ASA changes
 - See new sample playbooks and sample inventory
 - Updated the sample playbooks in /docs
+
+v1.1.0
+======
+- Added error handling for an invalid API key to pass back to a playbbook

@@ -10,7 +10,7 @@ __metaclass__ = type
 import requests
 from enum import Enum
 from functools import wraps
-from .errors import DuplicateObject, APIError, DeviceNotFound
+from .errors import DuplicateObject, APIError, DeviceNotFound, CredentialsFailure
 
 
 class CDORegions(Enum):
@@ -34,7 +34,6 @@ class CDOAPIWrapper(object):
     (400, {'errorCode': 'abc123', 'errorMessage': 'error text', 'errorType': 'error type', 'furtherDetails': None})
     """
 
-    # TODO: catch more specific errors
     # Add handler for bad certificate
     def __call__(self, fn):
         @wraps(fn)
@@ -44,6 +43,8 @@ class CDOAPIWrapper(object):
             except requests.HTTPError as ex:
                 if ex.response.status_code == 404:
                     raise DeviceNotFound("404 Device Not Found")
+                elif ex.response.status_code == 401:
+                    raise CredentialsFailure("API Key was rejected by CDO API")
                 elif ex.response.status_code in range(400, 600):
                     if "Duplicate" in ex.response.text:
                         raise DuplicateObject(ex.response.text)

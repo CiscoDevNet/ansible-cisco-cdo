@@ -246,8 +246,11 @@ def main():
 
     # Get inventory from CDO and return a list of dict(s) - Devices and attributes
     if module.params.get("gather"):
-        result["stdout"] = gather_inventory(module.params.get("gather"), http_session, endpoint)
-        result["changed"] = False
+        try:
+            result["stdout"] = gather_inventory(module.params.get("gather"), http_session, endpoint)
+            result["changed"] = False
+        except (CredentialsFailure, APIError) as e:
+            result["stderr"] = f"ERROR: {e.message}"
 
     # Add devices to CDO inventory and return a json dictionary of the new device attributes
     if module.params.get("add"):
@@ -255,7 +258,7 @@ def main():
             try:
                 result["stdout"] = add_ftd(module.params.get("add", {}).get("ftd"), http_session, endpoint)
                 result["changed"] = True
-            except (AddDeviceFailure, DuplicateObject, DeviceNotFound, ObjectNotFound) as e:
+            except (AddDeviceFailure, DuplicateObject, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
                 result["stderr"] = f"ERROR: {e.message}"
         if module.params.get("add", {}).get("asa_ios"):
             try:
