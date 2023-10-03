@@ -131,7 +131,7 @@ EXAMPLES = r"""
       when: hostvars[inventory_hostname].device_type == "ftd"
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: "{{ hostvars[inventory_hostname].region }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         add:
           ftd:
             device_name: "{{ inventory_hostname }}"
@@ -165,7 +165,7 @@ EXAMPLES = r"""
       when:  hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: "{{ hostvars[inventory_hostname].region }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         add:
           asa_ios:
             sdc: "{{ hostvars[inventory_hostname].sdc if hostvars[inventory_hostname].sdc is defined }}"
@@ -191,7 +191,7 @@ EXAMPLES = r"""
     - name: Delete devices from CDO inventory
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: "{{ hostvars[inventory_hostname].region }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         delete:
           device_name: "{{ inventory_hostname }}"
           device_type:  "{{ hostvars[inventory_hostname].device_type }}"

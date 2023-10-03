@@ -6,7 +6,7 @@
     - name: Deploy pending device changes
       cisco.cdo.deploy:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-        region: "us"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         deploy:
           device_name: "{{ inventory_hostname }}"
           timeout: 20
