@@ -19,6 +19,11 @@ pip3 install -r requirements.txt
 
 ### Cisco Defense Orcestrator API Key
 This module is for interacting with the Cisco Defense Orcestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommneded that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
+In the sample playbooks under `/docs`, we are getting this API key from an environment variable. You will also need to supply the CDO regional instance where this API key was generated (us, eu, apj). In a bash shell, you will add something like this to your `.bashrc` file or other bash profile settings:
+```
+export CDO_API_KEY="xxxxx"
+export CDO_REGION="us"
+```
 
 ## Included content
 <!--start collection content-->
@@ -54,17 +59,17 @@ This collection follows the Ansible project's
 Please read and familiarize yourself with this document.
 
 ## Release notes
-<!--Add a link to a changelog.md file or an external docsite to cover this information. -->
 Release notes are available [here](https://github.com/CiscoDevNet/ansible-cisco-cdo/blob/main/CHANGELOG.rst).
 
 ## Roadmap
 Additional modules will be added in future releases. These include:
 - objects and object-groups operations
-- multi-tenant operations
 - policy operations
-- Log searching operations
+- multi-tenant operations
+- log searching operations
+- VPN operations
 - others tbd
-<!-- Optional. Include the roadmap for this collection, and the proposed release/versioning strategy so users can anticipate the upgrade/update cycle. -->
+
 ## Licensing
 Apache License Version 2.0 or later.
 See [LICENSE](https://www.apache.org/licenses/LICENSE-2.0) to see the full text.
