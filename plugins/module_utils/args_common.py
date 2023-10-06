@@ -142,3 +142,22 @@ DEPLOY_MUTUALLY_REQUIRED_ONE_OF = ["deploy", "pending"]
 DEPLOY_MUTUALLY_EXCLUSIVE = []
 DEPLOY_REQUIRED_TOGETHER = []
 DEPLOY_REQUIRED_IF = []
+
+#############################
+# Commands
+CMD_ARGUMENT_SPEC = COMMON_SPEC | {
+    "exec_command": {
+        "type": "dict",
+        "options": {
+            "device_type": {"default": "all", "choices": ["all", "asa", "ios"]},
+            "device_name": {"required": True, "type": "str"},
+            "cmd_list": {"required": True, "type": "list"},
+            "timeout": {"default": 20, "type": "int"},
+            "interval": {"default": 2, "type": "int"},
+        },
+    },
+}
+CMD_MUTUALLY_REQUIRED_ONE_OF = ["exec_command"]
+CMD_MUTUALLY_EXCLUSIVE = []
+CMD_REQUIRED_TOGETHER = []
+CMD_REQUIRED_IF = []
