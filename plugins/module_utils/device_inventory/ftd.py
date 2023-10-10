@@ -44,12 +44,19 @@ def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: s
         ftd_device.larType = "CDG"
         ftd_device.name = module_params.get("device_name")
         ftd_device.serial = module_params.get("serial")
-        ftd_device.sseDeviceSerialNumberRegistration = dict(
-            initialProvisionData=(
-                base64.b64encode(f'{{"nkey": "{module_params.get("password")}"}}'.encode("ascii")).decode("ascii")
-            ),
-            sudiSerialNumber=module_params.get("serial"),
-        )
+        if module_params.get("password"):  # Set the initial admin password
+            ftd_device.sseDeviceSerialNumberRegistration = dict(
+                initialProvisionData=(
+                    base64.b64encode(f'{{"nkey": "{module_params.get("password")}"}}'.encode("ascii")).decode("ascii")
+                ),
+                sudiSerialNumber=module_params.get("serial"),
+            )
+        else:  # initial password has already been set by the CLI
+            ftd_device.sseDeviceSerialNumberRegistration = dict(
+                initialProvisionData=base64.b64encode('{"nkey":""}'.encode("ascii")).decode("ascii"),
+                sudiSerialNumber=module_params.get("serial"),
+            )
+
         ftd_device.sseEnabled = True
 
         new_ftd_device = CDORequests.post(
