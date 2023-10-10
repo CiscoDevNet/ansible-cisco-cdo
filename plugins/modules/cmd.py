@@ -11,11 +11,11 @@ __metaclass__ = type
 
 DOCUMENTATION = r"""
 ---
-module: deploy
+module: cmd
 
-short_description: Check for changes and deploy to devices (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
+short_description: Run arbitrary commands on an ASA or IOS device on Cisco Defense Orchestrator (CDO).
 
-version_added: "1.0.3"
+version_added: "1.2.0"
 
 description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
 """
@@ -33,6 +33,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     CMD_MUTUALLY_EXCLUSIVE,
     CMD_REQUIRED_IF
 )
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import RetriesExceeded, CmdExecutionError
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory, get_specific_device
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches, APIError, CredentialsFailure
@@ -57,31 +58,32 @@ def generate_uuid():
     return f"{raw_uuid[0:8]}-{raw_uuid[8:12]}-{raw_uuid[12:16]}-{raw_uuid[16:20]}-{raw_uuid[20:]}"
 
 
-def poll_cmd_execution(module_params: dict, http_session: requests.session, endpoint: str, trasaction_id: str):
-    # TODO: Set number of times to poll
-    # TODO: Set pause between polls
-    logger.debug("Entered the poller...")
-    logger.debug(f"Transaction ID: {trasaction_id}")
+def poll_cmd_execution(module_params: dict, http_session: requests.session, endpoint: str, transaction_id: str):
+    poll_attempt = 0
     while True:
-        query = {
-            "q": f"transactionId:{trasaction_id}",
-            "resolve": (
-                "[cli/executions.{createdDate,command,jobUid,deviceUid,transactionId,deviceType,deviceName,"
-                "responseHash,executionState,errorMsg}]"
-            ),
-        }
+        if poll_attempt > module_params.get("retries"):
+            raise (
+                RetriesExceeded(
+                    "Timeout waiting for the command(s) to execute on the device. Perhaps try raising "
+                    "the retries or interval playbook values. "
+                )
+            )
         response = CDORequests.get(
-            http_session, f"https://{endpoint}", path=f"{CDOAPI.CLI_EXECUTIONS.value}", query=query
+            http_session,
+            f"https://{endpoint}",
+            path=f"{CDOAPI.CLI_EXECUTIONS.value}",
+            query=CDOQuery.cli_executions_query(transaction_id),
         )
-
-        logger.debug(f"Polling Response: {response}")
-        if response.get("executionState") == "DONE":
+        if response[0].get("executionState") == "DONE":
             logger.debug(f"Execution State is Done!!")
-            break
-        elif response.get("errorMsg"):
-            # TODO: Get example of an error and raise the error
-            # For example: If the device is not sync'd or is unreachable
-            break
+            logger.debug(f"Full response payload: {response[0]}")
+            return response[0].get("response")
+        elif response[0].get("errorMsg"):
+            raise CmdExecutionError(
+                response[0].get("errorMsg")
+            )  # For example: If the device is not sync'd or unreachable
+        sleep(module_params.get("interval"))
+        poll_attempt += 1
 
 
 def run_cmd(module_params: dict, http_session: requests.session, endpoint: str):
@@ -102,14 +104,13 @@ def run_cmd(module_params: dict, http_session: requests.session, endpoint: str):
         },
     }
 
-    result = CDORequests.put(
+    CDORequests.put(
         http_session,
         f"https://{endpoint}",
         path=f"{CDOAPI.ASA_CONFIG.value}/{specific_device.get('uid')}",
         data=payload,
     )
-    logger.debug(f"PUT Returns: {result}")
-    poll_cmd_execution(module_params, http_session, endpoint, trasaction_id=transaction_id)
+    return poll_cmd_execution(module_params, http_session, endpoint, transaction_id=transaction_id)
 
 
 def main():
@@ -126,10 +127,9 @@ def main():
 
     # Execute command(s) to specific device
     if module.params.get("exec_command"):
-        logger.debug(f"Params: {module.params.get('exec_command')}")
         try:
-            run_cmd(module.params.get("exec_command"), http_session, endpoint)
-        except (DeviceNotFound, TooManyMatches, APIError, CredentialsFailure) as e:
+            result["stdout"] = run_cmd(module.params.get("exec_command"), http_session, endpoint)
+        except (DeviceNotFound, TooManyMatches, APIError, CredentialsFailure, RetriesExceeded, CmdExecutionError) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)

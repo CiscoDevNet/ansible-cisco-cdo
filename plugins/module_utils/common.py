@@ -69,6 +69,7 @@ def gather_inventory(
 ) -> str:
     """Get CDO inventory"""
     # TODO: Support paging
+    # TODO: Move the urllib parse to the query lib
     query = CDOQuery.get_inventory_query(module_params)
     q = urllib.parse.quote_plus(query["q"])
     r = urllib.parse.quote_plus(query["r"])

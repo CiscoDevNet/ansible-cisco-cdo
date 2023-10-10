@@ -69,7 +69,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 
 def poll_deploy_job(http_session: requests.session, endpoint: str, job_uid: str, retry, interval):
-    """Poll the doplay job for a successful completion"""
+    """Poll the deploy job for a successful completion"""
     while retry > 0:
         job_status = CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.JOBS.value}/{job_uid}")
         state_uid = job_status.get("objRefs")[0].get("uid")

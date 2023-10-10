@@ -55,8 +55,8 @@ class CDOQuery:
             return f"name:{filter} OR ipv4:{filter}"
 
     @staticmethod
-    def get_cdfmc_query() -> str | None:
-        """Return a query string to retrieve cdFMC informaton"""
+    def get_cdfmc_query() -> dict:
+        """Return a query string to retrieve cdFMC information"""
         return {"q": "deviceType:FMCE"}
 
     @staticmethod
@@ -68,7 +68,7 @@ class CDOQuery:
             return f"limit={limit}&offset={offset}"
 
     @staticmethod
-    def net_obj_query(name: str = None, network: str = None, tags: list = None) -> str:
+    def net_obj_query(name: str = None, network: str = None, tags: list = None) -> dict:
         """Return a query string for network objects given a name, network, or a list of tags"""
         q_part, q = "", ""
         if network is not None:
@@ -82,7 +82,7 @@ class CDOQuery:
         return {"q": q}
 
     @staticmethod
-    def pending_changes_query(module_params: dict, agg: bool = False) -> str:
+    def pending_changes_query(module_params: dict, agg: bool = False) -> dict:
         q = (
             f"device.name:{module_params.get('device_name')} AND device.configState:NOT_SYNCED AND device.model:false"
             " AND NOT device.deviceType:FTDC AND NOT device.deviceType:FMC_MANAGED_DEVICE"
@@ -94,8 +94,26 @@ class CDOQuery:
             return {"limit": module_params.get("limit"), "offset": module_params.get("offset"), "q": q, "resolve": r}
 
     @staticmethod
-    def pending_changes_diff_query(uid: str):
+    def pending_changes_diff_query(uid: str) -> dict:
         """Given a UID of an Object Reference, generate a query to return the diff details of the config"""
         q = f"(objectReference.uid:{uid})+AND+(changeLogState:ACTIVE)"
         r = "%5Bchangelogs%2Fquery.%7Buid,lastEventTimestamp,changeLogState,events,objectReference%7D%5D"
         return {"q": q, "resolve": r, "limit": 1, "offset": 0}
+
+    @staticmethod
+    def cli_executions_query(transaction_id: str) -> dict:
+        payload = {
+            "q": f"transactionId:{transaction_id}",
+            "resolve": (
+                "[cli/executions.{createdDate,command,jobUid,deviceUid,transactionId,deviceType,deviceName,"
+                "responseHash,executionState,errorMsg}]"
+            ),
+        }
+        return CDOQuery.url_encode_query_data(payload, safe_chars=",-:")
+
+    @staticmethod
+    def url_encode_query_data(query_payload: dict, safe_chars: str = "") -> dict:
+        encoded_payload = dict()
+        for key, value in query_payload.items():
+            encoded_payload[key] = urllib.parse.quote_plus(value, safe=safe_chars)
+        return encoded_payload

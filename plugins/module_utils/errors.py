@@ -72,3 +72,15 @@ class InvalidCertificate(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
+
+
+class RetriesExceeded(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class CmdExecutionError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)

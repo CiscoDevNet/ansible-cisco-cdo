@@ -23,4 +23,4 @@ class CDOAPI(Enum):
     FMC_ACCESS_POLICY = "fmc/api/fmc_config/v1/domain/{domain_uid}/policy/accesspolicies"  # {domain_uid} when using
     DEPLOY = f"{SVCS}/targets/device-changelog"
     JOBS = f"{SVCS}/state-machines/jobs"
-    CLI_EXECUTIONS = "{SVCS}/cli/executions"
+    CLI_EXECUTIONS = f"{SVCS}/cli/executions"
