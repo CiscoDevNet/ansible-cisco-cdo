@@ -31,3 +31,8 @@ New Modules
 v1.1.1
 ======
 - Added error handling for an invalid API key to pass back to a playbbook
+
+v1.1.2
+======
+- Bugfix adding LTP device with no password caused an error in a CDO workflow
+- Updated LTP sample playbook to add password if it is in inventory else none
