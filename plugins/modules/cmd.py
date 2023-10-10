@@ -21,8 +21,8 @@ description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco D
 """
 
 # fmt: off
+import uuid
 import requests
-import time
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
@@ -34,7 +34,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     CMD_REQUIRED_IF
 )
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
-from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory, get_specific_device
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches, APIError, CredentialsFailure
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
@@ -52,9 +52,64 @@ logger.debug("Logger started......")
 # fmt: on
 
 
+def generate_uuid():
+    raw_uuid = uuid.uuid4().hex
+    return f"{raw_uuid[0:8]}-{raw_uuid[8:12]}-{raw_uuid[12:16]}-{raw_uuid[16:20]}-{raw_uuid[20:]}"
+
+
+def poll_cmd_execution(module_params: dict, http_session: requests.session, endpoint: str, trasaction_id: str):
+    # TODO: Set number of times to poll
+    # TODO: Set pause between polls
+    logger.debug("Entered the poller...")
+    logger.debug(f"Transaction ID: {trasaction_id}")
+    while True:
+        query = {
+            "q": f"transactionId:{trasaction_id}",
+            "resolve": (
+                "[cli/executions.{createdDate,command,jobUid,deviceUid,transactionId,deviceType,deviceName,"
+                "responseHash,executionState,errorMsg}]"
+            ),
+        }
+        response = CDORequests.get(
+            http_session, f"https://{endpoint}", path=f"{CDOAPI.CLI_EXECUTIONS.value}", query=query
+        )
+
+        logger.debug(f"Polling Response: {response}")
+        if response.get("executionState") == "DONE":
+            logger.debug(f"Execution State is Done!!")
+            break
+        elif response.get("errorMsg"):
+            # TODO: Get example of an error and raise the error
+            # For example: If the device is not sync'd or is unreachable
+            break
+
+
 def run_cmd(module_params: dict, http_session: requests.session, endpoint: str):
-    # TODO: Call the run API point and return output from CLI command...
-    pass
+    module_params["filter"] = module_params["device_name"]
+    device_details = gather_inventory(module_params, http_session, endpoint)
+    if not len(device_details):
+        return DeviceNotFound
+
+    specific_device = get_specific_device(http_session, endpoint, device_details[0].get("uid"))
+    commands = "\n".join(module_params.get("cmd_list"))
+    transaction_id = generate_uuid()
+    payload = {
+        "queueTriggerState": "INITIATE_CLI",
+        "stateMachineContext": {
+            "command": commands,
+            "transactionId": transaction_id,
+            "cliMacroUid": None,
+        },
+    }
+
+    result = CDORequests.put(
+        http_session,
+        f"https://{endpoint}",
+        path=f"{CDOAPI.ASA_CONFIG.value}/{specific_device.get('uid')}",
+        data=payload,
+    )
+    logger.debug(f"PUT Returns: {result}")
+    poll_cmd_execution(module_params, http_session, endpoint, trasaction_id=transaction_id)
 
 
 def main():
@@ -66,8 +121,6 @@ def main():
         required_if=CMD_REQUIRED_IF,
     )
 
-    logger.debug(f"Params: {module.params}")
-
     endpoint = CDORegions.get_endpoint(module.params.get("region"))
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
 
@@ -75,7 +128,7 @@ def main():
     if module.params.get("exec_command"):
         logger.debug(f"Params: {module.params.get('exec_command')}")
         try:
-            run_cmd(module.params.get("cmd"), http_session, endpoint)
+            run_cmd(module.params.get("exec_command"), http_session, endpoint)
         except (DeviceNotFound, TooManyMatches, APIError, CredentialsFailure) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
