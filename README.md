@@ -2,7 +2,7 @@
 
 # CISCO CDO Ansible Collection
 
-The Ansible Cisco CDO collection includes a variety of Ansible content to help automate the interaction with the Cisco Defense Orcestrator (CDO) platform and the devices managed by the CDO platform.
+The Ansible Cisco CDO collection includes a variety of Ansible content to help automate the interaction with the Cisco Defense Orchestrator (CDO) platform and the devices managed by the CDO platform.
 
 This is a work in progress and more modules and functionality will be added in subsequent releases.
 
@@ -17,8 +17,8 @@ The needed python libraries are in requirements.txt
 pip3 install -r requirements.txt
 ```
 
-### Cisco Defense Orcestrator API Key
-This module is for interacting with the Cisco Defense Orcestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommneded that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
+### Cisco Defense Orchestrator API Key
+This module is for interacting with the Cisco Defense Orchestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommended that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
 In the sample playbooks under `/docs`, we are getting this API key from an environment variable. You will also need to supply the CDO regional instance where this API key was generated (us, eu, apj). In a bash shell, you will add something like this to your `.bashrc` file or other bash profile settings:
 ```
 export CDO_API_KEY="xxxxx"
