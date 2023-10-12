@@ -156,8 +156,18 @@ CMD_ARGUMENT_SPEC = COMMON_SPEC | {
             "interval": {"default": 2, "type": "int"},
         },
     },
+    "load_config": {
+        "type": "dict",
+        "options": {
+            "device_type": {"default": "asa", "choices": ["all", "asa", "ios"]},
+            "device_name": {"required": True, "type": "str"},
+            "config": {"required": True, "type": "dict"},
+            "retries": {"default": 20, "type": "int"},
+            "interval": {"default": 2, "type": "int"},
+        },
+    },
 }
-CMD_MUTUALLY_REQUIRED_ONE_OF = ["exec_command"]
+CMD_MUTUALLY_REQUIRED_ONE_OF = ["exec_command", "load_config"]
 CMD_MUTUALLY_EXCLUSIVE = []
 CMD_REQUIRED_TOGETHER = []
 CMD_REQUIRED_IF = []

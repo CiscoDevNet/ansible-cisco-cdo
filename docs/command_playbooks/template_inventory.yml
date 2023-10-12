@@ -11,156 +11,215 @@ CDO_cisco_aahackne:
       mgmt_port: 8443
       sdc: CDO_cisco_aahackne-SDC-1
       username: cisco
-      password: P@$$w0rd1!
+      password: "Admin123!"
       ignore_cert: true
       config:
-        global:
-          - hostname Austin
-          - domain-name hacksbrain.pvt
-          - enable password SanFran123!
-          - prompt hostname priority state
-
-        interfaces:
-          GigabitEthernet0/0:
-            - nameif outside
-            - security-level 1
-            - ip address 172.16.211.outside 255.255.255.0 standby 172.16.211.102
-            - no shutdown
-          GigabitEthernet0/1:
-            - nameif inside
-            - security-level inside
-            - ip address 192.168.11.1 255.255.255.0 standby 192.168.11.2
-            - no shutdown
-          GigabitEthernet0/2:
-            - nameif dmz
-            - security-level 0
-            - ip address 192.168.22.1 255.255.255.0 standby 192.168.22.2
-            - no shutdown
-
-        routes:
-          static: route outside 0.0.0.0 0.0.0.0 172.16.211.1 1
-
-        dns:
-          server-groups:
-            - DNS server-group DefaultDNS
-            - name-server 208.67.222.222
-            - name-server 208.67.220.220
-            - domain-name hacksbrain.pvt
-          domain-lookup:
-            - dns domain-lookup outside
-            - dns domain-lookup management
-
-        license:
-          - license smart
-          - feature tier standard
-          - throughput level 1G
-          - license smart register idtoken xxxxxxx
-
+        # global:
+        #   - hostname Austin
+        #   - domain-name hacksbrain.pvt
+        #   - enable password Admin123!
+        #   - prompt hostname
+        #   # - crypto key generate rsa modulus 2048 noconfirm
+        #   - no names
+        #   - no boot system disk0:/asa9-16-2-7-smp-k8.bin
+        #   - boot system disk0:/asa9-16-2-7-smp-k8.bin
+        #   - same-security-traffic permit intra-interface
+        #
+        # users:
+        #   - username test_user password Admin123! privilege 15
+        #   - username test_user attributes
+        #   - ssh authentication publickey AAAAC3NzaC1lZDI1NTE5AAAAIPETez1LdYJUnWD7MidZhf90VxVLm0O0bQE2CzvwytoJ
+        #
+        # interfaces:
+        #   # Clear the interface config and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
+        #   - clear configure interface GigabitEthernet0/0
+        #   - int GigabitEthernet0/0
+        #   - nameif outside
+        #   - security-level 1
+        #   - ip address 172.16.211.101 255.255.255.0 standby 172.16.211.102
+        #   - no shutdown
+        #   #
+        #   # Clear the interface config and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
+        #   - clear configure interface GigabitEthernet0/1
+        #   - int GigabitEthernet0/1
+        #   - nameif inside
+        #   - security-level 100
+        #   - ip address 192.168.11.1 255.255.255.0 standby 192.168.11.2
+        #   - no shutdown
+        #   #
+        #   # Clear the interface config and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
+        #   - clear configure interface GigabitEthernet0/2
+        #   - int GigabitEthernet0/2
+        #   - nameif dmz
+        #   - security-level 50
+        #   - ip address 192.168.22.1 255.255.255.0 standby 192.168.22.2
+        #   - no shutdown
+        #   - clear configure interface GigabitEthernet0/3
+        #   - clear configure interface GigabitEthernet0/4
+        #   - clear configure interface GigabitEthernet0/5
+        #   - clear configure interface GigabitEthernet0/6
+        #   - clear configure interface GigabitEthernet0/7
+        #   - clear configure interface GigabitEthernet0/8
+        #
+        # static_routes:
+        #   - route outside 0.0.0.0 0.0.0.0 172.16.211.1 1
+        #
+        # dns-server-groups:
+        #   - DNS server-group DefaultDNS
+        #   - name-server 208.67.222.222
+        #   - name-server 208.67.220.220
+        #   - domain-name hacksbrain.pvt
+        #
+        # dns-domain-lookup:
+        #   - dns domain-lookup outside
+        #   - dns domain-lookup management
+        #
+        # license:
+        #   - license smart
+        #   - feature tier standard
+        #   - throughput level 1G
+        #   - license smart register idtoken xxxxxxx
+        #
+        # aaa:
+        #   - aaa authentication ssh console LOCAL
+        #   - aaa authorization exec LOCAL auto-enable
+        #   - aaa authorization http console LOCAL
+        #
+        # ssh:
+        #   - ssh scopy enable
+        #   - ssh timeout 60
+        #   - ssh 172.16.0.0 255.240.0.0 management
+        #
+        # logging:
+        #   - logging enable
+        #   - logging buffered warning
+        #   - logging buffer-size 32768
+        #   - logging trap warnings
+        #   - logging host management 172.30.4.111 17/10025
+        #   - logging permit-hostdown
+        #   - logging class config trap warnings
+        #
         objects:
           # Network Objects
-          - object network INSIDE-NET
-          - subnet 192.168.11.0 255.255.255.0
+          - "object network INSIDE-NET"
+          - " subnet 192.168.11.0 255.255.255.0"
           #
-          - object network DMZ-NET
-          - subnet 192.168.22.0 255.255.255.0
+          - "object network DMZ-NET"
+          - " subnet 192.168.22.0 255.255.255.0"
           #
-          - object network app-1
-          - host 192.168.22.101
+          - "object network app-1"
+          - " host 192.168.22.101"
           #
-          - object network app-2
-          - host 192.168.22.102
+          - "object network app-2"
+          - " host 192.168.22.102"
           #
-          - object network mongo-db-1
-          - host 192.168.11.101
+          - "object network mongo-db-1"
+          - " host 192.168.11.101"
           #
-          - object network mongo-db-2
-          - host 192.168.11.102
+          - "object network mongo-db-2"
+          - " host 192.168.11.102"
           #
           # Service Objects
-          - object service mongo-27017
-          - service tcp destination eq 27017
+          - "object service mongo-27017"
+          - "service tcp destination eq 27017"
           #
-          - object service mongo-27018
-          - service tcp destination eq 27018
+          - "object service mongo-27018"
+          - " service tcp destination eq 27018"
 
         object-groups:
           # Network object-groups
-          - object-group network LOCAL-NETS
-          - description Networks directly connected to this appliance
-          - network-object object INSIDE-NET
-          - network-object object DMZ-NET
+          - "object-group network LOCAL-NETS"
+          - " description Networks directly connected to this appliance"
+          - " network-object object INSIDE-NET"
+          - " network-object object DMZ-NET"
           #
-          - object-group network MONGO-DB-SRVRS
-          - description Mongo servers on INSIDE network
-          - network-object object mongo-db-1
-          - network-object object mongo-db-2
+          - "object-group network MONGO-DB-SRVRS"
+          - " description Mongo servers on INSIDE network"
+          - " network-object object mongo-db-1"
+          - " network-object object mongo-db-2"
           #
-          - object-group network WEB-APP-SRVRS
-          - description Web app servers on DMZ network
-          - network-object object app-1
-          - network-object object app-2
+          - "object-group network WEB-APP-SRVRS"
+          - " description Web app servers on DMZ network"
+          - " network-object object app-1"
+          - " network-object object app-2"
+          #
           #
           # Service object-groups
-          - object-group service ICMP-COMMON
-          - description Common useful ICMP services
-          - service-object icmp echo
-          - service-object icmp echo-reply
-          - service-object icmp unreachable
-          - service-object icmp source-quench
+          - "object-group service ICMP-COMMON"
+          - " description Common useful ICMP services"
+          - " service-object icmp echo"
+          - " service-object icmp echo-reply"
+          - " service-object icmp unreachable"
+          - " service-object icmp source-quench"
           #
-          - object-group service WEB-COMMON
-          - description Common required ports for happy web browsing users
-          - service-object tcp destination eq www
-          - service-object tcp destination eq https
-          - service-object udp destination eq ntp
-          - service-object udp destination eq nameserver
+          - "object-group service WEB-COMMON"
+          - " description Common required ports for happy web browsing users"
+          - " service-object tcp destination eq www"
+          - " service-object tcp destination eq https"
+          - " service-object udp destination eq ntp"
+          - " service-object udp destination eq nameserver"
           #
-          - object-group service mongo-db-ports
-          - description the default ports for mongodb
-          - service-object object mongo-27017
-          - service-object object mongo-27018
+          - "object-group service mongo-db-ports"
+          - " description the default ports for mongodb"
+          - " service-object object mongo-27017"
+          - " service-object object mongo-27018"
+        #
+        names:
+          - "name 172.30.4.111 cdo-sdc-sec"
+        #
+        ip-local-pool:
+          - "ip local pool pool4 192.168.2.100-192.168.2.199 mask 255.255.255.0"
 
         access-lists:
-          # Clear the access-list and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
-          #
-          ###################### OUTSIDE interface Access Policy ######################
-          - clear config access-list outside
-          # 'outside' interface inbound to servers
-          - access-list outside permit object-group ICMP-COMMON any4 any4 log warnings
-          #
-          #### ====> Explicit Deny All <==== ####
-          - access-list outside remark explicit deny all and log
-          - access-list outside deny ip any any log warnings
-          #
-          ###################### INSIDE interface Access Policy ######################
-          - clear config access-list inside
-          #
-          - access-list inside permit object-group ICMP-COMMON any4 any4 log warnings
-          #
-          - access-list inside remark *** Allow for happy web browsing users and log ***
-          - access-list inside permit object-group WEB-COMMON any4 any4 log warnings
-          #
-          #### ====> Explicit Deny All <==== ####
-          - access-list inside remark explicit deny all and log
-          - access-list inside deny ip any any log warnings
-          #
-          ###################### DMZ interface Access Policy ######################
-          - clear config access-list dmz
-          #
-          - access-list dmz object-group ICMP-COMMON any4 any4 log warnings
-          #
-          #### ====> DMZ to Inside Access Policy <==== ####
-          - access-list dmz remark *** Web app servers to mongo db servers in inside segment ***
-          - access-list dmz permit object-group mongo-db-ports object-group WEB-APP-SRVRS object-group MONGO-DB-SRVRS log warnings
-          #
-          - access-list dmz remark *** Explicit allow all and log ***
-          - access-list dmz permit object-group WEB-COMMON any4 any4 log warnings
-          #
-          #### ====> Explicit Deny All <==== ####
-          - access-list dmz remark explicit deny all and log
-          - access-list dmz deny ip any any log warnings
+          #  ###################### OUTSIDE interface Access Policy ######################
+          #  # Clear the access-list and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
+          # - "clear config access-list outside"
+          #  # 'outside' interface inbound to servers
+          - "access-list outside extended permit object-group ICMP-COMMON any4 any4 log warnings"
+          #  #
+          #  #### ====> Explicit Deny All <==== ####
+          - "access-list outside remark explicit deny all and log"
+          - "access-list outside extended deny ip any any log warnings"
+        #  #
+        #  #
+        #  ###################### INSIDE interface Access Policy ######################
+        #  # Clear the access-list and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
+        #  - clear config access-list inside
+        #  #
+        #  - access-list inside extended permit object-group ICMP-COMMON any4 any4 log warnings
+        #  #
+        #  - access-list inside remark *** Allow for happy web browsing users and log ***
+        #  - access-list inside extended permit object-group WEB-COMMON object INSIDE-NET any4 log warnings
+        #  #
+        #  #### ====> Explicit Deny All <==== ####
+        #  - access-list inside remark explicit deny all and log
+        #  - access-list inside extended deny ip any any log warnings
+        #  #
+        #  #
+        #  ###################### DMZ interface Access Policy ######################
+        #  # Clear the access-list and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
+        #  - clear config access-list dmz
+        #  #
+        #  - access-list dmz extended permit object-group ICMP-COMMON any4 any4 log warnings
+        #  #
+        #  #
+        #  #### ====> DMZ to Inside Access Policy <==== ####
+        #  - access-list dmz remark *** Web app servers to mongo db servers in inside segment ***
+        #  - access-list dmz extended permit object-group mongo-db-ports object-group WEB-APP-SRVRS object-group MONGO-DB-SRVRS log warnings
+        #  #
+        #  - access-list dmz remark *** Explicit allow all and log ***
+        #  - access-list dmz extended permit object-group WEB-COMMON object DMZ-NET any4
+        #  #
+        #  #### ====> Explicit Deny All <==== ####
+        #  - access-list dmz remark explicit deny all and log
+        #  - access-list dmz extended deny ip any any log warnings
 
-        access-groups:
-          - access-group outside in interface outside
-          - access-group inside in interface inside
-          - access-group dmz in interface dmz
+        #access-groups:
+        #  - access-group outside in interface outside
+        #  - access-group inside in interface inside
+        #  - access-group dmz in interface dmz
+
+        #nat:
+        #  - nat (inside,outside) source dynamic INSIDE-NET interface
+        #  - nat (dmz,outside) source dynamic DMZ-NET interface
+        #  - nat (inside,dmz) source static INSIDE-NET INSIDE-NET destination static DMZ-NET DMZ-NET no-proxy-arp
