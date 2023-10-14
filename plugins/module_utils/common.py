@@ -13,6 +13,19 @@ from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDOR
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, ObjectNotFound
 import urllib.parse
 import requests
+import uuid
+
+
+def is_device_in_sync(device_info: dict) -> bool:
+    "Check to see if the device is out of sync or if there was an OOB Change"
+    if device_info.get("configState") != "SYNCED" or device_info.get("oobDetectionState") == "OOB_CHANGE_DETECTED":
+        return False
+    return True
+
+
+def generate_uuid():
+    raw_uuid = uuid.uuid4().hex
+    return f"{raw_uuid[0:8]}-{raw_uuid[8:12]}-{raw_uuid[12:16]}-{raw_uuid[16:20]}-{raw_uuid[20:]}"
 
 
 def get_lar_list(module_params: dict, http_session: requests.session, endpoint: str):
@@ -32,13 +45,13 @@ def inventory_count(http_session: requests.session, endpoint: str, filter: str =
 
 
 def get_specific_device(http_session: requests.session, endpoint: str, uid: str) -> str:
-    """Given a device uid, retreive the device specific details"""
+    """Given a device uid, retrieve the device specific details"""
     path = CDOAPI.SPECIFIC_DEVICE.value.replace("{uid}", uid)
     return CDORequests.get(http_session, f"https://{endpoint}", path=path)
 
 
 def get_device(http_session: requests.session, endpoint: str, uid: str):
-    """Given a device uid, retreive the specific device model of the device"""
+    """Given a device uid, retrieve the specific device model of the device"""
     return CDORequests.get(http_session, f"https://{endpoint}", path=f"{CDOAPI.DEVICES.value}/{uid}")
 
 

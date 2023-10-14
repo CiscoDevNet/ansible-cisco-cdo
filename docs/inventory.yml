@@ -8,7 +8,7 @@ CDO_cisco_aahackne:
       mgmt_port: 8443
       sdc: CDO_cisco_aahackne-SDC-1
       username: cisco
-      password: P@$$w0rd1!
+      password: Admin123!!
       ignore_cert: true
     Amarillo:
       device_type: asa
@@ -16,7 +16,7 @@ CDO_cisco_aahackne:
       mgmt_port: 8443
       sdc: CDO_cisco_aahackne-SDC-1
       username: cisco
-      password: P@$$w0rd1!
+      password: Admin123!!
       ignore_cert: true
     Austin-CSR-1000v:
       device_type: ios
@@ -24,7 +24,7 @@ CDO_cisco_aahackne:
       mgmt_port: 22
       sdc: CDO_cisco_aahackne-SDC-1
       username: cisco
-      password: P@$$w0rd1!
+      password: Admin123!!
       ignore_cert: true
     ElPaso:
       device_type: ftd

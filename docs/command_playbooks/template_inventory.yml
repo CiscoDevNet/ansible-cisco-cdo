@@ -13,92 +13,104 @@ CDO_cisco_aahackne:
       username: cisco
       password: "Admin123!"
       ignore_cert: true
+      clear_config:
+        # Clear the access-lists: ***NOTE TRAFFIC INTERRUPTION!!!***
+        # access_lists:
+        # - "clear config access-list outside"
+        # - "clear config access-list inside"
+        # - "clear config access-list dmz"
+        interfaces:
+          - "clear config interface GigabitEthernet0/0"
+          - "clear config interface GigabitEthernet0/1"
+          - "clear config interface GigabitEthernet0/2"
+          - "clear config interface GigabitEthernet0/3"
+          - "clear config interface GigabitEthernet0/4"
+          - "clear config interface GigabitEthernet0/5"
+          - "clear config interface GigabitEthernet0/6"
+          - "clear config interface GigabitEthernet0/7"
+          - "clear config interface GigabitEthernet0/8"
+          - "clear config interface GigabitEthernet0/9"
+
       config:
-        # global:
-        #   - hostname Austin
-        #   - domain-name hacksbrain.pvt
-        #   - enable password Admin123!
-        #   - prompt hostname
-        #   # - crypto key generate rsa modulus 2048 noconfirm
-        #   - no names
-        #   - no boot system disk0:/asa9-16-2-7-smp-k8.bin
-        #   - boot system disk0:/asa9-16-2-7-smp-k8.bin
-        #   - same-security-traffic permit intra-interface
-        #
-        # users:
-        #   - username test_user password Admin123! privilege 15
-        #   - username test_user attributes
-        #   - ssh authentication publickey AAAAC3NzaC1lZDI1NTE5AAAAIPETez1LdYJUnWD7MidZhf90VxVLm0O0bQE2CzvwytoJ
-        #
-        # interfaces:
-        #   # Clear the interface config and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
-        #   - clear configure interface GigabitEthernet0/0
-        #   - int GigabitEthernet0/0
-        #   - nameif outside
-        #   - security-level 1
-        #   - ip address 172.16.211.101 255.255.255.0 standby 172.16.211.102
-        #   - no shutdown
-        #   #
-        #   # Clear the interface config and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
-        #   - clear configure interface GigabitEthernet0/1
-        #   - int GigabitEthernet0/1
-        #   - nameif inside
-        #   - security-level 100
-        #   - ip address 192.168.11.1 255.255.255.0 standby 192.168.11.2
-        #   - no shutdown
-        #   #
-        #   # Clear the interface config and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
-        #   - clear configure interface GigabitEthernet0/2
-        #   - int GigabitEthernet0/2
-        #   - nameif dmz
-        #   - security-level 50
-        #   - ip address 192.168.22.1 255.255.255.0 standby 192.168.22.2
-        #   - no shutdown
-        #   - clear configure interface GigabitEthernet0/3
-        #   - clear configure interface GigabitEthernet0/4
-        #   - clear configure interface GigabitEthernet0/5
-        #   - clear configure interface GigabitEthernet0/6
-        #   - clear configure interface GigabitEthernet0/7
-        #   - clear configure interface GigabitEthernet0/8
-        #
-        # static_routes:
-        #   - route outside 0.0.0.0 0.0.0.0 172.16.211.1 1
-        #
-        # dns-server-groups:
-        #   - DNS server-group DefaultDNS
-        #   - name-server 208.67.222.222
-        #   - name-server 208.67.220.220
-        #   - domain-name hacksbrain.pvt
-        #
-        # dns-domain-lookup:
-        #   - dns domain-lookup outside
-        #   - dns domain-lookup management
-        #
-        # license:
-        #   - license smart
-        #   - feature tier standard
-        #   - throughput level 1G
-        #   - license smart register idtoken xxxxxxx
-        #
-        # aaa:
-        #   - aaa authentication ssh console LOCAL
-        #   - aaa authorization exec LOCAL auto-enable
-        #   - aaa authorization http console LOCAL
-        #
-        # ssh:
-        #   - ssh scopy enable
-        #   - ssh timeout 60
-        #   - ssh 172.16.0.0 255.240.0.0 management
-        #
-        # logging:
-        #   - logging enable
-        #   - logging buffered warning
-        #   - logging buffer-size 32768
-        #   - logging trap warnings
-        #   - logging host management 172.30.4.111 17/10025
-        #   - logging permit-hostdown
-        #   - logging class config trap warnings
-        #
+        global:
+          - hostname Austin
+          - domain-name hacksbrain.pvt
+          - enable password Admin123!
+          - prompt hostname
+          # - crypto key generate rsa modulus 2048 noconfirm
+          - no names
+          - no boot system disk0:/asa9-16-2-7-smp-k8.bin
+          - boot system disk0:/asa9-16-2-7-smp-k8.bin
+          - same-security-traffic permit intra-interface
+
+        users:
+          - username test_user password Admin123! privilege 15
+          - username test_user attributes
+          - ssh authentication publickey AAAAC3NzaC1lZDI1NTE5AAAAIPETez1LdYJUnWD7MidZhf90VxVLm0O0bQE2CzvwytoJ
+
+        interfaces:
+          - int GigabitEthernet0/0
+          - nameif outside
+          - security-level 1
+          - ip address 172.16.211.101 255.255.255.0 standby 172.16.211.102
+          - no shutdown
+          #
+          - int GigabitEthernet0/1
+          - nameif inside
+          - security-level 100
+          - ip address 192.168.11.1 255.255.255.0 standby 192.168.11.2
+          - no shutdown
+          #
+          - int GigabitEthernet0/2
+          - nameif dmz
+          - security-level 50
+          - ip address 192.168.22.1 255.255.255.0 standby 192.168.22.2
+          - no shutdown
+          - clear configure interface GigabitEthernet0/3
+          - clear configure interface GigabitEthernet0/4
+          - clear configure interface GigabitEthernet0/5
+          - clear configure interface GigabitEthernet0/6
+          - clear configure interface GigabitEthernet0/7
+          - clear configure interface GigabitEthernet0/8
+
+        static_routes:
+          - route outside 0.0.0.0 0.0.0.0 172.16.211.1 1
+
+        dns-server-groups:
+          - DNS server-group DefaultDNS
+          - name-server 208.67.222.222
+          - name-server 208.67.220.220
+          - domain-name hacksbrain.pvt
+
+        dns-domain-lookup:
+          - dns domain-lookup outside
+          - dns domain-lookup management
+
+        license:
+          - license smart
+          - feature tier standard
+          - throughput level 1G
+          - license smart register idtoken xxxxxxx
+
+        aaa:
+          - aaa authentication ssh console LOCAL
+          - aaa authorization exec LOCAL auto-enable
+          - aaa authorization http console LOCAL
+
+        ssh:
+          - ssh scopy enable
+          - ssh timeout 60
+          - ssh 172.16.0.0 255.240.0.0 management
+
+        logging:
+          - logging enable
+          - logging buffered warning
+          - logging buffer-size 32768
+          - logging trap warnings
+          - logging host management 172.30.4.111 17/10025
+          - logging permit-hostdown
+          - logging class config trap warnings
+
         objects:
           # Network Objects
           - "object network INSIDE-NET"
@@ -163,63 +175,56 @@ CDO_cisco_aahackne:
           - " description the default ports for mongodb"
           - " service-object object mongo-27017"
           - " service-object object mongo-27018"
-        #
+
         names:
           - "name 172.30.4.111 cdo-sdc-sec"
-        #
+
         ip-local-pool:
           - "ip local pool pool4 192.168.2.100-192.168.2.199 mask 255.255.255.0"
 
         access-lists:
-          #  ###################### OUTSIDE interface Access Policy ######################
-          #  # Clear the access-list and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
-          # - "clear config access-list outside"
-          #  # 'outside' interface inbound to servers
+          ####################### OUTSIDE interface Access Policy ######################
+          # 'outside' interface inbound to servers
           - "access-list outside extended permit object-group ICMP-COMMON any4 any4 log warnings"
           #  #
           #  #### ====> Explicit Deny All <==== ####
           - "access-list outside remark explicit deny all and log"
           - "access-list outside extended deny ip any any log warnings"
-        #  #
-        #  #
-        #  ###################### INSIDE interface Access Policy ######################
-        #  # Clear the access-list and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
-        #  - clear config access-list inside
-        #  #
-        #  - access-list inside extended permit object-group ICMP-COMMON any4 any4 log warnings
-        #  #
-        #  - access-list inside remark *** Allow for happy web browsing users and log ***
-        #  - access-list inside extended permit object-group WEB-COMMON object INSIDE-NET any4 log warnings
-        #  #
-        #  #### ====> Explicit Deny All <==== ####
-        #  - access-list inside remark explicit deny all and log
-        #  - access-list inside extended deny ip any any log warnings
-        #  #
-        #  #
-        #  ###################### DMZ interface Access Policy ######################
-        #  # Clear the access-list and reset to our golden image. NOTE TRAFFIC INTERRUPTION!
-        #  - clear config access-list dmz
-        #  #
-        #  - access-list dmz extended permit object-group ICMP-COMMON any4 any4 log warnings
-        #  #
-        #  #
-        #  #### ====> DMZ to Inside Access Policy <==== ####
-        #  - access-list dmz remark *** Web app servers to mongo db servers in inside segment ***
-        #  - access-list dmz extended permit object-group mongo-db-ports object-group WEB-APP-SRVRS object-group MONGO-DB-SRVRS log warnings
-        #  #
-        #  - access-list dmz remark *** Explicit allow all and log ***
-        #  - access-list dmz extended permit object-group WEB-COMMON object DMZ-NET any4
-        #  #
-        #  #### ====> Explicit Deny All <==== ####
-        #  - access-list dmz remark explicit deny all and log
-        #  - access-list dmz extended deny ip any any log warnings
+          #
+          #
+          ###################### INSIDE interface Access Policy ######################
+          # 'inside' interface outbound to other segments or the internet
+          - access-list inside extended permit object-group ICMP-COMMON any4 any4 log warnings
+          #
+          - access-list inside remark *** Allow for happy web browsing users and log ***
+          - access-list inside extended permit object-group WEB-COMMON object INSIDE-NET any4 log warnings
+          #
+          #### ====> Explicit Deny All <==== ####
+          - access-list inside remark explicit deny all and log
+          - access-list inside extended deny ip any any log warnings
+          #
+          #
+          ###################### DMZ interface Access Policy ######################
+          # 'dmz' interface outbound to other segments or the internet
+          - access-list dmz extended permit object-group ICMP-COMMON any4 any4 log warnings
+          #
+          #### ====> DMZ to Inside Access Policy <==== ####
+          - access-list dmz remark *** Web app servers to mongo db servers in inside segment ***
+          - access-list dmz extended permit object-group mongo-db-ports object-group WEB-APP-SRVRS object-group MONGO-DB-SRVRS log warnings
+          #
+          - access-list dmz remark *** Explicit allow all and log ***
+          - access-list dmz extended permit object-group WEB-COMMON object DMZ-NET any4
+          #
+          #### ====> Explicit Deny All <==== ####
+          - access-list dmz remark explicit deny all and log
+          - access-list dmz extended deny ip any any log warnings
 
-        #access-groups:
-        #  - access-group outside in interface outside
-        #  - access-group inside in interface inside
-        #  - access-group dmz in interface dmz
+        access-groups:
+          - access-group outside in interface outside
+          - access-group inside in interface inside
+          - access-group dmz in interface dmz
 
-        #nat:
-        #  - nat (inside,outside) source dynamic INSIDE-NET interface
-        #  - nat (dmz,outside) source dynamic DMZ-NET interface
-        #  - nat (inside,dmz) source static INSIDE-NET INSIDE-NET destination static DMZ-NET DMZ-NET no-proxy-arp
+        nat:
+          - nat (inside,outside) source dynamic INSIDE-NET interface
+          - nat (dmz,outside) source dynamic DMZ-NET interface
+          - nat (inside,dmz) source static INSIDE-NET INSIDE-NET destination static DMZ-NET DMZ-NET no-proxy-arp
