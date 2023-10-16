@@ -6,4 +6,4 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__version__ = "1.1.3"
+__version__ = "1.1.4"

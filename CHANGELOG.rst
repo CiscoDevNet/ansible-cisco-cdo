@@ -40,3 +40,7 @@ v1.1.2
 v1.1.3
 ======
 Documentation corrections
+
+v1.1.4
+======
+Fixed an issue where onboarding an LTP firewall could result in a 404 error
