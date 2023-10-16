@@ -62,7 +62,8 @@ def add_ftd_ltp(module_params: dict, http_session: requests.session, endpoint: s
         new_ftd_device = CDORequests.post(
             http_session, f"https://{endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device.asdict()
         )
-        ftd_specific_device = get_specific_device(http_session, endpoint, new_ftd_device["uid"])
+        ftd_specific_device = new_ftd_polling(module_params, http_session, endpoint, new_ftd_device["uid"])
+        # ftd_specific_device = get_specific_device(http_session, endpoint, new_ftd_device["uid"])
         new_ftd_device = get_device(http_session, endpoint, new_ftd_device["uid"])
         CDORequests.put(
             http_session,
