@@ -60,7 +60,7 @@ fh = logging.FileHandler('/tmp/cmd.log')
 fh.setLevel(logging.DEBUG)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(fh)
-logger.debug("Logger started......")
+logger.debug("Logger started cmd.py......")
 # fmt: on
 
 
@@ -123,6 +123,7 @@ def run_cmd(module_params: dict, http_session: requests.session, endpoint: str) 
             )
     specific_device = get_specific_device(http_session, endpoint, device_details[0].get("uid"))
     split_cmd_list = split_max_command_length(module_params.get("cmd_list"))  # API has max 600 char limit
+
     for commands in split_cmd_list:
         transaction_id = generate_uuid()
         payload = {
@@ -133,7 +134,7 @@ def run_cmd(module_params: dict, http_session: requests.session, endpoint: str) 
                 "cliMacroUid": None,
             },
         }
-        CDORequests.put(
+        response = CDORequests.put(
             http_session,
             f"https://{endpoint}",
             path=f"{CDOAPI.ASA_CONFIG.value}/{specific_device.get('uid')}",
@@ -168,16 +169,14 @@ def split_max_command_length(command_list: list) -> list[list]:
             top_level_command = line  # Save the top level command in case we need to split over multiple API calls
         length = length + len(line) + 2
         if length > 599:
-            command_sets.append(command_set)  # Append the list of commands under 600 characters total
+            command_sets.append(command_set)  # Append list of commands < 600 characters total not including this line
             command_set = list()  # reset the running list
             length = 0  # reset the character count
-            command_set.append(top_level_command) if is_sub_command(line) else None
-            # if is_sub_command(line):
-            #     command_set.append(top_level_command)  # Splitting a sub command so we need to re-issue top level cmd
+            command_set.append(top_level_command) if is_sub_command(line) else ""
             command_set.append(line)
         else:
             command_set.append(line)
-    command_sets.append(command_set)
+    command_sets.append(command_set) if command_set else ""
     return command_sets
 
 
@@ -186,7 +185,6 @@ def get_running_config(
 ):
     """Get the running config from the ASA. all=True: do a "show run all extra_parameter="| aaa": do a show run | aaa"""
     module_params["cmd_list"] = [f"show run all {extra_parameter}" if all else f"show run {extra_parameter}"]
-    # module_params["cmd_list"] = [f"{show_run}".strip()]
     running_config = run_cmd(module_params, http_session, endpoint)
     return running_config
 
@@ -199,24 +197,26 @@ def load_config(module_params: dict, http_session: requests.session, endpoint: s
             config.append(line)
         module_params["cmd_list"] = config
         results = f"{results} {run_cmd(module_params, http_session, endpoint)}"
-        return results
-
-
-def clear_config_access_list(module_params: dict, http_session: requests.session, endpoint: str, command):
-    # TODO normalize and send in one command and don't loop over each line....
-    """Completely remove access-lists from the running config"""
-    acls = get_running_config(module_params, http_session, endpoint, extra_parameter="access-list").split("\n")
-    access_policy_list = set([line.split(" ")[1] for line in acls])
-    if not access_policy_list:
-        return
-    if command.split(" ")[3] in access_policy_list:  # Extract the policy name from the clear config cmd
-        module_params["cmd_list"] = [command]
-        results = run_cmd(module_params, http_session, endpoint)
-        if not results:
-            results = f"access-list {command.split(' ')[3]} deleted"
-    else:
-        return f"access-list {command.split(' ')[3]} not found in running config - skipping..."
     return results
+
+
+def clear_config_access_list(module_params: dict, http_session: requests.session, endpoint: str, commands: list):
+    """Completely remove access-lists from the running config"""
+    # TODO: optimize the clear config sanity check (does object exist) into 1 fcn
+    results = ""
+    acl_list = get_running_config(module_params, http_session, endpoint, extra_parameter="access-list").split("\n")
+    access_policy_list = set([line.split(" ")[1] for line in acl_list])  # access-lists present on device
+    clear_access_list = [command.split(" ")[3] for command in commands]  # requested access-lists to delete
+    does_not_exist = list(set(clear_access_list).difference(access_policy_list))  # These access-lists don't exist
+    for access_list in does_not_exist:  # remove the access-lists that dne from the list of clear commands
+        [commands.remove(command) for command in commands if command.endswith(access_list)]
+    if commands:
+        module_params["cmd_list"] = commands
+        results = run_cmd(module_params, http_session, endpoint)  # run the clear commands
+    return (
+        f"clear access-list commands: {results} Completed: {commands} - {len(does_not_exist)} "
+        f"access-list(s) not found on device: {does_not_exist}"
+    )
 
 
 def clear_config_interfaces(module_params: dict, http_session: requests.session, endpoint: str, commands: list):
@@ -229,8 +229,11 @@ def clear_config_interfaces(module_params: dict, http_session: requests.session,
     for interface in does_not_exist:
         [commands.remove(command) for command in commands if command.endswith(interface)]
     module_params["cmd_list"] = commands
-    results = run_cmd(module_params, http_session, endpoint)
-    return f"{results} Completed: {commands} - Interface(s) not found on device: {does_not_exist}"
+    results = run_cmd(module_params, http_session, endpoint)  # run the clear commands
+    return (
+        f"clear interface commands: {results} Completed: {commands} - {len(does_not_exist)} "
+        f"interfaces not found on device: {does_not_exist}"
+    )
 
 
 def clear_config(module_params: dict, http_session: requests.session, endpoint: str) -> bool:
@@ -239,10 +242,10 @@ def clear_config(module_params: dict, http_session: requests.session, endpoint: 
     cases, do a sanity check to make sure that they exist before we attempt to delete them"""
     results = list()
     if module_params.get("access_lists"):
-        for current_command in module_params.get("access_lists"):
-            results.append(clear_config_access_list(module_params, http_session, endpoint, current_command))
+        results.append(
+            clear_config_access_list(module_params, http_session, endpoint, module_params.get("access_lists"))
+        )
     if module_params.get("interfaces"):
-        # for current_command in module_params.get("interfaces"):
         results.append(clear_config_interfaces(module_params, http_session, endpoint, module_params.get("interfaces")))
     # TODO: other clear config commands to come (like objects and object-groups)
     return results

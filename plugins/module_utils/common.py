@@ -65,7 +65,7 @@ def get_cdfmc(http_session: requests.session, endpoint: str):
 
 
 def working_set(http_session: requests.session, endpoint: str, uid: str):
-    """Return a workingset object"""
+    """Return a working set object"""
     data = {
         "selectedModelObjects": [{"modelClassKey": "targets/devices", "uuids": [uid]}],
         "workingSetFilterAttributes": [],

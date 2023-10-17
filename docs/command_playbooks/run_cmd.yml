@@ -10,8 +10,6 @@
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         exec_command:
           device_name: "{{ inventory_hostname }}"
-          retries: 20
-          interval: 2
           cmd_list:
             - show ip
             - show version

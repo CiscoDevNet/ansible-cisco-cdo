@@ -30,8 +30,7 @@ class CDOAPIWrapper(object):
     """This decorator class wraps all API methods of ths client and solves a number of issues. For example, if an
     object already exists when attempting to create an object, raise the custom error 'CDODuplicateDevice' and give
     the consumer the opportunity to ignore the error and carry on with other operations in their script.
-    Note that the repsone from the API calls are a tuple. Example:
-    (400, {'errorCode': 'abc123', 'errorMessage': 'error text', 'errorType': 'error type', 'furtherDetails': None})
+    Note that the response from the API calls are a tuple. Example:
     """
 
     # Add handler for bad certificate

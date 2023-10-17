@@ -36,3 +36,10 @@ v1.1.2
 ======
 - Bugfix adding LTP device with no password caused an error in a CDO workflow
 - Updated LTP sample playbook to add password if it is in inventory else none
+
+v1.2.0
+======
+
+New Modules
+-----------
+- cmd - Send arbitrary CLI commands to ASA and IOS devices
