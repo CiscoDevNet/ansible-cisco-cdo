@@ -44,3 +44,7 @@ Documentation corrections
 v1.1.4
 ======
 Fixed an issue where onboarding an LTP firewall could result in a 404 error
+
+v1.1.5
+======
+Fixed idempotence with add ftd/asa device_inventory module (Issue #19)

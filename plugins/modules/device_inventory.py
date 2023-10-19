@@ -258,21 +258,26 @@ def main():
             try:
                 result["stdout"] = add_ftd(module.params.get("add", {}).get("ftd"), http_session, endpoint)
                 result["changed"] = True
-            except (AddDeviceFailure, DuplicateObject, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
+            except DuplicateObject as e:
+                result["stdout"] = f"Device Not added: {e.message}"
+                result["changed"] = False
+                result["failed"] = False
+            except (AddDeviceFailure, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
                 result["stderr"] = f"ERROR: {e.message}"
+                result["changed"] = False
+                result["failed"] = True
         if module.params.get("add", {}).get("asa_ios"):
             try:
                 result["stdout"] = add_asa_ios(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
                 result["changed"] = True
-            except (
-                SDCNotFound,
-                InvalidCertificate,
-                DeviceUnreachable,
-                CredentialsFailure,
-                DuplicateObject,
-                APIError,
-            ) as e:
+            except DuplicateObject as e:
+                result["stdout"] = f"Device Not added: {e.message}"
+                result["changed"] = False
+                result["failed"] = False
+            except (SDCNotFound, InvalidCertificate, DeviceUnreachable, CredentialsFailure, APIError) as e:
                 result["stderr"] = f"ERROR: {e.message}"
+                result["changed"] = False
+                result["failed"] = True
 
     # Delete an ASA, FTD, or IOS device from CDO/cdFMC
     if module.params.get("delete"):
