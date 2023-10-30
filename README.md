@@ -52,6 +52,30 @@ See the docs directory and README for practical usage of this collection.
 
 ## Contributing to this collection
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco Defense Orchestrator collection repository](https://github.com/CiscoDevNet/ansible-cisco-cdo). See [Contributing to Ansible-maintained collections](https://docs.ansible.com/ansible/devel/community/contributing_maintained_collections.html#contributing-maintained-collections) for complete details.
+### Gitleaks
+
+We use [Gitleaks](https://github.com/gitleaks/gitleaks) to catch secrets being committed to the repository by accident. The first line of defense is before you ever push to GitHub using a pre-commit hook.
+
+Please enable the pre-commit hook before you commit anything to this repository, even in a branch.
+
+- Install `pre-commit`
+```
+brew install pre-commit
+```
+- Update the pre-commit configuration:
+```
+pre-commit autoupdate
+```
+- Install the pre-commit configuration as a pre-commit hook to your local Git repo:
+```
+pre-commit install
+```
+
+Now any commits you make will be scanned by Gitleaks
+
+#### Gitleaks License
+
+The Gitleaks License is free, and stored in the `GITLEAKS_LICENSE` secret. In addition, it is saved to [Conjur](https://secrets.cisco.com/conjur/nonprod/eng/cdo/gitleaks-license). Speak to a maintainer to access it.
 
 ### Code of Conduct
 This collection follows the Ansible project's
