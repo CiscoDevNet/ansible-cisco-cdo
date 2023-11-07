@@ -2,7 +2,7 @@
 
 # CISCO CDO Ansible Collection
 
-The Ansible Cisco CDO collection includes a variety of Ansible content to help automate the interaction with the Cisco Defense Orcestrator (CDO) platform and the devices managed by the CDO platform.
+The Ansible Cisco CDO collection includes a variety of Ansible content to help automate the interaction with the Cisco Defense Orchestrator (CDO) platform and the devices managed by the CDO platform.
 
 This is a work in progress and more modules and functionality will be added in subsequent releases.
 
@@ -17,8 +17,8 @@ The needed python libraries are in requirements.txt
 pip3 install -r requirements.txt
 ```
 
-### Cisco Defense Orcestrator API Key
-This module is for interacting with the Cisco Defense Orcestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommneded that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
+### Cisco Defense Orchestrator API Key
+This module is for interacting with the Cisco Defense Orchestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommended that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
 In the sample playbooks under `/docs`, we are getting this API key from an environment variable. You will also need to supply the CDO regional instance where this API key was generated (us, eu, apj). In a bash shell, you will add something like this to your `.bashrc` file or other bash profile settings:
 ```
 export CDO_API_KEY="xxxxx"
@@ -50,6 +50,31 @@ collections:
 **"Show don't tell"**
 See the docs directory and README for practical usage of this collection.
 
+## Docker
+If you prefer to run this in a docker container, we have included a Dockerfile that will install all of the needed python libraries and the CDO Ansible collection `cisco.cdo`
+
+### Build Docker Container
+From the root of the github repo where the Dockerfile resides:
+
+```
+docker build --tag cisco_cdo_collection:latest .
+```
+
+### Run the Docker Container interactively
+This presumes that your shell currently has environment variables CDO_API_KEY and CDO_REGION. If not, you could always pass those as literals in the `docker run` statement.
+```
+docker run -e CDO_API_KEY=$CDO_API_KEY \
+           -e CDO_REGION=$CDO_REGION \
+           -it cisco_cdo_collection:latest /bin/bash
+```
+
+
+### Test the collection
+You can test that the collection in installed and working by getting the CDO inventory directly from CDO without even creating an inventory file by using one of the sample playbooks in the docs directory.
+
+```
+ansible-playbook docs/device_inventory_playbooks/get_cdo_inventory.yml
+```
 ## Contributing to this collection
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco Defense Orchestrator collection repository](https://github.com/CiscoDevNet/ansible-cisco-cdo). See [Contributing to Ansible-maintained collections](https://docs.ansible.com/ansible/devel/community/contributing_maintained_collections.html#contributing-maintained-collections) for complete details.
 

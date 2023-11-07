@@ -1,7 +1,0 @@
-# Install from tarball
-To install this release from the tarball:
-`ansible-galaxy collection install cisco-cdo-x.y.z.tar.gz`
-e.g.
-```
-ansible-galaxy collection install cisco-cdo-1.2.0.tar.gz
-```

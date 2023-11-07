@@ -31,4 +31,4 @@
       when: added_device.stdout['metadata'] is not defined and hostvars[inventory_hostname].device_type == "ftd"
       ansible.builtin.debug:
         msg:
-          "{{ added_device.stdout }}"
+          "{{ added_device }}"

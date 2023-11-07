@@ -1,0 +1,219 @@
+---
+# TODO: Move credentials to vault. Here for demo purposes
+# TODO: Move the common config items (ACLS, objects, etc) to group vars
+# TODO: This inventory should only include device specific settings like interfaces/ip/routes and maybe nat/acls
+
+CDO_cisco_aahackne:
+  hosts:
+    Austin:
+      device_type: asa
+      ipv4: 172.30.4.101
+      mgmt_port: 8443
+      sdc: CDO_cisco_aahackne-SDC-1
+      username: cisco
+      password: "Admin123!"
+      ignore_cert: true
+      config:
+        global:
+          - "hostname Austin"
+          - "domain-name hacksbrain.pvt"
+          - "enable password Admin123!"
+          - "prompt hostname"
+          - "names"
+          - "clear configure names"
+          - "name 172.30.4.111 cdo-sdc-sec"
+          - "clear config boot system"
+          - "boot system disk0:/asa9-16-2-7-smp-k8.bin"
+          - "same-security-traffic permit intra-interface"
+          - "no sysopt connection permit-vpn"
+
+        interfaces:
+          GigabitEthernet0/0:
+            - "int GigabitEthernet0/0"
+            - " nameif outside"
+            - " security-level 1"
+            - " ip address 172.16.211.101 255.255.255.0 standby 172.16.211.102"
+            - " no shutdown"
+          GigabitEthernet0/1:
+            - "int GigabitEthernet0/1"
+            - " nameif inside"
+            - " security-level 100"
+            - " ip address 192.168.11.1 255.255.255.0 standby 192.168.11.2"
+            - " no shutdown"
+          GigabitEthernet0/2:
+            - "int GigabitEthernet0/2"
+            - " nameif dmz"
+            - " security-level 50"
+            - " ip address 192.168.22.1 255.255.255.0 standby 192.168.22.2"
+            - " no shutdown"
+          GigabitEthernet0/3:
+            - "clear config interface GigabitEthernet0/3"
+          GigabitEthernet0/4:
+            - "clear config interface GigabitEthernet0/4"
+          GigabitEthernet0/5:
+            - "clear config interface GigabitEthernet0/5"
+          GigabitEthernet0/6:
+            - "clear config interface GigabitEthernet0/6"
+          GigabitEthernet0/7:
+            - "clear config interface GigabitEthernet0/7"
+          GigabitEthernet0/8:
+            - "clear config interface GigabitEthernet0/8"
+
+        static_routes:
+          outside:
+            - "clear config route outside"
+            - "route outside 0.0.0.0 0.0.0.0 172.16.211.1 1"
+          inside:
+            - "clear config route inside"
+          dmz:
+            - "clear config route dmz"
+
+        dns:
+          server_groups:
+            - "DNS server-group DefaultDNS"
+            - " name-server 208.67.222.222"
+            - " name-server 208.67.220.220"
+            - " domain-name hacksbrain.pvt"
+          domain-lookup:
+            - "dns domain-lookup outside"
+            - "dns domain-lookup management"
+
+        license:
+          smart:
+            - "license smart"
+            - " feature tier standard"
+            - " throughput level 1G"
+            - "license smart register idtoken xxxxxx"
+
+        aaa:
+          ssh:
+            - "aaa authentication ssh console LOCAL"
+          http:
+            - "aaa authorization http console LOCAL"
+          auto-enable:
+            - "aaa authorization exec LOCAL auto-enable"
+
+        ssh:
+          ssh_control_plane:
+            - "clear configure ssh"
+            - "ssh scopy enable"
+            - "ssh timeout 60"
+            - "ssh 172.16.0.0 255.240.0.0 management"
+
+        http:
+          http_control_plane:
+            CAREFUL!! THIS IS HOW WE ARE APPLYING THE TEMPLATE!!!
+            - "http 172.16.0.0 255.240.0.0 management"
+
+        logging:
+          log_settings:
+            - "logging enable"
+            - "logging trap warnings"
+            - "logging permit-hostdown"
+            - "logging class config trap warnings"
+          buffered:
+            - "logging buffered warning"
+            - "logging buffer-size 32768"
+          host_cdo_sec:
+            - "logging host management 172.30.4.111 17/10025"
+
+          objects:
+            network_objects:
+              - "object network INSIDE-NET"
+              - " subnet 192.168.11.0 255.255.255.0"
+              - "object network DMZ-NET"
+              - " subnet 192.168.22.0 255.255.255.0"
+              - "object network app-1"
+              - " host 192.168.22.101"
+              - "object network app-2"
+              - " host 192.168.22.102"
+              - "object network mongo-db-1"
+              - " host 192.168.11.101"
+              - "object network mongo-db-2"
+              - " host 192.168.11.102"
+
+            service_objects:
+              - "object service mongo-27017"
+              - "service tcp destination eq 27017"
+
+              - "object service mongo-27018"
+              - " service tcp destination eq 27018"
+
+            network_object_groups:
+              - "object-group network LOCAL-NETS"
+              - " description Networks directly connected to this appliance"
+              - " network-object object INSIDE-NET"
+              - " network-object object DMZ-NET"
+              - "object-group network MONGO-DB-SRVRS"
+              - " description Mongo servers on INSIDE network"
+              - " network-object object mongo-db-1"
+              - " network-object object mongo-db-2"
+              - "object-group network WEB-APP-SRVRS"
+              - " description Web app servers on DMZ network"
+              - " network-object object app-1"
+              - " network-object object app-2"
+
+            service_object_groups:
+              - "object-group service ICMP-COMMON"
+              - " description Common useful ICMP services"
+              - " service-object icmp echo"
+              - " service-object icmp echo-reply"
+              - " service-object icmp unreachable"
+              - " service-object icmp source-quench"
+              - "object-group service WEB-COMMON"
+              - " description Common required ports for happy web browsing users"
+              - " service-object tcp destination eq www"
+              - " service-object tcp destination eq https"
+              - " service-object udp destination eq ntp"
+              - " service-object udp destination eq nameserver"
+              - "object-group service mongo-db-ports"
+              - " description the default ports for mongodb"
+              - " service-object object mongo-27017"
+              - " service-object object mongo-27018"
+
+        ip-pools:
+          pool4:
+            - "ip local pool pool4 192.168.2.100-192.168.2.199 mask 255.255.255.0"
+
+        access-lists:
+          outside:
+            - "access-list outside line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
+            - "access-list outside line 2 remark explicit deny all and log"
+            - "access-list outside line 3 extended deny ip any any log warnings"
+          inside:
+            - "access-list inside line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
+            - "access-list inside line 2 remark *** Allow for happy web browsing users and log ***"
+            - "access-list inside line 3 extended permit object-group WEB-COMMON object INSIDE-NET any4 log warnings"
+            - "access-list inside line 4 remark explicit deny all and log"
+            - "access-list inside line 5 extended deny ip any any log warnings"
+          dmz:
+            - "access-list dmz line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
+            - "access-list dmz line 2 remark *** Web app servers to mongo db servers in inside segment ***"
+            - "access-list dmz line 3 extended permit object-group mongo-db-ports object-group WEB-APP-SRVRS object-group MONGO-DB-SRVRS log warnings"
+            - "access-list dmz line 4 remark *** Explicit allow all and log ***"
+            - "access-list dmz line 5 extended permit object-group WEB-COMMON object DMZ-NET any4"
+            - "access-list dmz line 6 remark explicit deny all and log"
+            - "access-list dmz line 7 extended deny ip any any log warnings"
+
+        access-groups:
+          outside:
+            - "access-group outside in interface outside"
+          inside:
+            - "access-group inside in interface inside"
+          dmz:
+            - "access-group dmz in interface dmz"
+
+        nat:
+          - "nat (inside,outside) source dynamic INSIDE-NET interface"
+          - "nat (dmz,outside) source dynamic DMZ-NET interface"
+          - "nat (inside,dmz) source static INSIDE-NET INSIDE-NET destination static DMZ-NET DMZ-NET no-proxy-arp"
+
+        users:
+          dr_evil:
+            - "username dr_evil password Admin123! privilege 15"
+            - "username dr_evil attributes"
+            - " ssh authentication publickey AAAAC3NzaC1lZDI1NTE5AAAAIPETez1LdYJUnWD7MidZhf90VxVLm0O0bQE2CzvwytoJ"
+          austin_powers:
+            - "username austin_powers password Admin123! privilege 15"
+            - "username austin_powers attributes"
+            - " ssh authentication publickey AAAAC3NzaC1lZDI1NTE5AAAAIPETez1LdYJUnWD7MidZhf90VxVLm0O0bQE2CzvwytoJ"
