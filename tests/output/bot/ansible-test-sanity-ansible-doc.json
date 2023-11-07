@@ -1,0 +1,10 @@
+{
+    "docs": "https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/ansible-doc.html", 
+    "results": [
+        {
+            "message": "The test `ansible-test sanity --test ansible-doc` [[explain](https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/ansible-doc.html)] failed with the error:", 
+            "output": "Command \"ansible-doc -t module cisco.cdo.cmd cisco.cdo.deploy cisco.cdo.device_inventory\" returned exit status 1.\n>>> Standard Error\nERROR! Unable to retrieve documentation from 'cisco.cdo.deploy' due to: All (sub-)options and return values must have a 'description' field. All (sub-)options and return values must have a 'description' field"
+        }
+    ], 
+    "verified": false
+}

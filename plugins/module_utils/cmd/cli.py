@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -13,12 +12,6 @@ from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
-    CMD_ARGUMENT_SPEC,
-    CMD_MUTUALLY_REQUIRED_ONE_OF,
-    CMD_MUTUALLY_EXCLUSIVE,
-    CMD_REQUIRED_IF,
-)
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import RetriesExceeded, CmdExecutionError
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
@@ -53,11 +46,10 @@ class cli:
         self.inventory_client = Inventory(module_params, http_session, endpoint)
         self.changed = False
 
-    def is_read_only(self):
+    def is_cmd_read_only(self):
         # TODO
         """Determine if the command list is a configuration command or just a noop or other non-write command"""
         pass
-
 
     def poll_cmd_execution(self, transaction_id: str):
         """Wait for the cli commands to complete execution"""
@@ -90,13 +82,11 @@ class cli:
             sleep(self.module_params.get("interval"))
             poll_attempt += 1
 
-
     def get_device_details(self) -> dict:
         """Get the device details from CDO inventory"""
         self.module_params["filter"] = self.module_params["device_name"]
         device_details = self.inventory_client.gather_inventory()
         return device_details
-
 
     def is_command_allowed_out_of_sync(self) -> bool:
         """Returns true if all of the commands are in the allowed-out-of-sync list (See CDO Docs) If there is a command
@@ -107,15 +97,18 @@ class cli:
                 return False
         return True
 
-
     def run_cmd(self) -> str:
         cmd_results = list()
         device_details = self.get_device_details()
         if not device_details:
             raise DeviceNotFound(f'Device {self.module_params["device_name"]} not found in CDO inventory')
         elif len(device_details) != 1:
-            raise TooManyMatches(f'Device {self.module_params["device_name"]} matched more than 1 device in CDO inventory')
-        if not self.inventory_client.is_device_in_sync(device_details[0]):  # Out of sync devices have a restricted command set
+            raise TooManyMatches(
+                f'Device {self.module_params["device_name"]} matched more than 1 device in CDO inventory'
+            )
+        if not self.inventory_client.is_device_in_sync(
+            device_details[0]
+        ):  # Out of sync devices have a restricted command set
             if not self.is_command_allowed_out_of_sync():  # check the command is in the restricted command set
                 raise DeviceNotInSync(
                     "Device is not in a synced state. The only allowed commands are:"
@@ -145,7 +138,6 @@ class cli:
                 cmd_results.extend(results.split("\n"))
         return cmd_results
 
-
     def is_sub_command(self, command: str) -> bool:
         """If the command starts with a space or tab, then it is a sub command of a parent command:
         e.g. 'object-group network foo' is a parent command while ' network-object object INSIDE-NET' is a sub-command of
@@ -155,7 +147,6 @@ class cli:
         if not command.startswith(" ") and not command.startswith("\t"):
             return False
         return True
-
 
     def split_max_command_length(self, command_list: list) -> list[list]:
         """The CDO API can take at most 600 characters per API call. Split the list of commands fed from the playbook into
@@ -171,7 +162,9 @@ class cli:
                 top_level_command = line  # Save the top level command in case we need to split over multiple API calls
             length = length + len(line) + 2
             if length > 599:
-                command_sets.append(command_set)  # Append list of commands < 600 characters total not including this line
+                command_sets.append(
+                    command_set
+                )  # Append list of commands < 600 characters total not including this line
                 command_set = list()  # reset the running list
                 length = 0  # reset the character count
                 command_set.append(top_level_command) if self.is_sub_command(line) else ""
@@ -181,23 +174,19 @@ class cli:
         command_sets.append(command_set) if command_set else ""
         return command_sets
 
-
     def is_access_list_exists(self, acl_name: str) -> bool:
         """Check to see if an access-list exists and return True if it does, else return false
         returns "ERROR: access-list <acl_name> does not exist" if the ACL does not exist else none"""
         results = self.get_running_config(extra_parameter=f"access-list {acl_name} | grep > does not exist")
         if results:
-            logger.debug(f"")
             return False
         return True
-
 
     def get_running_config(self, extra_parameter="", all=False):
         """Get the running config from the ASA. all=True: do a "show run all extra_parameter="| aaa": do a show run | aaa"""
         self.module_params["cmd_list"] = [f"show run all {extra_parameter}" if all else f"show run {extra_parameter}"]
         running_config = self.run_cmd()
         return running_config
-
 
     def process_access_lists(self, access_list: list, list_exists: bool):
         """If the acl exists, we need to attempt remove the existing entry to avoid CLI errors. Then add line numbers to
@@ -218,8 +207,7 @@ class cli:
             is_acl_exists = self.is_access_list_exists(acl_name)
             self.module_params["cmd_list"] = self.process_access_lists(acl_values, is_acl_exists)
             self.run_cmd()
-            self. prune_acl_lines(acl_name)
-
+            self.prune_acl_lines(acl_name)
 
     def prune_acl_lines(self, acl_name: str):
         """Remove ACL lines that are left over after prepending the template to the ACL"""
@@ -234,7 +222,8 @@ class cli:
             self.module_params["cmd_list"].append(f"no {line}")
         if self.module_params["cmd_list"]:
             self.run_cmd()
+
     def apply_config(self):
-        """ For each of the discreet sections of config, apply them one at a time in a specific order."""
+        """For each of the discreet sections of config, apply them one at a time in a specific order."""
         self.apply_access_lists()
         return  # TODO: return meaningful information

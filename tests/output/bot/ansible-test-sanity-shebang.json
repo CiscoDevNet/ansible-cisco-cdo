@@ -1,0 +1,10 @@
+{
+    "docs": "https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/shebang.html", 
+    "results": [
+        {
+            "message": "The test `ansible-test sanity --test shebang` [[explain](https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/shebang.html)] failed with 13 errors:", 
+            "output": "plugins/module_utils/_version.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/api_endpoints.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/api_requests.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/args_common.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/cmd/cli.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/crypto.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/deploy/deploy.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/device_inventory/asa.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/device_inventory/delete.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/device_inventory/ftd.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/device_inventory/inventory.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/errors.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'\nplugins/module_utils/query.py:1:1: unexpected non-module shebang: b'#!/usr/bin/python'"
+        }
+    ], 
+    "verified": false
+}

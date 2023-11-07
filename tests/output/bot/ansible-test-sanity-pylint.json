@@ -1,0 +1,10 @@
+{
+    "docs": "https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/pylint.html", 
+    "results": [
+        {
+            "message": "The test `ansible-test sanity --test pylint` [[explain](https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/pylint.html)] failed with 6 errors:", 
+            "output": "plugins/module_utils/cmd/cli.py:182:12: logging-fstring-interpolation: Use lazy % formatting in logging functions\nplugins/module_utils/cmd/cli.py:182:25: f-string-without-interpolation: Using an f-string that does not have any interpolated variables\nplugins/module_utils/deploy/deploy.py:15:0: unused-import: Unused CDORegions imported from ansible_collections.cisco.cdo.plugins.module_utils.api_requests\nplugins/module_utils/deploy/deploy.py:39:8: logging-fstring-interpolation: Use lazy % formatting in logging functions\nplugins/module_utils/deploy/deploy.py:105:8: logging-fstring-interpolation: Use lazy % formatting in logging functions\nplugins/module_utils/deploy/deploy.py:123:8: logging-fstring-interpolation: Use lazy % formatting in logging functions"
+        }
+    ], 
+    "verified": false
+}

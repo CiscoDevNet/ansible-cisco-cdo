@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -19,11 +18,6 @@ class CDORegions(Enum):
     us = "www.defenseorchestrator.com"
     eu = "www.defenseorchestrator.eu"
     apj = "apj.cdo.cisco.com"
-
-    @classmethod
-    def get_endpoint(region: object, input_region: str) -> str:
-        """Given a region (input_region) , return the endpoint"""
-        return region[input_region].value
 
 
 class CDOAPIWrapper(object):

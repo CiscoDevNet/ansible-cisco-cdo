@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -62,6 +61,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 # TODO: Document and Link with cdFMC Ansible module to deploy staged FTD configs
 
+
 def main():
     result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
     module = AnsibleModule(
@@ -70,8 +70,7 @@ def main():
         mutually_exclusive=DEPLOY_MUTUALLY_EXCLUSIVE,
         required_if=DEPLOY_REQUIRED_IF,
     )
-
-    endpoint = CDORegions.get_endpoint(module.params.get("region"))
+    endpoint = CDORegions[module.params.get("region")].value
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
 
     # Deploy pending configuration changes to specific device

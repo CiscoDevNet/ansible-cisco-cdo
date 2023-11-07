@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -15,6 +14,7 @@ import urllib.parse
 import requests
 import uuid
 
+
 class Inventory:
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
@@ -28,12 +28,10 @@ class Inventory:
             return False
         return True
 
-
     def generate_uuid(self):
         # move to utility
         raw_uuid = uuid.uuid4().hex
         return f"{raw_uuid[0:8]}-{raw_uuid[8:12]}-{raw_uuid[12:16]}-{raw_uuid[16:20]}-{raw_uuid[20:]}"
-
 
     def get_lar_list(self):
         """Return a list of lars (SDC/CDG from CDO)"""
@@ -43,33 +41,30 @@ class Inventory:
             path = f"{path}?q={urllib.parse.quote_plus(query)}"
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
 
-
     def inventory_count(self, filter: str = None):
         """Given a filter criteria, return the number of devices that match the criteria"""
-        return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}?agg=count&q={filter}")[
-            "aggregationQueryResult"
-        ]
-
+        return CDORequests.get(
+            self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}?agg=count&q={filter}"
+        )["aggregationQueryResult"]
 
     def get_specific_device(self, uid: str) -> str:
         """Given a device uid, retrieve the device specific details"""
         path = CDOAPI.SPECIFIC_DEVICE.value.replace("{uid}", uid)
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
 
-
     def get_device(self, uid: str):
         """Given a device uid, retrieve the specific device model of the device"""
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{uid}")
 
-
     def get_cdfmc(self):
         """Get the cdFMC object for this tenant if one exists"""
         query = CDOQuery.get_cdfmc_query()
-        response = CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}?q={query['q']}")
+        response = CDORequests.get(
+            self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}?q={query['q']}"
+        )
         if len(response) == 0:
             raise DeviceNotFound("A cdFMC was not found in this tenant")
         return response[0]
-
 
     def working_set(self, uid: str):
         """Return a working set object"""
@@ -77,10 +72,11 @@ class Inventory:
             "selectedModelObjects": [{"modelClassKey": "targets/devices", "uuids": [uid]}],
             "workingSetFilterAttributes": [],
         }
-        return CDORequests.post(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.WORKSET.value}", data=data)
+        return CDORequests.post(
+            self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.WORKSET.value}", data=data
+        )
 
-
-    def gather_inventory(self,limit: int = 50,offset: int = 0 ) -> str:
+    def gather_inventory(self, limit: int = 50, offset: int = 0) -> str:
         """Get CDO inventory"""
         # TODO: Support paging
         # TODO: Move the urllib parse to the query lib
@@ -90,9 +86,13 @@ class Inventory:
         path = f"{CDOAPI.DEVICES.value}?limit={limit}&offset={offset}&q={q}&resolve={r}"
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
 
-
     def get_cdfmc_access_policy_list(
-        self,cdfmc_host: str,domain_uid: str,limit: int = 50,offset: int = 0,access_list_name=None,
+        self,
+        cdfmc_host: str,
+        domain_uid: str,
+        limit: int = 50,
+        offset: int = 0,
+        access_list_name=None,
     ):
         # TODO: move to ftd library
         """Given the domain uuid of the cdFMC, retrieve the list of access policies"""

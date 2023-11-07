@@ -178,22 +178,16 @@ CDO_cisco_aahackne:
         access-lists:
           outside:
             - "access-list outside line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
-            - "access-list outside line 2 remark explicit deny all and log"
-            - "access-list outside line 3 extended deny ip any any log warnings"
+            - "access-list outside line 2 extended deny ip any any log warnings"
           inside:
             - "access-list inside line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
-            - "access-list inside line 2 remark *** Allow for happy web browsing users and log ***"
-            - "access-list inside line 3 extended permit object-group WEB-COMMON object INSIDE-NET any4 log warnings"
-            - "access-list inside line 4 remark explicit deny all and log"
-            - "access-list inside line 5 extended deny ip any any log warnings"
+            - "access-list inside line 2 extended permit object-group WEB-COMMON object INSIDE-NET any4 log warnings"
+            - "access-list inside line 3 extended deny ip any any log warnings"
           dmz:
             - "access-list dmz line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
-            - "access-list dmz line 2 remark *** Web app servers to mongo db servers in inside segment ***"
-            - "access-list dmz line 3 extended permit object-group mongo-db-ports object-group WEB-APP-SRVRS object-group MONGO-DB-SRVRS log warnings"
-            - "access-list dmz line 4 remark *** Explicit allow all and log ***"
-            - "access-list dmz line 5 extended permit object-group WEB-COMMON object DMZ-NET any4"
-            - "access-list dmz line 6 remark explicit deny all and log"
-            - "access-list dmz line 7 extended deny ip any any log warnings"
+            - "access-list dmz line 2 extended permit object-group mongo-db-ports object-group WEB-APP-SRVRS object-group MONGO-DB-SRVRS log warnings"
+            - "access-list dmz line 3 extended permit object-group WEB-COMMON object DMZ-NET any4"
+            - "access-list dmz line 4 extended deny ip any any log warnings"
 
         access-groups:
           outside:

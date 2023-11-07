@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -15,8 +14,8 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotF
 import requests
 # fmt: on
 
-class DeleteInventory:
 
+class DeleteInventory:
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
@@ -25,26 +24,31 @@ class DeleteInventory:
         self.inventory_client = Inventory(module_params, http_session, endpoint)
         # TODO: Inherit this class from the inventory class
 
-
     def find_device_for_deletion(self):
         """Find the object we intend to delete"""
         # TODO: Paging for large device lists
         self.module_params["filter"] = self.module_params.get("device_name")
         device_list = self.inventory_client.gather_inventory()
         if len(device_list) < 1:
-            raise DeviceNotFound(f"Cannot delete {self.module_params.get('device_name')} - device by that name not found")
+            raise DeviceNotFound(
+                f"Cannot delete {self.module_params.get('device_name')} - device by that name not found"
+            )
         elif len(device_list) > 1:
-            raise TooManyMatches(f"Cannot delete {self.module_params.get('device_name')} - more than 1 device matches name")
+            raise TooManyMatches(
+                f"Cannot delete {self.module_params.get('device_name')} - more than 1 device matches name"
+            )
         else:
             return device_list[0]
-
 
     def delete_device(self):
         """Orchestrate deleting the device"""
         try:
             device = self.find_device_for_deletion()
-            self.inventory_client.working_set(device["uid"]) # do we need this?
-            if self.module_params.get("device_type").upper() == "ASA" or self.module_params.get("device_type").upper() == "IOS":
+            self.inventory_client.working_set(device["uid"])  # do we need this?
+            if (
+                self.module_params.get("device_type").upper() == "ASA"
+                or self.module_params.get("device_type").upper() == "IOS"
+            ):
                 response = CDORequests.delete(
                     self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{device['uid']}"
                 )

@@ -1,0 +1,10 @@
+{
+    "docs": "https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/yamllint.html", 
+    "results": [
+        {
+            "message": "The test `ansible-test sanity --test yamllint` [[explain](https://docs.ansible.com/ansible-core/2.15/dev_guide/testing/sanity/yamllint.html)] failed with 1 error:", 
+            "output": "plugins/modules/device_inventory.py:125:1: unparsable-with-libyaml: expected a single document in the stream - but found another document"
+        }
+    ], 
+    "verified": false
+}

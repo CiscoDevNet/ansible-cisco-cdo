@@ -1,16 +1,19 @@
+# -*- coding: utf-8 -*-
+#
+# Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
+
+
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
 # fmt: off
 import requests
 import time
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
-from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
-    DEPLOY_ARGUMENT_SPEC,
-    DEPLOY_MUTUALLY_REQUIRED_ONE_OF,
-    DEPLOY_MUTUALLY_EXCLUSIVE,
-    DEPLOY_REQUIRED_IF
-)
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches
@@ -41,26 +44,26 @@ class Deploy:
         self.changed = False
         self.pending_changes = None
 
-
     def poll_deploy_job(self, job_uid: str, retry, interval):
         """Poll the deploy job for a successful completion"""
         while retry > 0:
-            job_status = CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.JOBS.value}/{job_uid}")
+            job_status = CDORequests.get(
+                self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.JOBS.value}/{job_uid}"
+            )
             state_uid = job_status.get("objRefs")[0].get("uid")
             if job_status.get("stateMachinesProgress").get(state_uid).get("progressStatus") == "DONE":
                 return job_status
             sleep(interval)
             retry -= 1
 
-
     def deploy_changes(self):
         """Given the device name, deploy the pending config changes to the device if there are any"""
 
         # Check to see if there are any pending changes before deploying unnecessarily
         q = CDOQuery.pending_changes_query(self.module_params, agg=True)
-        count = CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEPLOY.value}", query=q).get(
-            "aggregationQueryResult"
-        )
+        count = CDORequests.get(
+            self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEPLOY.value}", query=q
+        ).get("aggregationQueryResult")
         if not count:
             return
 
@@ -73,7 +76,11 @@ class Deploy:
         if len(device) == 0:
             raise (DeviceNotFound(f"Could not find device {self.module_params.get('device_name')}"))
         elif len(device) == 0:
-            raise (TooManyMatches(f"{len(device)} matched - {self.module_params.get('device_name')} not a unique device name"))
+            raise (
+                TooManyMatches(
+                    f"{len(device)} matched - {self.module_params.get('device_name')} not a unique device name"
+                )
+            )
         payload = {
             "action": "WRITE",
             "overallProgress": "PENDING",
@@ -87,10 +94,11 @@ class Deploy:
         job = CDORequests.post(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.JOBS.value}", data=payload)
 
         return {
-            "deploy_job": self.poll_deploy_job(job.get("uid"), self.module_params.get("timeout"), self.module_params.get("interval")),
+            "deploy_job": self.poll_deploy_job(
+                job.get("uid"), self.module_params.get("timeout"), self.module_params.get("interval")
+            ),
             "changes_deployed": pending_config,
         }
-
 
     def get_pending_deploy(self) -> str:
         """Given a device name, return the config staged in CDO to be deployed, if any"""

@@ -1,7 +1,11 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
+
+
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 import requests
 from time import sleep
@@ -32,7 +36,7 @@ logger.debug("Logger started inv.py......")
 
 
 class ASA_IOS_Inventory:
-    """ Class to add/remove ASA and IOS devices from CDO inventory"""
+    """Class to add/remove ASA and IOS devices from CDO inventory"""
 
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
@@ -42,14 +46,13 @@ class ASA_IOS_Inventory:
         self.inventory_client = Inventory(module_params, http_session, endpoint)
         # TODO: Inherit this class from the inventory class
 
-
     def connectivity_poll(self, uid: str) -> bool:
         """Check device connectivity or fail after retry attempts have expired"""
         for i in range(self.module_params.get("retry")):
             device = self.inventory_client.get_device(uid)
             if device["connectivityState"] == -2:
                 if self.module_params.get("ignore_cert"):
-                    self.update_device(self.http_session, self.endpoint, uid, data={"ignoreCertificate": True})
+                    self.update_device(uid, data={"ignoreCertificate": True})
                     return True
                 else:
                     # TODO: Delete the device we just attempted to add....
@@ -62,11 +65,12 @@ class ASA_IOS_Inventory:
             f"{self.module_params.get('ipv4')}:{self.module_params.get('mgmt_port')} by CDO"
         )
 
-
     def asa_credentials_polling(self, uid: str) -> dict:
         """Check credentials have been used successfully  or fail after retry attempts have expired"""
         for i in range(self.module_params.get("retry")):
-            result = CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.ASA_CONFIG.value}/{uid}")
+            result = CDORequests.get(
+                self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.ASA_CONFIG.value}/{uid}"
+            )
             if result["state"] == "BAD_CREDENTIALS":
                 raise CredentialsFailure(
                     f"Credentials provided for device {self.module_params.get('device_name')} were rejected."
@@ -77,7 +81,6 @@ class ASA_IOS_Inventory:
         raise APIError(
             f"Credentials for device {self.module_params.get('device_name')} were sent but we never reached a known good state."
         )
-
 
     def ios_credentials_polling(self, uid: str) -> dict:
         """Check to see if the supplied credentials are accepted by the live device"""
@@ -91,11 +94,11 @@ class ASA_IOS_Inventory:
                 return device
         raise CredentialsFailure(f"Device remains in connectivity state {device.get('connectivityState')}")
 
-
     def update_device(self, uid: str, data: dict):
         """Update an existing device's attributes"""
-        return CDORequests.put(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{uid}", data=data)
-
+        return CDORequests.put(
+            self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{uid}", data=data
+        )
 
     def add_asa_ios(self):
         """Add ASA or IOS device to CDO"""
@@ -105,16 +108,16 @@ class ASA_IOS_Inventory:
         else:
             lar = lar_list[0]
 
-        larType="CDG" if lar["cdg"] else "SDC"
+        larType = "CDG" if lar["cdg"] else "SDC"
         asa_ios_device = {
-            "deviceType": self.module_params.get('device_type').upper(),
+            "deviceType": self.module_params.get("device_type").upper(),
             "host": "self.module_params.get('ipv4')",
             "ipv4": f"{self.module_params.get('ipv4')}:{self.module_params.get('mgmt_port')}",
             "larType": larType,
             "larUid": lar["uid"],
             "model": False,
             "name": self.module_params.get("device_name"),
-            "ignore_cert": False
+            "ignore_cert": False,
         }
 
         if self.module_params.get("ignore_cert"):
@@ -127,7 +130,9 @@ class ASA_IOS_Inventory:
         except DuplicateObject as e:
             raise e
 
-        creds_crypto = CDOCrypto.encrypt_creds(self.module_params.get("username"), self.module_params.get("password"), lar)
+        creds_crypto = CDOCrypto.encrypt_creds(
+            self.module_params.get("username"), self.module_params.get("password"), lar
+        )
 
         if self.module_params.get("device_type").upper() == "ASA":
             creds_crypto["state"] = "CERT_VALIDATED"

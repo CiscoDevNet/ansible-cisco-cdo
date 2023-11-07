@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -122,7 +121,6 @@ EXAMPLES = r"""
         msg:
           "{{ inventory.stdout }}"
 
----
 - name: Add FTD CDO inventory via CLI or LTP
   hosts: all
   connection: local
@@ -156,7 +154,6 @@ EXAMPLES = r"""
         msg:
           "{{ added_device.stdout }}"
 
----
 - name: Add ansible inventory to CDO
   hosts: all
   connection: local
@@ -183,7 +180,6 @@ EXAMPLES = r"""
       ansible.builtin.debug:
         msg: "{{ added_device }}"
 
----
 - name: Delete devices from CDO inventory
   hosts: all
   connection: local
@@ -241,7 +237,7 @@ def main():
         mutually_exclusive=INVENTORY_MUTUALLY_EXCLUSIVE,
         required_if=INVENTORY_REQUIRED_IF,
     )
-    endpoint = CDORegions.get_endpoint(module.params.get("region"))
+    endpoint = CDORegions[module.params.get("region")].value
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
     # Get inventory from CDO and return a list of dict(s) - Devices and attributes
     if module.params.get("gather"):
@@ -254,39 +250,39 @@ def main():
     # Add devices to CDO inventory and return a json dictionary of the new device attributes
     if module.params.get("add"):
         if module.params.get("add", {}).get("ftd"):
-          ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
-          try:
-              result["stdout"] = ftd_client.add_ftd()
-              result["changed"] = True
-          except DuplicateObject as e:
-              result["stdout"] = f"Device Not added: {e.message}"
-              result["changed"] = False
-              result["failed"] = False
-          except (AddDeviceFailure, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
-              result["stderr"] = f"ERROR: {e.message}"
-              result["changed"] = False
-              result["failed"] = True
+            ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
+            try:
+                result["stdout"] = ftd_client.add_ftd()
+                result["changed"] = True
+            except DuplicateObject as e:
+                result["stdout"] = f"Device Not added: {e.message}"
+                result["changed"] = False
+                result["failed"] = False
+            except (AddDeviceFailure, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
+                result["stderr"] = f"ERROR: {e.message}"
+                result["changed"] = False
+                result["failed"] = True
         if module.params.get("add", {}).get("asa_ios"):
-          asa_ios_client = ASA_IOS_Inventory(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
-          try:
-              result["stdout"] = asa_ios_client.add_asa_ios()
-              result["changed"] = True
-          except DuplicateObject as e:
-              result["stdout"] = f"Device Not added: {e.message}"
-              result["changed"] = False
-              result["failed"] = False
-          except (SDCNotFound, InvalidCertificate, DeviceUnreachable, CredentialsFailure, APIError) as e:
-              result["stderr"] = f"ERROR: {e.message}"
-              result["changed"] = False
-              result["failed"] = True
+            asa_ios_client = ASA_IOS_Inventory(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
+            try:
+                result["stdout"] = asa_ios_client.add_asa_ios()
+                result["changed"] = True
+            except DuplicateObject as e:
+                result["stdout"] = f"Device Not added: {e.message}"
+                result["changed"] = False
+                result["failed"] = False
+            except (SDCNotFound, InvalidCertificate, DeviceUnreachable, CredentialsFailure, APIError) as e:
+                result["stderr"] = f"ERROR: {e.message}"
+                result["changed"] = False
+                result["failed"] = True
     # Delete an ASA, FTD, or IOS device from CDO/cdFMC
     # TODO: not found should not fail....
     if module.params.get("delete"):
-      try:
+        try:
             delete_client = DeleteInventory(module.params.get("delete"), http_session, endpoint)
             delete_client.delete_device()
             result["changed"] = True
-      except (DeviceNotFound, TooManyMatches) as e:
+        except (DeviceNotFound, TooManyMatches) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -16,6 +15,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDOR
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, AddDeviceFailure, DuplicateObject, ObjectNotFound
 # fmt: on
+
 
 class FTD_Inventory:
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
@@ -36,23 +36,27 @@ class FTD_Inventory:
                 continue
         raise AddDeviceFailure(f"Failed to add FTD {self.module_params.get('device_name')}")
 
-
     def update_ftd_device(self, uid: str, data: dict):
         """Update an FTD object"""
-        return CDORequests.put(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FTDS.value}/{uid}", data=data)
-
+        return CDORequests.put(
+            self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FTDS.value}/{uid}", data=data
+        )
 
     def add_ftd_ltp(self, ftd_device: dict, fmc_uid: str):
         """Onboard an FTD to cdFMC using LTP (serial number onboarding)"""
 
-        if not self.inventory_client.inventory_count(filter=f"serial:{self.module_params.get('serial')}") and not self.inventory_client.inventory_count(filter=f"name:{self.module_params.get('serial')}"):
+        if not self.inventory_client.inventory_count(
+            filter=f"serial:{self.module_params.get('serial')}"
+        ) and not self.inventory_client.inventory_count(filter=f"name:{self.module_params.get('serial')}"):
             ftd_device["larType"] = "CDG"
             ftd_device["name"] = self.module_params.get("device_name")
             ftd_device["serial"] = self.module_params.get("serial")
             if self.module_params.get("password"):  # Set the initial admin password
                 ftd_device["sseDeviceSerialNumberRegistration"] = dict(
                     initialProvisionData=(
-                        base64.b64encode(f'{{"nkey": "{self.module_params.get("password")}"}}'.encode("ascii")).decode("ascii")
+                        base64.b64encode(f'{{"nkey": "{self.module_params.get("password")}"}}'.encode("ascii")).decode(
+                            "ascii"
+                        )
                     ),
                     sudiSerialNumber=self.module_params.get("serial"),
                 )
@@ -79,7 +83,6 @@ class FTD_Inventory:
         else:
             raise DuplicateObject(f"Device with serial number {self.module_params.get('serial')} exists in tenant")
 
-
     def add_ftd(self):
         """Add an FTD to CDO via CLI or LTP process"""
         try:
@@ -100,15 +103,15 @@ class FTD_Inventory:
             "name": self.module_params.get("device_name"),
             "associatedDeviceUid": cdfmc["uid"],
             "deviceType": "FTDC",
-            "model":False,
+            "model": False,
             "state": "NEW",
             "type": "devices",
             "metadata": {
                 "accessPolicyName": access_policy["items"][0]["name"],
                 "accessPolicyUuid": access_policy["items"][0]["id"],
                 "license_caps": ",".join(self.module_params.get("license")),
-                "performanceTier": self.module_params.get("performance_tier")
-            }
+                "performanceTier": self.module_params.get("performance_tier"),
+            },
         }
         if self.module_params.get("onboard_method").lower() == "ltp":
             ftd_device = self.add_ftd_ltp(ftd_device, cdfmc["uid"])
@@ -119,4 +122,6 @@ class FTD_Inventory:
             )
             specific_ftd_device = self.new_ftd_polling(new_device["uid"])
             self.update_ftd_device(specific_ftd_device["uid"], {"queueTriggerState": "INITIATE_FTDC_ONBOARDING"})
-            return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{new_device['uid']}")
+            return CDORequests.get(
+                self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{new_device['uid']}"
+            )
