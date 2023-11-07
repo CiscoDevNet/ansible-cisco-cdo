@@ -37,9 +37,22 @@ v1.1.2
 - Bugfix adding LTP device with no password caused an error in a CDO workflow
 - Updated LTP sample playbook to add password if it is in inventory else none
 
+v1.1.3
+======
+Documentation corrections
+
+v1.1.4
+======
+Fixed an issue where onboarding an LTP firewall could result in a 404 error
+
+v1.1.5
+======
+Fixed idempotence with add ftd/asa device_inventory module (Issue #19)
+
 v1.2.0
 ======
 
 New Modules
 -----------
 - cmd - Send arbitrary CLI commands to ASA and IOS devices
+
