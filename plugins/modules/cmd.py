@@ -21,7 +21,7 @@ author: Aaron Hackney (@aaronhackney)
 
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
-from ansible_collections.cisco.cdo.plugins.module_utils.cmd.cli import cli
+from ansible_collections.cisco.cdo.plugins.module_utils.cmd.cli import CLI
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     CMD_ARGUMENT_SPEC,
@@ -68,12 +68,13 @@ def main():
     # Execute command(s) to specific device
     try:
         if module.params.get("exec_command"):
-            cli_client = cli(module.params.get("exec_command"), http_session, endpoint)
+            cli_client = CLI(module.params.get("exec_command"), http_session, endpoint)
             result["stdout"] = cli_client.run_cmd()
             result["changed"] = True  # TODO: We need to make sure this is true...
         elif module.params.get("apply_template"):
-            cli_client = cli(module.params.get("apply_template"), http_session, endpoint)
-            result["stdout"] = cli_client.apply_config()
+            cli_client = CLI(module.params.get("apply_template"), http_session, endpoint)
+            cli_client.apply_config()
+            result["stdout"] = cli_client.results
             result["changed"] = True  # TODO: We need to make sure this is true...
     except (
         DeviceNotFound,

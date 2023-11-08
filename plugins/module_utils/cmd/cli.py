@@ -26,7 +26,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
 # Remove for publishing....
 import logging
 logging.basicConfig()
-logger = logging.getLogger('cmd')
+logger = logging.getLogger('cli')
 fh = logging.FileHandler('/tmp/cli.log')
 fh.setLevel(logging.DEBUG)
 logger.setLevel(logging.DEBUG)
@@ -35,7 +35,7 @@ logger.debug("Logger started cli.py......")
 # fmt: on
 
 
-class cli:
+class CLI:
     # TODO: Trigger OOB check before write operations
     # TODO: get running config and process it into needed parts
     # TODO: use an existing library to parse ASA config pieces
@@ -45,11 +45,7 @@ class cli:
         self.endpoint = endpoint
         self.inventory_client = Inventory(module_params, http_session, endpoint)
         self.changed = False
-
-    def is_cmd_read_only(self):
-        # TODO
-        """Determine if the command list is a configuration command or just a noop or other non-write command"""
-        pass
+        self.results = list()
 
     def poll_cmd_execution(self, transaction_id: str):
         """Wait for the cli commands to complete execution"""
@@ -98,6 +94,12 @@ class cli:
         return True
 
     def run_cmd(self) -> str:
+        """
+        Run the commands queued in the class attribute self.module_params["cmd_list"]
+        Note that the ASA/CDO CLI API can only take up to 600 chars at a time, so in
+        this method, we split the commands into less than 600 character chunks and send
+        them all unit the entire cmd_list has been executed.
+        """
         cmd_results = list()
         device_details = self.get_device_details()
         if not device_details:
@@ -174,13 +176,16 @@ class cli:
         command_sets.append(command_set) if command_set else ""
         return command_sets
 
-    def is_access_list_exists(self, acl_name: str) -> bool:
-        """Check to see if an access-list exists and return True if it does, else return false
-        returns "ERROR: access-list <acl_name> does not exist" if the ACL does not exist else none"""
-        results = self.get_running_config(extra_parameter=f"access-list {acl_name} | grep > does not exist")
-        if results:
-            return False
-        return True
+    def get_access_control_list(self, acl_name: str) -> list:
+        """
+        Given an ACL name from an ASA, return the running-config for that ACL.
+        If the ACL is not found, return an empty list
+        """
+        results = self.get_running_config(extra_parameter=f"access-list {acl_name}")
+        if len(results) == 1:
+            if results[0].startswith("ERROR:"):  # The acl does not exist
+                return []
+        return results
 
     def get_running_config(self, extra_parameter="", all=False):
         """Get the running config from the ASA. all=True: do a "show run all extra_parameter="| aaa": do a show run | aaa"""
@@ -188,42 +193,84 @@ class cli:
         running_config = self.run_cmd()
         return running_config
 
-    def process_access_lists(self, access_list: list, list_exists: bool):
+    def process_access_lists(self, access_list: list, running_config_acl: bool):
         """If the acl exists, we need to attempt remove the existing entry to avoid CLI errors. Then add line numbers to
         each acl entry to ensure the correct order
         """
         acl_commands = []
-        for line in access_list:
-            if list_exists:  # remove the line number and "no" the ACL entry
-                no_line_num = re.sub(r"(^access-list\s[A-z'-_]+)(\sline\s\d+)?([\s\S]*)", r"\1\3", line)
-                acl_commands.append(f"no {no_line_num}")
+        for line in access_list:  # Loop through the template ACL
+            no_line_num = re.sub(r"(^access-list\s[A-z'-_]+)(\sline\s\d+)?([\s\S]*)", r"\1\3", line)  # del line #
+            for running_line in running_config_acl:  # Loop through the device's ACL
+                if self.is_ace_exists(no_line_num, running_line):
+                    acl_commands.append(f"no {no_line_num}")
             acl_commands.append(line)
         return acl_commands
 
-    def apply_access_lists(self):
+    def is_ace_exists(self, ace_1: str, ace_2: str) -> bool:
+        """Given an ACE, check to see if some form of the ACE exists in the the other ACE"""
+        pattern = r"\slog.+|\sinactive.*|\stime-range.*"  # remove the optional parameters for an ACL entry on ASA
+        normalized_ace_1 = re.sub(pattern, "", ace_1, flags=re.I).strip()
+        normalized_ace_2 = re.sub(pattern, "", ace_2, flags=re.I).strip()
+        return True if normalized_ace_1 == normalized_ace_2 else False
+
+    def prune_acl_lines(self, acl_name: list, acl_template_len: int):
+        """Remove ACL lines that are left over after prepending the template to the ACL"""
+        current_acl = self.get_access_control_list(acl_name)
+        self.module_params["cmd_list"] = []
+        for line in current_acl[acl_template_len:]:
+            logger.debug(f"Adding no line: {line}")
+            self.module_params["cmd_list"].append(f"no {line}")
+        if self.module_params["cmd_list"]:
+            results = self.run_cmd()
+            self.results.append({"commands": self.module_params["cmd_list"], "results": results})
+        self.module_params["cmd_list"] = []
+
+    def apply_access_lists_config(self):
         """Normalize the ACL list with line numbers and apply to the device"""
         acls = self.module_params.get("config").get("access-lists")
         for acl_name, acl_values in acls.items():  # normalize the acl and insert the "no" commands
-            is_acl_exists = self.is_access_list_exists(acl_name)
-            self.module_params["cmd_list"] = self.process_access_lists(acl_values, is_acl_exists)
-            self.run_cmd()
-            self.prune_acl_lines(acl_name)
-
-    def prune_acl_lines(self, acl_name: str):
-        """Remove ACL lines that are left over after prepending the template to the ACL"""
-        cmd_list = []
-        for line in self.module_params["cmd_list"]:
-            if not line.startswith("no "):
-                cmd_list.append(line)
-        self.module_params["cmd_list"] = [f"show run access-list {acl_name}"]
-        current_acl = self.run_cmd()
+            running_config_acl = self.get_access_control_list(acl_name)
+            self.module_params["cmd_list"] = self.process_access_lists(acl_values, running_config_acl)
+            results = self.run_cmd()
+            if not results:
+                results = "Global config template appear to have been applied successfully"
+            self.results.append({f"{acl_name}_acl_commands_": self.module_params["cmd_list"], "results": results})
+            self.prune_acl_lines(acl_name, len(acl_values))
         self.module_params["cmd_list"] = []
-        for line in current_acl[len(cmd_list) :]:
-            self.module_params["cmd_list"].append(f"no {line}")
-        if self.module_params["cmd_list"]:
-            self.run_cmd()
 
-    def apply_config(self):
-        """For each of the discreet sections of config, apply them one at a time in a specific order."""
-        self.apply_access_lists()
-        return  # TODO: return meaningful information
+    def apply_global_config(self):
+        """Apply the global section from the config section of the inventory file"""
+        self.module_params["cmd_list"] = self.module_params.get("config").get("global")
+        results = self.run_cmd()
+        if not results:
+            results = "ACL template(s) appear to have been applied successfully"
+        self.results.append({"global_commands": self.module_params["cmd_list"], "results": results})
+
+    def apply_objects_config(
+        self,
+        object_types: list = ["network_objects", "network_object_groups", "service_objects", "service_object_groups"],
+    ):
+        """Add each of the object types from the template defined in the parameter object_types"""
+        # TODO: Get list of objects....add the missing items and remove the extra items
+        object_types = ["network_objects", "network_object_groups", "service_objects", "service_object_groups"]
+        for object_type in object_types:
+            self.module_params["cmd_list"] = self.module_params.get("config").get("objects").get(object_type)
+            if self.module_params["cmd_list"]:
+                results = self.run_cmd()
+                if not results:
+                    results = f"{object_type} template(s) appear to have been applied successfully"
+                self.results.append({f"{object_type}_commands": self.module_params["cmd_list"], "results": results})
+            else:
+                self.results.append({f"{object_type}_commands": self.module_params["cmd_list"], "results": results})
+
+    def apply_config(self, section: str = None):
+        """For each of the discreet sections of config, apply them one at a time in a specific order.
+        If the section parameter is passed, only apply that section of the template"""
+        if not section:
+            # self.apply_objects_config()
+            # self.apply_global_config()
+            self.apply_access_lists_config()
+        elif section == "global":
+            self.apply_global_config()
+        elif section == "access-lists":
+            self.apply_access_lists_config()

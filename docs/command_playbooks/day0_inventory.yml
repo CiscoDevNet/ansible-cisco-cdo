@@ -117,59 +117,58 @@ CDO_cisco_aahackne:
           host_cdo_sec:
             - "logging host management 172.30.4.111 17/10025"
 
-          objects:
-            network_objects:
-              - "object network INSIDE-NET"
-              - " subnet 192.168.11.0 255.255.255.0"
-              - "object network DMZ-NET"
-              - " subnet 192.168.22.0 255.255.255.0"
-              - "object network app-1"
-              - " host 192.168.22.101"
-              - "object network app-2"
-              - " host 192.168.22.102"
-              - "object network mongo-db-1"
-              - " host 192.168.11.101"
-              - "object network mongo-db-2"
-              - " host 192.168.11.102"
+        objects:
+          network_objects:
+            - "object network INSIDE-NET"
+            - " subnet 192.168.11.0 255.255.255.0"
+            - "object network DMZ-NET"
+            - " subnet 192.168.22.0 255.255.255.0"
+            - "object network app-1"
+            - " host 192.168.22.101"
+            - "object network app-2"
+            - " host 192.168.22.102"
+            - "object network mongo-db-1"
+            - " host 192.168.11.101"
+            - "object network mongo-db-2"
+            - " host 192.168.11.102"
 
-            service_objects:
-              - "object service mongo-27017"
-              - "service tcp destination eq 27017"
+          service_objects:
+            - "object service mongo-27017"
+            - "service tcp destination eq 27017"
+            - "object service mongo-27018"
+            - " service tcp destination eq 27018"
 
-              - "object service mongo-27018"
-              - " service tcp destination eq 27018"
+          network_object_groups:
+            - "object-group network LOCAL-NETS"
+            - " description Networks directly connected to this appliance"
+            - " network-object object INSIDE-NET"
+            - " network-object object DMZ-NET"
+            - "object-group network MONGO-DB-SRVRS"
+            - " description Mongo servers on INSIDE network"
+            - " network-object object mongo-db-1"
+            - " network-object object mongo-db-2"
+            - "object-group network WEB-APP-SRVRS"
+            - " description Web app servers on DMZ network"
+            - " network-object object app-1"
+            - " network-object object app-2"
 
-            network_object_groups:
-              - "object-group network LOCAL-NETS"
-              - " description Networks directly connected to this appliance"
-              - " network-object object INSIDE-NET"
-              - " network-object object DMZ-NET"
-              - "object-group network MONGO-DB-SRVRS"
-              - " description Mongo servers on INSIDE network"
-              - " network-object object mongo-db-1"
-              - " network-object object mongo-db-2"
-              - "object-group network WEB-APP-SRVRS"
-              - " description Web app servers on DMZ network"
-              - " network-object object app-1"
-              - " network-object object app-2"
-
-            service_object_groups:
-              - "object-group service ICMP-COMMON"
-              - " description Common useful ICMP services"
-              - " service-object icmp echo"
-              - " service-object icmp echo-reply"
-              - " service-object icmp unreachable"
-              - " service-object icmp source-quench"
-              - "object-group service WEB-COMMON"
-              - " description Common required ports for happy web browsing users"
-              - " service-object tcp destination eq www"
-              - " service-object tcp destination eq https"
-              - " service-object udp destination eq ntp"
-              - " service-object udp destination eq nameserver"
-              - "object-group service mongo-db-ports"
-              - " description the default ports for mongodb"
-              - " service-object object mongo-27017"
-              - " service-object object mongo-27018"
+          service_object_groups:
+            - "object-group service ICMP-COMMON"
+            - " description Common useful ICMP services"
+            - " service-object icmp echo"
+            - " service-object icmp echo-reply"
+            - " service-object icmp unreachable"
+            - " service-object icmp source-quench"
+            - "object-group service WEB-COMMON"
+            - " description Common required ports for happy web browsing users"
+            - " service-object tcp destination eq www"
+            - " service-object tcp destination eq https"
+            - " service-object udp destination eq ntp"
+            - " service-object udp destination eq nameserver"
+            - "object-group service mongo-db-ports"
+            - " description the default ports for mongodb"
+            - " service-object object mongo-27017"
+            - " service-object object mongo-27018"
 
         ip-pools:
           pool4:
@@ -178,7 +177,9 @@ CDO_cisco_aahackne:
         access-lists:
           outside:
             - "access-list outside line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
-            - "access-list outside line 2 extended deny ip any any log warnings"
+            - "access-list outside line 2 extended permit tcp any4 any4 eq www log warnings"
+            - "access-list outside line 3 extended permit tcp any4 any4 eq https log warnings"
+            - "access-list outside line 4 extended deny ip any any log warnings"
           inside:
             - "access-list inside line 1 extended permit object-group ICMP-COMMON any4 any4 log warnings"
             - "access-list inside line 2 extended permit object-group WEB-COMMON object INSIDE-NET any4 log warnings"
