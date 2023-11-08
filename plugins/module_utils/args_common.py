@@ -28,7 +28,7 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
         "options": {
             "ftd": {
                 "type": "dict",
-                "options": {
+                "suboptions": {
                     "device_name": {"required": True, "type": "str"},
                     "onboard_method": {"default": "cli", "choices": ["cli", "ltp"], "type": "str"},
                     "access_control_policy": {"default": "Default Access Control Policy", "type": "str"},
@@ -50,13 +50,13 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
             },
             "asa_ios": {
                 "type": "dict",
-                "options": {
+                "suboptions": {
                     "device_name": {"required": True, "type": "str"},
-                    "ipv4": {"type": "str"},
+                    "ipv4": {"required": True, "type": "str"},
                     "mgmt_port": {"default": 443, "type": "int"},
-                    "sdc": {"type": "str"},
-                    "username": {"type": "str"},
-                    "password": {"type": "str"},
+                    "sdc": {"required": True, "type": "str"},
+                    "username": {"required": True, "type": "str"},
+                    "password": {"required": True, "type": "str"},
                     "ignore_cert": {"default": False, "type": "bool"},
                     "device_type": {"default": "asa", "choices": ["asa", "ios"], "type": "str"},
                     "retry": {"default": 10, "type": "int"},
@@ -131,7 +131,7 @@ DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
         "type": "dict",
         "options": {
             "device_type": {"default": "all", "choices": ["all", "asa"], "type": "str"},
-            "device_name": {"type": "str"},
+            "device_name": {"required": True, "type": "str"},
             "limit": {"default": 50, "type": "int"},
             "offset": {"default": 0, "type": "int"},
         },

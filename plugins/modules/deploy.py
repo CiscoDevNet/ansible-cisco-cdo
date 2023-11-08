@@ -9,41 +9,113 @@ __metaclass__ = type
 
 
 DOCUMENTATION = r"""
----
 module: deploy
-
-short_description: Check for changes and deploy to devices (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
-
-version_added: "1.0.3"
-
-description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
+short_description: >-
+  Check for changes and deploy to devices (FTD, ASA, IOS devices) on Cisco
+  Defense Orchestrator (CDO).
+description: >-
+  This module is to report pending changes yet to be deployed (FTD, ASA, IOS
+  devices) and to actually deploy pending changes to devices through Cisco
+  Defense Orchestrator (CDO).
 options:
-    api_key:
+  api_key:
+    description: This is the CDO tenant's API token.
+    type: str
+    required: true
+  region:
+    description: This is the CDO region where the tenant exists.
+    type: str
+    choices:
+      - us
+      - eu
+      - apj
+    default: us
+  deploy:
+    description: Deploy pending configs (Changes staged in CDO) to running devices
+    type: dict
+    suboptions:
+      device_type:
+        description: 'The type of devices to deploy (asa, ios, ftd)'
+        type: str
+        required: false
+        choices:
+          - asa
+          - ios
+          - ftd
+          - all
+        default: all
+      device_name:
+        description: The CDO inventory name of the device in which we wish to deploy
         type: str
         required: true
-        no_log: true
-    region:
+      timeout:
+        description: >-
+          When polling for the deploy to complete, poll this many times.
+          The total time before we assume something has gone wrong will be
+          the timeout x interval (below)
+        type: int
+        default: 10
+      interval:
+        description: The amount of time to wait before checking to see if
+        type: int
+        default: 1
+  pending:
+    description: >-
+      Just return the pending configs (Changes staged in CDO) but DO NOT DEPLOY
+      to any devices
+    type: dict
+    suboptions:
+      device_type:
+        description: >-
+          The type of devices for which to get the pending configs (asa, ios,
+          ftd)
         type: str
-        choices: [us, eu, apj]
-        default: us
-    deploy:
-        device_type:
-            type: str
-            required: False
-            choices: [asa, ios, ftd, all]
-            default: "all"
-    pending:
-        device_type:
-            type: str
-            required: False
-            choices: [asa, ios, ftd, all]
-            default: "all"
-
+        required: false
+        choices:
+          - asa
+          - ios
+          - ftd
+          - all
+        default: all
+      device_name:
+        description: The CDO inventory name of the device in which we wish to deploy
+        type: str
+        required: true
+      limit:
+        description: The number of devices for which to retrieve changes in 1 API call
+        type: int
+        default: 50
+      offset:
+        description: Used for paging when records exceed the limit above
+        type: int
+        default: 0
 author:
-    - Aaron Hackney (@aaronhackney)
+  - Aaron Hackney (@aaronhackney)
+
 """
 
-EXAMPLES = r""" """
+EXAMPLES = r"""
+---
+- name: Deploy pending device changes
+  hosts: all
+  connection: local
+  tasks:
+    - name: Get the pending deploy for all devices in the inventory
+      cisco.cdo.deploy:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        pending:
+          device_type: "{{ hostvars[inventory_hostname].device_type }}"
+          device_name: "{{ inventory_hostname }}"
+    - name: Deploy pending device changes
+      cisco.cdo.deploy:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        deploy:
+          device_name: "{{ inventory_hostname }}"
+          timeout: 20
+          interval: 2
+"""
 
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.deploy.deploy import Deploy

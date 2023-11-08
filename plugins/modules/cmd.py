@@ -14,9 +14,9 @@ module: cmd
 
 short_description: Run arbitrary commands on an ASA or IOS device on Cisco Defense Orchestrator (CDO).
 
-version_added: "1.2.0"
-
 description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
+
+author: Aaron Hackney (@aaronhackney)
 """
 
 # fmt: off
