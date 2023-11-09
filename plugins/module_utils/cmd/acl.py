@@ -8,7 +8,6 @@ __metaclass__ = type
 
 import re
 
-# TODO Pass to methods rather than call the class self.module_params and return results and not class.results
 from ansible_collections.cisco.cdo.plugins.module_utils.cmd.cli import CLI
 
 

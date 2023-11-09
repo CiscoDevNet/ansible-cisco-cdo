@@ -6,7 +6,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import re
 import requests
 from time import sleep
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI

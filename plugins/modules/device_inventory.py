@@ -210,7 +210,6 @@ options:
 
 EXAMPLES = r"""
 ---
----
 - name: CDO Inventory operations
   hosts: all
   connection: local
