@@ -4,7 +4,7 @@
   tasks:
     - name: Get the CDO inventory for this tenant
       cisco.cdo.device_inventory:
-        api_key: "{{ lookup('file', '/run/secrets/CDO_API_KEY') }}"
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         gather:
           device_type: "all"
