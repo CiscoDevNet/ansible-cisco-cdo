@@ -27,21 +27,19 @@
     - name: Build container from Containerfile
       containers.podman.podman_image:
         path: "{{ molecule_ephemeral_directory }}"
-        # name: "molecule_local/{{ item.item.image }}"
-        name: "localhost/{{ item.item.image }}"
+        name: "molecule_local/{{ item.item.image }}"
         build:
           file: "{{ item.item.containerfile | default(item.invocation.module_args.dest) }}"
           format: "docker"
         force: "{{ item.item.force | default(True) }}"
       with_items: "{{ platforms.results }}"
-      when: platforms.changed
+      # when: platforms.changed
 
     - name: Create molecule instance(s)
       containers.podman.podman_container:
         name: "{{ item.name }}"
         hostname: "{{ item.name }}"
-        # image: "molecule_local/{{ item.image }}"
-        image: "localhost/{{ item.image }}"
+        image: "molecule_local/{{ item.image }}"
         state: started
         recreate: false
         log_driver: json-file
