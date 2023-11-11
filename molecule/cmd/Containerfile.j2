@@ -13,12 +13,10 @@ RUN cd /opt/venv/app/collections/ansible_collections/cisco/ansible-cisco-cdo && 
 RUN mv ansible-cisco-cdo cdo
 RUN pip install -r cdo/requirements.txt
 
-# Final stage
+# Stage 2: Final stage build image
 FROM python:3.10 AS build-image
 COPY --from=compile-image /opt/venv /opt/venv
-# COPY --from=compile-image /opt/venv/app/collections/cisco/cdo/.ansible.cfg /root/.ansible.cfg
 ENV PATH="/opt/venv/bin:$PATH"
-# ENV ANSIBLE_CONFIG=/opt/venv/app/collections/cisco/cdo/.ansible.cfg
-# export ANSIBLE_COLLECTIONS_PATHS=${ANSIBLE_COLLECTIONS_PATHS:+$ANSIBLE_COLLECTIONS_PATHS:}$TPA_VENV/collections
+ENV CDO_REGION=${CDO_REGION}
 ENV ANSIBLE_COLLECTIONS_PATHS=/opt/venv/app/collections
 WORKDIR /opt/venv/app/collections/ansible_collections/cisco/cdo

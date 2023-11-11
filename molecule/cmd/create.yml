@@ -37,12 +37,19 @@
 
     - name: Create molecule instance(s)
       containers.podman.podman_container:
+        # pass env variable to container at runtime "{{ (lookup('env','CDO_REGION')) }}"
         name: "{{ item.name }}"
         hostname: "{{ item.name }}"
         image: "molecule_local/{{ item.image }}"
         state: started
         recreate: false
         log_driver: json-file
+        # log_level: debug
+        # Requires the CDO_API_KEY to be stored in podman secrets
+        secrets:
+          - CDO_API_KEY
+        env:
+          CDO_REGION: "{{ (lookup('env', 'CDO_REGION')) }}"
         command: "{{ item.command | default('sleep infinity') }}"
         privileged: "{{ item.privileged | default(omit) }}"
         volumes: "{{ item.volumes | default(omit) }}"

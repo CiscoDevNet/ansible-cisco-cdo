@@ -1,8 +1,17 @@
 ---
-- name: Converge
-  hosts: all
-  gather_facts: false
+- name: Get device inventory details from CDO irrespective of the Ansible inventory
+  hosts: localhost
   tasks:
-    - name: Replace this task with one that validates your content
+    - name: Get the CDO inventory for this tenant
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('file', '/run/secrets/CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        gather:
+          device_type: "all"
+      register: inventory
+      failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
+
+    - name: Print All Results for all devices, all fields
       ansible.builtin.debug:
-        msg: "This is the effective test"
+        msg:
+          "{{ inventory }}"
