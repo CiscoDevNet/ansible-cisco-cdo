@@ -278,12 +278,14 @@ EXAMPLES = r"""
 """
 
 # fmt: off
+import json
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import FTD_Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import ASA_IOS_Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import DeleteInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.device_models import ASA_IOS, FTD, FMC
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     DeviceNotFound,
     AddDeviceFailure,
@@ -306,6 +308,18 @@ from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
 
+def normalize_device_output(results: list):
+    normalized_devices = list()
+    for device in results:
+        if device["deviceType"] == "ASA" or device["deviceType"] == "IOS":
+            normalized_devices.append(ASA_IOS.from_json(json.dumps(device)).to_dict())
+        elif device["deviceType"] == "FTDC":
+            normalized_devices.append(FTD.from_json(json.dumps(device)).to_dict())
+        elif device["deviceType"] == "FMCE":
+            normalized_devices.append(FMC.from_json(json.dumps(device)).to_dict())
+    return normalized_devices
+
+
 def main():
     result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
     module = AnsibleModule(
@@ -320,7 +334,7 @@ def main():
     if module.params.get("gather"):
         try:
             inventory_client = Inventory(module.params.get("gather"), http_session, endpoint)
-            result["stdout"] = inventory_client.gather_inventory()
+            result["stdout"] = normalize_device_output(inventory_client.gather_inventory())
             result["changed"] = False
         except (CredentialsFailure, APIError) as e:
             result["stderr"] = f"ERROR: {e.message}"

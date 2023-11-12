@@ -1,4 +1,10 @@
 ---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+# https://ansible.readthedocs.io/projects/molecule/docker/
 platforms:
   - name: molecule-python
     image: python:3.10

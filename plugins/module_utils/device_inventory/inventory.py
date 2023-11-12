@@ -78,13 +78,12 @@ class Inventory:
 
     def gather_inventory(self, limit: int = 50, offset: int = 0) -> str:
         """Get CDO inventory"""
-        # TODO: Support paging
-        # TODO: Move the urllib parse to the query lib
         query = CDOQuery.get_inventory_query(self.module_params)
         q = urllib.parse.quote_plus(query["q"])
         r = urllib.parse.quote_plus(query["r"])
         path = f"{CDOAPI.DEVICES.value}?limit={limit}&offset={offset}&q={q}&resolve={r}"
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
+        # return self.normalize_output(CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path))
 
     def get_cdfmc_access_policy_list(
         self,

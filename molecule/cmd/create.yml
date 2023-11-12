@@ -8,8 +8,7 @@
         hosts: {}
         molecule: {}
   tasks:
-    # https://github.com/ansible/molecule-cookiecutter/blob/master/%7B%7Bcookiecutter.role_name%7D%7D/molecule/%7B%7Bcookiecutter.scenario_name%7D%7D/create.yml
-    - name: Create Containerfile from image names
+    - name: Copy Containerfile from image names
       ansible.builtin.template:
         src: "{{ molecule_scenario_directory }}/Containerfile.j2"
         dest: "{{ molecule_ephemeral_directory }}/Containerfile_{{ item.image | regex_replace('[^a-zA-Z0-9_]', '_') }}.j2"
@@ -25,27 +24,27 @@
       with_items: "{{ molecule_yml.platforms }}"
       register: platforms
 
-    - name: Build container from Containerfile
+    - name: Build image from Containerfile
       containers.podman.podman_image:
         path: "{{ molecule_ephemeral_directory }}"
         name: "molecule_local/{{ item.item.image }}"
         build:
           file: "{{ item.item.containerfile | default(item.invocation.module_args.dest) }}"
           format: "docker"
+          extra_args:
+            --build-arg DEV_BRANCH="{{ (lookup('env', 'DEV_BRANCH')) }}"
         force: "{{ item.item.force | default(True) }}"
       with_items: "{{ platforms.results }}"
       # when: platforms.changed
 
-    - name: Create molecule instance(s)
+    - name: Create molecule instance(s) (Run container)
       containers.podman.podman_container:
-        # pass env variable to container at runtime "{{ (lookup('env','CDO_REGION')) }}"
         name: "{{ item.name }}"
         hostname: "{{ item.name }}"
         image: "molecule_local/{{ item.image }}"
         state: started
         recreate: false
         log_driver: json-file
-        # Requires the CDO_API_KEY to be stored in podman secrets
         secrets:
           - CDO_API_KEY,type=env
         env:
@@ -55,7 +54,7 @@
         volumes: "{{ item.volumes | default(omit) }}"
         capabilities: "{{ item.capabilities | default(omit) }}"
       register: result
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
 
     - name: Print some info
       ansible.builtin.debug:
@@ -79,13 +78,17 @@
               molecule:
                 hosts:
                   "{{ item.name }}":
-                    ansible_connection: containers.podman.podman
+                    ansible_connection: podman
       ansible.builtin.set_fact:
         molecule_inventory: >
           {{ molecule_inventory | combine(inventory_partial_yaml | from_yaml, recursive=true) }}
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+
+    - name: Check molecule inventory
+      ansible.builtin.debug:
+        msg: "molecule_inventory: {{ molecule_inventory }}"
 
     - name: Dump molecule_inventory
       ansible.builtin.copy:
@@ -103,16 +106,3 @@
         fail_msg: |
           molecule group was not found inside inventory groups: {{ groups }}
       run_once: true # noqa: run-once[task]
-
-# # we want to avoid errors like "Failed to create temporary directory"
-- name: Validate that inventory was refreshed
-  hosts: molecule
-  gather_facts: false
-  tasks:
-    - name: Check uname
-      ansible.builtin.raw: uname -a
-      register: result
-      changed_when: false
-    - name: Display uname info
-      ansible.builtin.debug:
-        msg: "{{ result.stdout }}"

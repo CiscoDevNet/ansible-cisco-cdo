@@ -73,7 +73,7 @@ class CDORequests:
             params=query,
         )
         result.raise_for_status()
-        if result.text:
+        if result.json():
             return result.json()
         else:
             return result.text
