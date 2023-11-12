@@ -32,6 +32,8 @@
         build:
           file: "{{ item.item.containerfile | default(item.invocation.module_args.dest) }}"
           format: "docker"
+          extra_args:
+            --build-arg DEV_BRANCH="{{ (lookup('env', 'DEV_BRANCH')) }}"
         force: "{{ item.item.force | default(True) }}"
       with_items: "{{ platforms.results }}"
       # when: platforms.changed
