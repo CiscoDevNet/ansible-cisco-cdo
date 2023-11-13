@@ -1,5 +1,5 @@
 ---
-- name: Test CDO device inventory functions
+- name: Test CDO device GET inventory functions
   hosts: localhost
   tasks:
     - name: Test FMC CDO get inventory for this tenant
@@ -49,6 +49,4 @@
       ansible.builtin.assert:
         that:
           - "'IOS' in item.deviceType"
-        success_msg: "IOS found in device record"
-        fail_msg: "IOS not found in device record"
       loop: "{{ inventory.cdo }}"
