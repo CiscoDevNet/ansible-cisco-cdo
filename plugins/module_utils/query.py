@@ -36,6 +36,8 @@ class CDOQuery:
                 "((model:false) AND ((deviceType:FMC_MANAGED_DEVICE) OR (deviceType:FTDC))) AND "
                 "(NOT deviceType:FMCE)"
             )
+        elif device_type == "fmc":
+            q = "deviceType:FMC OR deviceType:FMCE"
         if filter:
             q = q.replace(
                 "(model:false)", f"(model:false) AND ((name:{filter}) OR (ipv4:{filter}) OR (serial:{filter}))"
