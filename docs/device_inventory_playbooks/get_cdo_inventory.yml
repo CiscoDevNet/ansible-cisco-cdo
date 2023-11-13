@@ -11,7 +11,8 @@
       register: inventory
       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
 
-    - name: Print All Results for all devices, all fields
+    - name: Print inventory results
       ansible.builtin.debug:
         msg:
-          "{{ inventory }}"
+          "{{ inventory.cdo }}"
+      when: inventory.cdo is defined

@@ -321,7 +321,7 @@ def normalize_device_output(results: list):
 
 
 def main():
-    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
+    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], cdo=None, rc=0, failed=False, changed=False)
     module = AnsibleModule(
         argument_spec=INVENTORY_ARGUMENT_SPEC,
         required_one_of=[INVENTORY_REQUIRED_ONE_OF],
@@ -334,7 +334,7 @@ def main():
     if module.params.get("gather"):
         try:
             inventory_client = Inventory(module.params.get("gather"), http_session, endpoint)
-            result["stdout"] = normalize_device_output(inventory_client.gather_inventory())
+            result["cdo"] = normalize_device_output(inventory_client.gather_inventory())
             result["changed"] = False
         except (CredentialsFailure, APIError) as e:
             result["stderr"] = f"ERROR: {e.message}"
@@ -343,10 +343,10 @@ def main():
         if module.params.get("add", {}).get("ftd"):
             ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
             try:
-                result["stdout"] = ftd_client.add_ftd()
+                result["cdo"] = ftd_client.add_ftd()
                 result["changed"] = True
             except DuplicateObject as e:
-                result["stdout"] = f"Device Not added: {e.message}"
+                result["cdo"] = f"Device Not added: {e.message}"
                 result["changed"] = False
                 result["failed"] = False
             except (AddDeviceFailure, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
@@ -356,10 +356,10 @@ def main():
         if module.params.get("add", {}).get("asa_ios"):
             asa_ios_client = ASA_IOS_Inventory(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
             try:
-                result["stdout"] = asa_ios_client.add_asa_ios()
+                result["cdo"] = asa_ios_client.add_asa_ios()
                 result["changed"] = True
             except DuplicateObject as e:
-                result["stdout"] = f"Device Not added: {e.message}"
+                result["cdo"] = f"Device Not added: {e.message}"
                 result["changed"] = False
                 result["failed"] = False
             except (SDCNotFound, InvalidCertificate, DeviceUnreachable, CredentialsFailure, APIError) as e:
