@@ -83,7 +83,6 @@ class Inventory:
         r = urllib.parse.quote_plus(query["r"])
         path = f"{CDOAPI.DEVICES.value}?limit={limit}&offset={offset}&q={q}&resolve={r}"
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
-        # return self.normalize_output(CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path))
 
     def get_cdfmc_access_policy_list(
         self,

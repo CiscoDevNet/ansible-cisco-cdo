@@ -28,7 +28,9 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
         "options": {
             "ftd": {
                 "type": "dict",
-                "suboptions": {
+                "options": {
+                    "retry": {"type": "int", "required": False, "default": 10},
+                    "delay": {"type": "int", "required": False, "default": 1},
                     "device_name": {"required": True, "type": "str"},
                     "onboard_method": {"default": "cli", "choices": ["cli", "ltp"], "type": "str"},
                     "access_control_policy": {"default": "Default Access Control Policy", "type": "str"},
@@ -42,15 +44,13 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
                         "choices": ["FTDv", "FTDv5", "FTDv10", "FTDv20", "FTDv30", "FTDv50", "FTDv100"],
                         "type": "str",
                     },
-                    "retry": {"default": 10, "type": "int"},
-                    "delay": {"default": 1, "type": "int"},
                     "serial": {"type": "str"},
                     "password": {"type": "str"},
                 },
             },
             "asa_ios": {
                 "type": "dict",
-                "suboptions": {
+                "options": {
                     "device_name": {"required": True, "type": "str"},
                     "ipv4": {"required": True, "type": "str"},
                     "mgmt_port": {"default": 443, "type": "int"},

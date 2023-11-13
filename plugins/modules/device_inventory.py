@@ -54,11 +54,11 @@ options:
   add:
     description: 'This option onboards an FTD, ASA, or IOS device to be managed by CDO'
     type: dict
-    suboptions:
+    options:
       ftd:
         description: Define an FTD device to onboard
         type: dict
-        suboptions:
+        options:
           device_name:
             description: Add a device to CDO and give it this display name
             type: str
@@ -132,7 +132,7 @@ options:
       asa_ios:
         description: Define an FTD device to onboard
         type: dict
-        suboptions:
+        options:
           device_name:
             description: Add a device to CDO and give it this display name
             type: str
@@ -192,7 +192,7 @@ options:
       This option removes an FTD, ASA, or IOS device from CDO and cdFMC if
       relevant.
     type: dict
-    suboptions:
+    options:
       device_name:
         description: 'The type of device to delete [ASA, IOS, FTD]'
         type: str
@@ -307,6 +307,18 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('inventory')
+fh = logging.FileHandler('/tmp/inventory.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("inventory Logger started......")
+# fmt: on
+
 
 def normalize_device_output(results: list):
     normalized_devices = list()
@@ -321,7 +333,9 @@ def normalize_device_output(results: list):
 
 
 def main():
-    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], cdo=None, rc=0, failed=False, changed=False)
+    result = dict(
+        msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], cdo=None, rc=0, failed=False, changed=False
+    )
     module = AnsibleModule(
         argument_spec=INVENTORY_ARGUMENT_SPEC,
         required_one_of=[INVENTORY_REQUIRED_ONE_OF],
@@ -343,7 +357,8 @@ def main():
         if module.params.get("add", {}).get("ftd"):
             ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
             try:
-                result["cdo"] = ftd_client.add_ftd()
+                add_result = ftd_client.add_ftd()
+                result["cdo"] = add_result
                 result["changed"] = True
             except DuplicateObject as e:
                 result["cdo"] = f"Device Not added: {e.message}"
