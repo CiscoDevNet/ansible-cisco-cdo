@@ -71,3 +71,22 @@
         (hostvars[inventory_hostname].device_type == "asa" or
         hostvars[inventory_hostname].device_type == "ios") and
         added_device.cdo.serial is defined
+
+- name: Print CDO inventory
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Get the CDO inventory for this tenant
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        gather:
+          device_type: "all"
+      register: cdo_inventory
+      failed_when: (cdo_inventory.stderr is defined) and (cdo_inventory.stderr | length > 0)
+
+    - name: Print CDO inventory results
+      ansible.builtin.debug:
+        msg:
+          "{{ cdo_inventory.cdo }}"
+      when: cdo_inventory.cdo is defined
