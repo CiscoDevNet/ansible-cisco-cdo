@@ -9,6 +9,7 @@ platforms:
     image: python:3.10
     containerfile: Containerfile.j2
     pre_build_image: false
+  # - name: ElPaso
 
 driver:
   options:
@@ -20,5 +21,17 @@ driver:
 provisioner:
   name: ansible
   inventory:
-    links:
-      hosts: inventory.yml
+    host_vars:
+      molecule-python:
+        ansible_python_interpreter: /usr/local/bin/python
+        device_type: ftd
+        onboard_method: cli
+        access_control_policy: Default Access Control Policy
+        is_virtual: true
+        performance_tier: FTDv10
+        license:
+          - BASE
+          - THREAT
+          - URLFilter
+          - MALWARE
+          - PLUS
