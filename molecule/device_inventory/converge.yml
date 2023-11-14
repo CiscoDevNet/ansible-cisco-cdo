@@ -1,4 +1,51 @@
 ---
+- name: Test CDO FTD device onboarding
+  hosts: all
+  connection: local
+  tasks:
+    - name: Add FTD to CDO and cdFMC via CLI or LTP
+      when: hostvars[inventory_hostname].device_type == "ftd"
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        add:
+          ftd:
+            device_name: "{{ inventory_hostname }}"
+            onboard_method: "{{ hostvars[inventory_hostname].onboard_method }}"
+            access_control_policy: "{{ hostvars[inventory_hostname].access_control_policy }}"
+            is_virtual: "{{ hostvars[inventory_hostname].is_virtual }}"
+            performance_tier: "{{ hostvars[inventory_hostname].performance_tier }}"
+            license: "{{ hostvars[inventory_hostname].license }}"
+            serial: "{{ hostvars[inventory_hostname].serial | default(omit) }}"
+            password: "{{ hostvars[inventory_hostname].password | default(omit) }}"
+      register: added_device
+      failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
+
+    - name: Debug added_device
+      ansible.builtin.debug:
+        msg: "{{ added_device.cdo }}"
+
+    - name: Test - FTD was added successfully
+      ansible.builtin.assert:
+        that:
+          - "'configure manager add' in added_device.cdo.metadata.generatedCommand"
+        success_msg: "FTD added successfully - config manager string was generated"
+      when: >
+        hostvars[inventory_hostname].device_type == "ftd" and
+        hostvars[inventory_hostname].onboard_method == "cli" and
+        added_device.cdo.metadata is defined
+
+    - name: Test - FTD was added successfully
+      ansible.builtin.assert:
+        that:
+          - "'sudiSerialNumber' in added_device.cdo.sseDeviceSerialNumberRegistration"
+          - "'sudiSerialNumber' | length > 0"
+        success_msg: "FTD added successfully via LTP - Serial number added"
+      when: >
+        hostvars[inventory_hostname].device_type == "ftd" and
+        hostvars[inventory_hostname].onboard_method == "ltp" and
+        added_device.cdo.sseDeviceSerialNumberRegistration is defined
+
 - name: Test CDO device GET inventory functions
   hosts: localhost
   tasks:

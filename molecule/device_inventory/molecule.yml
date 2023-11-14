@@ -4,7 +4,6 @@ dependency:
   options:
     requirements-file: requirements.yml
 
-# https://ansible.readthedocs.io/projects/molecule/docker/
 platforms:
   - name: molecule-python
     image: python:3.10
@@ -17,3 +16,9 @@ driver:
     login_cmd_template: "podman exec -ti {instance} bash"
     ansible_connection_options:
       ansible_connection: podman
+
+provisioner:
+  name: ansible
+  inventory:
+    links:
+      hosts: inventory.yml
