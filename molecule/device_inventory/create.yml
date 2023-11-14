@@ -18,7 +18,7 @@
 
     - name: Copy requirements into the podman build dir
       ansible.builtin.template:
-        src: "requirements.txt"
+        src: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/requirements.txt"
         dest: "{{ molecule_ephemeral_directory }}/requirements.txt"
         mode: preserve
       with_items: "{{ molecule_yml.platforms }}"

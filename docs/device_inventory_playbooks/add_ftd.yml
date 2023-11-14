@@ -27,6 +27,11 @@
         msg:
           "{{ added_device.cdo['metadata']['generatedCommand'] }}"
 
+    - name: Print CLI FTD results
+      ansible.builtin.debug:
+        msg:
+          "{{ added_device.cdo }}"
+
     - name: Print LTP FTD results
       when: added_device.cdo['metadata'] is not defined and hostvars[inventory_hostname].device_type == "ftd"
       ansible.builtin.debug:

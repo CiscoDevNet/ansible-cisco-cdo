@@ -25,6 +25,24 @@
       register: added_device
       failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
 
+    - name: Add ASA or IOS device to CDO
+      when: hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        add:
+          asa_ios:
+            sdc: "{{ hostvars[inventory_hostname].sdc if hostvars[inventory_hostname].sdc is defined }}"
+            device_name: "{{ inventory_hostname }}"
+            ipv4: "{{ hostvars[inventory_hostname].ipv4 }}"
+            mgmt_port: "{{ hostvars[inventory_hostname].mgmt_port }}"
+            device_type: "{{ hostvars[inventory_hostname].device_type }}"
+            username: "{{ hostvars[inventory_hostname].username }}"
+            password: "{{ hostvars[inventory_hostname].password }}"
+            ignore_cert: "{{ hostvars[inventory_hostname].ignore_cert }}"
+      register: added_device
+      failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
+
     - name: Debug added_device
       ansible.builtin.debug:
         msg: "{{ added_device.cdo }}"
@@ -50,55 +68,23 @@
         hostvars[inventory_hostname].onboard_method == "ltp" and
         added_device.cdo.sseDeviceSerialNumberRegistration is defined
 
-#
-# - name: Test CDO device GET inventory functions
-#   hosts: localhost
-#   tasks:
-#     - name: Test FMC CDO get inventory for this tenant
-#       cisco.cdo.device_inventory:
-#         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-#         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
-#         gather:
-#           device_type: "fmc"
-#       register: inventory
-#       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
-#
-#     - name: Test - Find cdFMC in inventory
-#       ansible.builtin.assert:
-#         that:
-#           - "'FMCE' in item.deviceType"
-#         success_msg: "cdFMC found in device record"
-#         fail_msg: "cdFMC not found in device record"
-#       loop: "{{ inventory.cdo }}"
-#
-#     - name: Test ASA CDO get inventory for this tenant
-#       cisco.cdo.device_inventory:
-#         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-#         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
-#         gather:
-#           device_type: "asa"
-#       register: inventory
-#       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
-#
-#     - name: Test - Find ASA in inventory
-#       ansible.builtin.assert:
-#         that:
-#           - "'ASA' in item.deviceType"
-#         success_msg: "ASA found in device record"
-#         fail_msg: "ASA not found in device record"
-#       loop: "{{ inventory.cdo }}"
-#
-#     - name: Test IOS CDO get inventory for this tenant
-#       cisco.cdo.device_inventory:
-#         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-#         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
-#         gather:
-#           device_type: "ios"
-#       register: inventory
-#       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
-#
-#     - name: Test - Find IOS in inventory
-#       ansible.builtin.assert:
-#         that:
-#           - "'IOS' in item.deviceType"
-#       loop: "{{ inventory.cdo }}"
+    - name: Test - ASA or IOS device was added successfully
+      ansible.builtin.assert:
+        that:
+          - "'sudiSerialNumber' in added_device.cdo.sseDeviceSerialNumberRegistration"
+          - "'added_device.cdo.sseDeviceSerialNumberRegistration.sudiSerialNumber' | length > 0"
+        success_msg: "FTD added successfully via LTP - Serial number added"
+      when: >
+        (hostvars[inventory_hostname].device_type == "asa" or
+        hostvars[inventory_hostname].device_type == "ios") and
+        added_device.cdo.serial is defined
+
+    # - name: Delete device from CDO inventory
+    #   cisco.cdo.device_inventory:
+    #     api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+    #     region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+    #     delete:
+    #       device_name: "{{ inventory_hostname }}"
+    #       device_type: "{{ hostvars[inventory_hostname].device_type }}"
+    #   register: deleted_device
+    #   failed_when: (deleted_device.stderr is defined) and (deleted_device.stderr | length > 0)
