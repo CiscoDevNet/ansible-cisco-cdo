@@ -3,10 +3,6 @@
   hosts: all
   connection: local
   tasks:
-    - name: Print hostvars from inventory
-      ansible.builtin.debug:
-        msg: "{{ inventory_hostname }} - {{ hostvars }}"
-
     - name: Add FTD to CDO and cdFMC via CLI or LTP
       when: hostvars[inventory_hostname].device_type == "ftd"
       cisco.cdo.device_inventory:
@@ -43,13 +39,10 @@
       register: added_device
       failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
 
-    - name: Debug added_device
-      ansible.builtin.debug:
-        msg: "{{ added_device.cdo }}"
-
     - name: Test - FTD was added successfully
       ansible.builtin.assert:
         that:
+          - "'generatedCommand' in added_device.cdo.metadata"
           - "'configure manager add' in added_device.cdo.metadata.generatedCommand"
         success_msg: "FTD added successfully - config manager string was generated"
       when: >
@@ -61,7 +54,7 @@
       ansible.builtin.assert:
         that:
           - "'sudiSerialNumber' in added_device.cdo.sseDeviceSerialNumberRegistration"
-          - "'sudiSerialNumber' | length > 0"
+          - "added_device.cdo.sseDeviceSerialNumberRegistration.sudiSerialNumber | length > 0"
         success_msg: "FTD added successfully via LTP - Serial number added"
       when: >
         hostvars[inventory_hostname].device_type == "ftd" and
@@ -71,20 +64,10 @@
     - name: Test - ASA or IOS device was added successfully
       ansible.builtin.assert:
         that:
-          - "'sudiSerialNumber' in added_device.cdo.sseDeviceSerialNumberRegistration"
-          - "'added_device.cdo.sseDeviceSerialNumberRegistration.sudiSerialNumber' | length > 0"
-        success_msg: "FTD added successfully via LTP - Serial number added"
+          - "'serial' in added_device.cdo"
+          - "added_device.cdo.serial | length > 5"
+        success_msg: "{{ hostvars[inventory_hostname].device_type }} added successfully"
       when: >
         (hostvars[inventory_hostname].device_type == "asa" or
         hostvars[inventory_hostname].device_type == "ios") and
         added_device.cdo.serial is defined
-
-    # - name: Delete device from CDO inventory
-    #   cisco.cdo.device_inventory:
-    #     api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
-    #     region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
-    #     delete:
-    #       device_name: "{{ inventory_hostname }}"
-    #       device_type: "{{ hostvars[inventory_hostname].device_type }}"
-    #   register: deleted_device
-    #   failed_when: (deleted_device.stderr is defined) and (deleted_device.stderr | length > 0)

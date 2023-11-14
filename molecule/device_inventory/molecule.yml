@@ -21,7 +21,7 @@ platforms:
     containerfile: Containerfile.j2
     pre_build_image: false
 
-  - name: Amarillo
+  - name: Austin-CSR-1000v
     image: python:3.10
     containerfile: Containerfile.j2
     pre_build_image: false
@@ -74,11 +74,11 @@ provisioner:
         username: cisco
         password: Admin123!!
         ignore_cert: true
-      Amarillo:
+      Austin-CSR-1000v:
         ansible_python_interpreter: /usr/local/bin/python
-        device_type: asa
-        ipv4: 172.30.4.119
-        mgmt_port: 8443
+        device_type: ios
+        ipv4: 172.30.4.250
+        mgmt_port: 22
         sdc: CDO_cisco_aahackne-SDC-1
         username: cisco
         password: Admin123!!
