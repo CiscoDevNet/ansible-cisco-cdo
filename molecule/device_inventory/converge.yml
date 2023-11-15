@@ -1,5 +1,5 @@
 ---
-- name: Test CDO FTD device onboarding
+- name: Test CDO ASA, IOS, and FTD (ltp and cli) device onboarding
   hosts: all
   connection: local
   tasks:
@@ -50,7 +50,7 @@
         hostvars[inventory_hostname].onboard_method == "cli" and
         added_device.cdo.metadata is defined
 
-    - name: Test - FTD was added successfully
+    - name: Test - Return values from adding FTD
       ansible.builtin.assert:
         that:
           - "'sudiSerialNumber' in added_device.cdo.sseDeviceSerialNumberRegistration"
@@ -61,7 +61,7 @@
         hostvars[inventory_hostname].onboard_method == "ltp" and
         added_device.cdo.sseDeviceSerialNumberRegistration is defined
 
-    - name: Test - ASA or IOS device was added successfully
+    - name: Test - Return values from adding ASA or IOS device
       ansible.builtin.assert:
         that:
           - "'serial' in added_device.cdo"
@@ -72,21 +72,20 @@
         hostvars[inventory_hostname].device_type == "ios") and
         added_device.cdo.serial is defined
 
-- name: Print CDO inventory
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Get the CDO inventory for this tenant
+    - name: Get device from CDO (also tests gather function in module)
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         gather:
-          device_type: "all"
+          device_type: "{{ hostvars[inventory_hostname].device_type }}"
+          filter: "{{ inventory_hostname }}"
       register: cdo_inventory
       failed_when: (cdo_inventory.stderr is defined) and (cdo_inventory.stderr | length > 0)
 
-    - name: Print CDO inventory results
-      ansible.builtin.debug:
-        msg:
-          "{{ cdo_inventory.cdo }}"
-      when: cdo_inventory.cdo is defined
+    - name: Test - ASA or IOS device was added successfully
+      ansible.builtin.assert:
+        that:
+          - "cdo_inventory.cdo | length == 1"
+          - "'name' in cdo_inventory.cdo[0]"
+          - "cdo_inventory.cdo[0]['name'] == inventory_hostname"
+        success_msg: "{{ inventory_hostname }} found in CDO inventory"
