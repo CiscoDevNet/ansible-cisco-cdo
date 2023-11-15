@@ -22,18 +22,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     CredentialsFailure,
 )
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('inv')
-fh = logging.FileHandler('/tmp/inv.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Logger started inv.py......")
-# fmt: on
-
 
 class ASA_IOS_Inventory:
     """Class to add/remove ASA and IOS devices from CDO inventory"""
@@ -103,7 +91,7 @@ class ASA_IOS_Inventory:
     def add_asa_ios(self):
         """Add ASA or IOS device to CDO"""
         lar_list = self.inventory_client.get_lar_list()
-        if len(lar_list) != 1:
+        if not lar_list:
             raise (SDCNotFound("Could not find SDC"))
         else:
             lar = lar_list[0]

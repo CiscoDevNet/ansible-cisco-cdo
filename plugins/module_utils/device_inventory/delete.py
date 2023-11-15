@@ -29,7 +29,7 @@ class DeleteInventory:
         # TODO: Paging for large device lists
         self.module_params["filter"] = self.module_params.get("device_name")
         device_list = self.inventory_client.gather_inventory()
-        if len(device_list) < 1:
+        if not device_list:
             raise DeviceNotFound(
                 f"Cannot delete {self.module_params.get('device_name')} - device by that name not found"
             )

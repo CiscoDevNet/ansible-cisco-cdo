@@ -10,18 +10,6 @@ import requests
 from ansible_collections.cisco.cdo.plugins.module_utils.cmd.acl import CLIACL
 from ansible_collections.cisco.cdo.plugins.module_utils.cmd.acl import CLI
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('template')
-fh = logging.FileHandler('/tmp/template.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Logger started template.py......")
-# fmt: on
-
 
 class ApplyTemplate:
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str) -> None:
@@ -81,5 +69,4 @@ class ApplyTemplate:
                 "users",
             ]
             for section in sections:
-                logger.debug(f"running section: {section}")
                 self.apply_common(section)

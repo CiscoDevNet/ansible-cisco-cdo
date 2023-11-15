@@ -62,7 +62,7 @@ class CDORequests:
 
     @CDOAPIWrapper()
     @staticmethod
-    def get(http_session: requests.Session, url: str, path: str = None, query: dict = None) -> str:
+    def get(http_session: requests.Session, url: str, path: str = None, query: dict = None):
         """Given the CDO endpoint, path, and query, return the json payload from the API"""
         # TODO: convert dictionary of query to encoded string with safe values..
         # params = urllib.parse.quote(query.encode('utf-8'), safe='()/')
@@ -75,8 +75,8 @@ class CDORequests:
         result.raise_for_status()
         if result.json():
             return result.json()
-        else:
-            return result.text
+        # else:
+        #     return result.text
 
     @CDOAPIWrapper()
     @staticmethod
