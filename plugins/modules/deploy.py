@@ -135,7 +135,9 @@ from ansible.module_utils.basic import AnsibleModule
 
 
 def main():
-    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
+    result = dict(
+        msg="", cdo=None, stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False
+    )
     module = AnsibleModule(
         argument_spec=DEPLOY_ARGUMENT_SPEC,
         required_one_of=[DEPLOY_MUTUALLY_REQUIRED_ONE_OF],
@@ -149,8 +151,8 @@ def main():
     if module.params.get("deploy"):
         try:
             deploy_client = Deploy(module.params.get("deploy"), http_session, endpoint)
-            result["stdout"] = deploy_client.deploy_changes()
-            if result["stdout"]:
+            result["cdo"] = deploy_client.deploy_changes()
+            if result["cdo"]:
                 result["changed"] = True
         except (DeviceNotFound, TooManyMatches, APIError, CredentialsFailure) as e:
             result["stderr"] = f"ERROR: {e.message}"
@@ -159,7 +161,7 @@ def main():
     if module.params.get("pending"):
         try:
             deploy_client = Deploy(module.params.get("pending"), http_session, endpoint)
-            result["stdout"] = deploy_client.get_pending_deploy()
+            result["cdo"] = deploy_client.get_pending_deploy()
         except (DeviceNotFound, APIError, CredentialsFailure) as e:
             result["stderr"] = f"ERROR: {e.message}"
 

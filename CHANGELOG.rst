@@ -39,20 +39,20 @@ v1.1.2
 
 v1.1.3
 ======
-Documentation corrections
+- Documentation corrections
 
 v1.1.4
 ======
-Fixed an issue where onboarding an LTP firewall could result in a 404 error
+- Fixed an issue where onboarding an LTP firewall could result in a 404 error
 
 v1.1.5
 ======
-Fixed idempotence with add ftd/asa device_inventory module (Issue #19)
+- Fixed idempotence with add ftd/asa device_inventory module (Issue #19)
 
-v1.2.0
+v1.1.6
 ======
-
-New Modules
------------
-- cmd - Send arbitrary CLI commands to ASA and IOS devices
-
+- Added molecule integration testing
+- Changed module output from [stdout] to [cdo]
+- removed jmsepath from requirements
+- added dataclasses-json to requirements
+- Bug fixes
