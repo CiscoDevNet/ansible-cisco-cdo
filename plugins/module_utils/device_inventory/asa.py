@@ -101,9 +101,10 @@ class ASA_IOS_Inventory:
         )
 
     def add_asa_ios(self):
+        logger.debug(f"Entering add ASA: {self.module_params}")
         """Add ASA or IOS device to CDO"""
         lar_list = self.inventory_client.get_lar_list()
-        if len(lar_list) != 1:
+        if not lar_list:
             raise (SDCNotFound("Could not find SDC"))
         else:
             lar = lar_list[0]

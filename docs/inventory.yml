@@ -6,7 +6,7 @@ CDO_cisco_tenant_name:
       ipv4: 172.30.4.101
       mgmt_port: 8443
       sdc: CDO_cisco_SDC-1
-      username: cisco
+      username: '{{ lookup("env", "ASA_USERNAME") }}'
       password: '{{ lookup("env", "ASA_PASSWORD") }}'
       ignore_cert: true
     Amarillo:
@@ -14,7 +14,7 @@ CDO_cisco_tenant_name:
       ipv4: 172.30.4.119
       mgmt_port: 8443
       sdc: CDO_cisco_SDC-1
-      username: cisco
+      username: '{{ lookup("env", "ASA_USERNAME") }}'
       password: '{{ lookup("env", "ASA_PASSWORD") }}'
       ignore_cert: true
     Austin-CSR-1000v:
@@ -22,7 +22,7 @@ CDO_cisco_tenant_name:
       ipv4: 172.30.4.250
       mgmt_port: 22
       sdc: CDO_SDC-1
-      username: cisco
+      username: '{{ lookup("env", "IOS_USERNAME") }}'
       password: '{{ lookup("env", "IOS_PASSWORD") }}'
       ignore_cert: true
     ElPaso:

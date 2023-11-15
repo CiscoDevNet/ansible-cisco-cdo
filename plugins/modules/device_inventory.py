@@ -321,14 +321,18 @@ logger.debug("inventory Logger started......")
 
 
 def normalize_device_output(results: list):
+    """From the json data returned from the CDO API, use the models defined in
+    module_utils/device_models.py to determine what data we return to the calling playbook"""
+    results = [results] if isinstance(results, dict) else results  # we expect a list
     normalized_devices = list()
-    for device in results:
-        if device["deviceType"] == "ASA" or device["deviceType"] == "IOS":
-            normalized_devices.append(ASA_IOS.from_json(json.dumps(device)).to_dict())
-        elif device["deviceType"] == "FTDC":
-            normalized_devices.append(FTD.from_json(json.dumps(device)).to_dict())
-        elif device["deviceType"] == "FMCE":
-            normalized_devices.append(FMC.from_json(json.dumps(device)).to_dict())
+    if results:
+        for device in results:
+            if device.get("deviceType") == "ASA" or device.get("deviceType") == "IOS":
+                normalized_devices.append(ASA_IOS.from_json(json.dumps(device)).to_dict())
+            elif device.get("deviceType") == "FTDC":
+                normalized_devices.append(FTD.from_json(json.dumps(device)).to_dict())
+            elif device.get("deviceType") == "FMCE":
+                normalized_devices.append(FMC.from_json(json.dumps(device)).to_dict())
     return normalized_devices
 
 
@@ -369,9 +373,9 @@ def main():
                 result["changed"] = False
                 result["failed"] = True
         if module.params.get("add", {}).get("asa_ios"):
-            asa_ios_client = ASA_IOS_Inventory(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
             try:
-                result["cdo"] = asa_ios_client.add_asa_ios()
+                asa_ios_client = ASA_IOS_Inventory(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
+                result["cdo"] = normalize_device_output(asa_ios_client.add_asa_ios())
                 result["changed"] = True
             except DuplicateObject as e:
                 result["cdo"] = f"Device Not added: {e.message}"

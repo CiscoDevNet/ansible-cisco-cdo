@@ -71,7 +71,7 @@ provisioner:
         ipv4: 172.30.4.101
         mgmt_port: 8443
         sdc: CDO_cisco_aahackne-SDC-1
-        username: cisco
+        username: ${ASA_USERNAME}
         password: ${ASA_PASSWORD}
         ignore_cert: true
       Austin-CSR-1000v:
@@ -80,6 +80,6 @@ provisioner:
         ipv4: 172.30.4.250
         mgmt_port: 22
         sdc: CDO_cisco_aahackne-SDC-1
-        username: cisco
+        username: ${IOS_USERNAME}
         password: ${IOS_PASSWORD}
         ignore_cert: true
