@@ -11,3 +11,4 @@ build/
 MANIFEST
 .DS_Store
 tests/output/
+.env
