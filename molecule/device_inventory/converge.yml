@@ -89,3 +89,4 @@
           - "'name' in cdo_inventory.cdo[0]"
           - "cdo_inventory.cdo[0]['name'] == inventory_hostname"
         success_msg: "{{ inventory_hostname }} found in CDO inventory"
+        fail_msg: "Fail message: {{ cdo_inventory }} "

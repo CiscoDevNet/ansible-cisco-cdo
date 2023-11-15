@@ -1,7 +1,5 @@
 FROM python:3.10
-# Required environment vars:
-# DEV_BRANCH=xxxx for the git branch under test
-# CDO_REGION=xx [us, apj, eu]
+# Required environment var - DEV_BRANCH=xxxx for the git branch under test
 ARG DEV_BRANCH
 RUN apt-get update
 RUN mkdir -p /app/collections/ansible_collections/cisco
@@ -9,6 +7,5 @@ WORKDIR /app/collections/ansible_collections/cisco
 RUN git clone https://github.com/CiscoDevNet/ansible-cisco-cdo.git cdo
 RUN cd /app/collections/ansible_collections/cisco/cdo && git checkout ${DEV_BRANCH}
 RUN pip install --upgrade pip && pip install ansible ansible-lint && pip install -r cdo/requirements.txt
-ENV CDO_REGION=${CDO_REGION}
 ENV ANSIBLE_COLLECTIONS_PATHS=/app/collections
 WORKDIR /app/collections/ansible_collections/cisco/cdo
