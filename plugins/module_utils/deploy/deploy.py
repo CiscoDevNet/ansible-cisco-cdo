@@ -21,22 +21,9 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotF
 
 # TODO: Document and Link with cdFMC Ansible module to deploy staged FTD configs
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('cmd')
-fh = logging.FileHandler('/tmp/deploy.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Logger started deploy.py......")
-# fmt: on
-
 
 class Deploy:
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
-        logger.debug(f"init: module_params: {module_params}")
         self.module_params = module_params
         self.http_session = http_session
         self.endpoint = endpoint
@@ -102,7 +89,6 @@ class Deploy:
 
     def get_pending_deploy(self) -> str:
         """Given a device name, return the config staged in CDO to be deployed, if any"""
-        logger.debug(f"module parameters: {self.module_params}")
         pending_change = list()
         q = CDOQuery.pending_changes_query(self.module_params)
         result = CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEPLOY.value}", query=q)
@@ -120,5 +106,4 @@ class Deploy:
                 )
                 staged_config["action"] = event.get("action")
             pending_change.append(staged_config)
-        logger.debug(f"pending_change: {pending_change}")
         return pending_change

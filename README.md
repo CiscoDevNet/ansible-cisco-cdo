@@ -19,10 +19,19 @@ pip3 install -r requirements.txt
 
 ### Cisco Defense Orchestrator API Key
 This module is for interacting with the Cisco Defense Orchestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommended that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
-In the sample playbooks under `/docs`, we are getting this API key from an environment variable. You will also need to supply the CDO regional instance where this API key was generated (us, eu, apj). In a bash shell, you will add something like this to your `.bashrc` file or other bash profile settings:
+In the sample playbooks under `/docs`, we are getting this API key from an environment variable. You will also need to supply the CDO regional instance where this API key was generated (us, eu, apj).
+
+In the sample inventory file, you will see where we are also pulling the username/password for devices from environment variables as well. If you wish to get started by modeling the sample inventory and playbooks found in `/Docs` then you will also need to supply those credentials via an environment variable.
+
+In a bash shell, you will add something like this to your `.bashrc` file or other bash profile settings:
 ```
 export CDO_API_KEY="xxxxx"
 export CDO_REGION="us"
+export ASA_PASSWORD='xxxxxxx'
+export FTD_PASSWORD='xxxxxxx'
+export IOS_PASSWORD='xxxxxxx'
+export ASA_USERNAME="xxxxxxx"
+export IOS_USERNAME="xxxxxxx"
 ```
 
 ## Included content
