@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -9,102 +8,213 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 DOCUMENTATION = r"""
----
-module: inventory
-
-short_description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
-
-version_added: "1.0.0"
-
-description: This module is to read inventory (FTD, ASA, IOS devices) on Cisco Defense Orchestrator (CDO).
-options:
-    api_key:
-        type: str
-        required: true
-        no_log: true
-    region:
-        type: str
-        choices: [us, eu, apj]
-        default: us
-    add:
-        ftd:
-            device_name:
-                type: str
-                required: True
-            onboard_method:
-                type: str
-                choices: [ltp, cli]
-                default: cli
-            access_control_policy:
-                type: str
-                default: Default Access Control Policy
-            is_virtual:
-                default: False
-                type: bool
-            license:
-                type: list
-                choices: [BASE, THREAT, URLFilter, MALWARE, CARRIER, PLUS, APEX, VPNOnly]
-                default: [BASE]
-            performance_tier:
-                type: str
-                choices: [FTDv, FTDv5, FTDv10, FTDv20, FTDv30, FTDv50, FTDv100]
-            retry:
-                type: int
-                default: 10
-            delay:
-                type: int
-                default: 1
-            serial:
-                type: str
-            password:
-                type: str
-        asa_ios:
-            device_name:
-                type: str
-                required: True
-            ipv4:
-                type: str
-            port:
-                type: int
-                default: 443
-            sdc:
-                type: str
-            username:
-                type: str
-            password:
-                type: str
-            ignore_cert:
-                type: bool
-                default: False
-            device_type:
-                type: str
-                choices: [asa, ios]
-                default: asa
-            retry:
-                type: int
-                default: 10
-            delay:
-                type: int
-                default: 1
-    delete:
-        device_name:
-            type: str
-            required: True
-        device_type:
-            type: str
-            required: True
-            choices: [asa, ios, ftd]
-
-author:
-    - Aaron Hackney (@aaronhackney)
+module: device_inventory
+short_description: >-
+  This module is to read, add, and delete inventory (FTD, ASA, IOS devices) on
+  Cisco Defense Orchestrator (CDO).
+description: >-
+  This module is to read, add, and delete inventory (FTD, ASA, IOS devices) on
+  Cisco Defense Orchestrator (CDO).
+author: Aaron Hackney (@aaronhackney)
 requirements:
   - pycryptodome
   - requests
+options:
+  api_key:
+    description: This is the CDO tenant's API token.
+    type: str
+    required: true
+  region:
+    description: This is the CDO region where the tenant exists.
+    type: str
+    choices:
+      - us
+      - eu
+      - apj
+    default: us
+  gather:
+    description: >-
+      This option gathers inventory information from CDO and returns things like
+      serial number, code version, uptime, etc.
+    type: dict
+    suboptions:
+      filter:
+        description: Filter the inventory based on a device's name or ipv4 address
+        type: str
+      device_type:
+        description: The types of devices to gather from inventory
+        type: str
+        choices:
+          - all
+          - asa
+          - ios
+          - ftd
+          - fmc
+        default: all
+  add:
+    description: 'This option onboards an FTD, ASA, or IOS device to be managed by CDO'
+    type: dict
+    options:
+      ftd:
+        description: Define an FTD device to onboard
+        type: dict
+        options:
+          device_name:
+            description: Add a device to CDO and give it this display name
+            type: str
+            required: true
+          onboard_method:
+            description: Onboard the FTD using the traditional CLI or via LTP
+            type: str
+            choices:
+              - ltp
+              - cli
+            default: cli
+          access_control_policy:
+            description: >-
+              The access-control-policy from FMC to apply to the device at the
+              time of onboarding
+            type: str
+            default: Default Access Control Policy
+          is_virtual:
+            description: 'If this is a virtual FTD, set this to true'
+            default: false
+            type: bool
+          license:
+            description: >-
+              Provide a list of license entitlements to apply to the device. Can
+              be changed later.
+            type: list
+            elements: str
+            choices:
+              - BASE
+              - THREAT
+              - URLFilter
+              - MALWARE
+              - CARRIER
+              - PLUS
+              - APEX
+              - VPNOnly
+            default:
+              - BASE
+          performance_tier:
+            description: 'If this is an FTDv, select a performance tier'
+            type: str
+            choices:
+              - FTDv
+              - FTDv5
+              - FTDv10
+              - FTDv20
+              - FTDv30
+              - FTDv50
+              - FTDv100
+          retry:
+            description: >-
+              While waiting for the device to be added to CDO, retry this many
+              times before giving up and failing.
+            type: int
+            default: 10
+          delay:
+            description: The amount of time to wait before retrying (See retry above)
+            type: int
+            default: 1
+          serial:
+            description: >-
+              If the LTP onboarding method is used, we must provide a serial
+              number
+            type: str
+          password:
+            description: >-
+              If the LTP onboarding method is used and the device has never been
+              logged into we must provide a new admin password. Note that this
+              needs to meet password complexity requirements.
+            type: str
+      asa_ios:
+        description: Define an FTD device to onboard
+        type: dict
+        options:
+          device_name:
+            description: Add a device to CDO and give it this display name
+            type: str
+            required: true
+          ipv4:
+            description: >-
+              The ip address that the SDC will use to communicate with the SDC.
+              Usually the management interface ip address.
+            type: str
+            required: true
+          mgmt_port:
+            description: >-
+              The TCP port on which the ASDM interface on the ASA listens. 443
+              is the default.
+            type: int
+            default: 443
+          sdc:
+            description: >-
+              The exact name of the SDC that will communicate with this ASA.
+              This name can be found in CDO under Tools & Services --> Secure
+              Connectors
+            type: str
+            required: true
+          username:
+            description: The admin username used to log into the ASA
+            type: str
+            required: true
+          password:
+            description: The admin password for the above username used to log into the ASA
+            type: str
+            required: true
+          ignore_cert:
+            description: >-
+              If the ASA ASDM interface has an expired, self-signed, or invalid
+              certificate, onboard it anyway (RISK!)
+            type: bool
+            default: false
+          device_type:
+            description: 'The type of device to onboard, an ASA or an IOS device'
+            type: str
+            choices:
+              - asa
+              - ios
+            default: asa
+          retry:
+            description: >-
+              While waiting for the device to be added to CDO, retry this many
+              times before giving up and failing.
+            type: int
+            default: 10
+          delay:
+            description: The amount of time to wait before retrying (See retry above)
+            type: int
+            default: 1
+  delete:
+    description: >-
+      This option removes an FTD, ASA, or IOS device from CDO and cdFMC if
+      relevant.
+    type: dict
+    options:
+      device_name:
+        description: 'The type of device to delete [ASA, IOS, FTD]'
+        type: str
+        required: true
+      device_type:
+        description: The name of the device in CDO inventory to delete
+        type: str
+        required: true
+        choices:
+          - asa
+          - ios
+          - ftd
 
 """
 
 EXAMPLES = r"""
 ---
+- name: CDO Inventory operations
+  hosts: all
+  connection: local
+  tasks:
+
 - name: Get device inventory details
   hosts: localhost
   tasks:
@@ -114,15 +224,7 @@ EXAMPLES = r"""
         region: "us"
         gather:
           device_type: "all"
-      register: inventory
-      failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
 
-    - name: Print All Results for all devices, all fields
-      ansible.builtin.debug:
-        msg:
-          "{{ inventory.stdout }}"
-
----
 - name: Add FTD CDO inventory via CLI or LTP
   hosts: all
   connection: local
@@ -141,28 +243,13 @@ EXAMPLES = r"""
             performance_tier: "{{ hostvars[inventory_hostname].performance_tier }}"
             license: "{{ hostvars[inventory_hostname].license }}"
             serial: "{{ hostvars[inventory_hostname].serial | default(omit) }}"
-      register: added_device
-      failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
 
-    - name: Print CLI FTD results
-      when: added_device.stdout['metadata'] is defined and hostvars[inventory_hostname].device_type == "ftd"
-      ansible.builtin.debug:
-        msg:
-          "{{ added_device.stdout['metadata']['generatedCommand'] }}"
-
-    - name: Print LTP FTD results
-      when: added_device.stdout['metadata'] is not defined and hostvars[inventory_hostname].device_type == "ftd"
-      ansible.builtin.debug:
-        msg:
-          "{{ added_device.stdout }}"
-
----
 - name: Add ansible inventory to CDO
   hosts: all
   connection: local
   tasks:
     - name: Add ASA to CDO
-      when:  hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
+      when: hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
@@ -176,14 +263,7 @@ EXAMPLES = r"""
             username: "{{ hostvars[inventory_hostname].username }}"
             password: "{{ hostvars[inventory_hostname].password }}"
             ignore_cert: "{{ hostvars[inventory_hostname].ignore_cert }}"
-      register: added_device
-      failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
 
-    - name: Print results
-      ansible.builtin.debug:
-        msg: "{{ added_device }}"
-
----
 - name: Delete devices from CDO inventory
   hosts: all
   connection: local
@@ -194,23 +274,18 @@ EXAMPLES = r"""
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         delete:
           device_name: "{{ inventory_hostname }}"
-          device_type:  "{{ hostvars[inventory_hostname].device_type }}"
-      register: deleted_device
-      failed_when: (deleted_device.stderr is defined) and (deleted_device.stderr | length > 0)
-
-    - name: Print results
-      ansible.builtin.debug:
-        msg:
-          "{{ deleted_device }}"
+          device_type: "{{ hostvars[inventory_hostname].device_type }}"
 """
 
 # fmt: off
+import json
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.common import gather_inventory
-from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import add_ftd
-from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import add_asa_ios
-from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import delete_device
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import FTD_Inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import ASA_IOS_Inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import DeleteInventory
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.device_models import ASA_IOS, FTD, FMC
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     DeviceNotFound,
     AddDeviceFailure,
@@ -232,34 +307,61 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('inventory')
+fh = logging.FileHandler('/tmp/inventory.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("inventory Logger started......")
+# fmt: on
+
+
+def normalize_device_output(results: list):
+    normalized_devices = list()
+    for device in results:
+        if device["deviceType"] == "ASA" or device["deviceType"] == "IOS":
+            normalized_devices.append(ASA_IOS.from_json(json.dumps(device)).to_dict())
+        elif device["deviceType"] == "FTDC":
+            normalized_devices.append(FTD.from_json(json.dumps(device)).to_dict())
+        elif device["deviceType"] == "FMCE":
+            normalized_devices.append(FMC.from_json(json.dumps(device)).to_dict())
+    return normalized_devices
+
 
 def main():
-    result = dict(msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], rc=0, failed=False, changed=False)
+    result = dict(
+        msg="", stdout="", stdout_lines=[], stderr="", stderr_lines=[], cdo=None, rc=0, failed=False, changed=False
+    )
     module = AnsibleModule(
         argument_spec=INVENTORY_ARGUMENT_SPEC,
         required_one_of=[INVENTORY_REQUIRED_ONE_OF],
         mutually_exclusive=INVENTORY_MUTUALLY_EXCLUSIVE,
         required_if=INVENTORY_REQUIRED_IF,
     )
-    endpoint = CDORegions.get_endpoint(module.params.get("region"))
+    endpoint = CDORegions[module.params.get("region")].value
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
-
     # Get inventory from CDO and return a list of dict(s) - Devices and attributes
     if module.params.get("gather"):
         try:
-            result["stdout"] = gather_inventory(module.params.get("gather"), http_session, endpoint)
+            inventory_client = Inventory(module.params.get("gather"), http_session, endpoint)
+            result["cdo"] = normalize_device_output(inventory_client.gather_inventory())
             result["changed"] = False
         except (CredentialsFailure, APIError) as e:
             result["stderr"] = f"ERROR: {e.message}"
-
     # Add devices to CDO inventory and return a json dictionary of the new device attributes
     if module.params.get("add"):
         if module.params.get("add", {}).get("ftd"):
+            ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
             try:
-                result["stdout"] = add_ftd(module.params.get("add", {}).get("ftd"), http_session, endpoint)
+                add_result = ftd_client.add_ftd()
+                result["cdo"] = add_result
                 result["changed"] = True
             except DuplicateObject as e:
-                result["stdout"] = f"Device Not added: {e.message}"
+                result["cdo"] = f"Device Not added: {e.message}"
                 result["changed"] = False
                 result["failed"] = False
             except (AddDeviceFailure, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
@@ -267,22 +369,24 @@ def main():
                 result["changed"] = False
                 result["failed"] = True
         if module.params.get("add", {}).get("asa_ios"):
+            asa_ios_client = ASA_IOS_Inventory(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
             try:
-                result["stdout"] = add_asa_ios(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
+                result["cdo"] = asa_ios_client.add_asa_ios()
                 result["changed"] = True
             except DuplicateObject as e:
-                result["stdout"] = f"Device Not added: {e.message}"
+                result["cdo"] = f"Device Not added: {e.message}"
                 result["changed"] = False
                 result["failed"] = False
             except (SDCNotFound, InvalidCertificate, DeviceUnreachable, CredentialsFailure, APIError) as e:
                 result["stderr"] = f"ERROR: {e.message}"
                 result["changed"] = False
                 result["failed"] = True
-
     # Delete an ASA, FTD, or IOS device from CDO/cdFMC
+    # TODO: not found should not fail....
     if module.params.get("delete"):
         try:
-            result["stdout"] = delete_device(module.params.get("delete"), http_session, endpoint)
+            delete_client = DeleteInventory(module.params.get("delete"), http_session, endpoint)
+            delete_client.delete_device()
             result["changed"] = True
         except (DeviceNotFound, TooManyMatches) as e:
             result["stderr"] = f"ERROR: {e.message}"

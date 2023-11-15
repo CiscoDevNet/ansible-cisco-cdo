@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
 # Apache License v2.0+ (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0)
@@ -30,6 +29,8 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
             "ftd": {
                 "type": "dict",
                 "options": {
+                    "retry": {"type": "int", "required": False, "default": 10},
+                    "delay": {"type": "int", "required": False, "default": 1},
                     "device_name": {"required": True, "type": "str"},
                     "onboard_method": {"default": "cli", "choices": ["cli", "ltp"], "type": "str"},
                     "access_control_policy": {"default": "Default Access Control Policy", "type": "str"},
@@ -43,8 +44,6 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
                         "choices": ["FTDv", "FTDv5", "FTDv10", "FTDv20", "FTDv30", "FTDv50", "FTDv100"],
                         "type": "str",
                     },
-                    "retry": {"default": 10, "type": "int"},
-                    "delay": {"default": 1, "type": "int"},
                     "serial": {"type": "str"},
                     "password": {"type": "str"},
                 },
@@ -53,11 +52,11 @@ INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
                 "type": "dict",
                 "options": {
                     "device_name": {"required": True, "type": "str"},
-                    "ipv4": {"type": "str"},
+                    "ipv4": {"required": True, "type": "str"},
                     "mgmt_port": {"default": 443, "type": "int"},
-                    "sdc": {"type": "str"},
-                    "username": {"type": "str"},
-                    "password": {"type": "str"},
+                    "sdc": {"required": True, "type": "str"},
+                    "username": {"required": True, "type": "str"},
+                    "password": {"required": True, "type": "str"},
                     "ignore_cert": {"default": False, "type": "bool"},
                     "device_type": {"default": "asa", "choices": ["asa", "ios"], "type": "str"},
                     "retry": {"default": 10, "type": "int"},
@@ -132,7 +131,7 @@ DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
         "type": "dict",
         "options": {
             "device_type": {"default": "all", "choices": ["all", "asa"], "type": "str"},
-            "device_name": {"type": "str"},
+            "device_name": {"required": True, "type": "str"},
             "limit": {"default": 50, "type": "int"},
             "offset": {"default": 0, "type": "int"},
         },
@@ -142,3 +141,32 @@ DEPLOY_MUTUALLY_REQUIRED_ONE_OF = ["deploy", "pending"]
 DEPLOY_MUTUALLY_EXCLUSIVE = []
 DEPLOY_REQUIRED_TOGETHER = []
 DEPLOY_REQUIRED_IF = []
+
+#############################
+# Commands
+CMD_ARGUMENT_SPEC = COMMON_SPEC | {
+    "exec_command": {
+        "type": "dict",
+        "options": {
+            "device_type": {"default": "asa", "choices": ["all", "asa", "ios"]},
+            "device_name": {"required": True, "type": "str"},
+            "cmd_list": {"required": True, "type": "list"},
+            "retries": {"default": 20, "type": "int"},
+            "interval": {"default": 2, "type": "int"},
+        },
+    },
+    "apply_template": {
+        "type": "dict",
+        "options": {
+            "device_type": {"default": "asa", "choices": ["all", "asa", "ios"]},
+            "device_name": {"required": True, "type": "str"},
+            "retries": {"default": 20, "type": "int"},
+            "interval": {"default": 2, "type": "int"},
+            "config": {"required": True, "type": "dict"},
+        },
+    },
+}
+CMD_MUTUALLY_REQUIRED_ONE_OF = ["exec_command", "load_config", "clear_config", "apply_template"]
+CMD_MUTUALLY_EXCLUSIVE = []
+CMD_REQUIRED_TOGETHER = []
+CMD_REQUIRED_IF = []

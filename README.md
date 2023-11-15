@@ -50,6 +50,31 @@ collections:
 **"Show don't tell"**
 See the docs directory and README for practical usage of this collection.
 
+## Docker
+If you prefer to run this in a docker container, we have included a Dockerfile that will install all of the needed python libraries and the CDO Ansible collection `cisco.cdo`
+
+### Build Docker Container
+From the root of the github repo where the Dockerfile resides:
+
+```
+docker build --tag cisco_cdo_collection:latest .
+```
+
+### Run the Docker Container interactively
+This presumes that your shell currently has environment variables CDO_API_KEY and CDO_REGION. If not, you could always pass those as literals in the `docker run` statement.
+```
+docker run -e CDO_API_KEY=$CDO_API_KEY \
+           -e CDO_REGION=$CDO_REGION \
+           -it cisco_cdo_collection:latest /bin/bash
+```
+
+
+### Test the collection
+You can test that the collection in installed and working by getting the CDO inventory directly from CDO without even creating an inventory file by using one of the sample playbooks in the docs directory.
+
+```
+ansible-playbook docs/device_inventory_playbooks/get_cdo_inventory.yml
+```
 ## Contributing to this collection
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco Defense Orchestrator collection repository](https://github.com/CiscoDevNet/ansible-cisco-cdo). See [Contributing to Ansible-maintained collections](https://docs.ansible.com/ansible/devel/community/contributing_maintained_collections.html#contributing-maintained-collections) for complete details.
 ### Gitleaks

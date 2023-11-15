@@ -1,0 +1,92 @@
+---
+- name: Test CDO ASA, IOS, and FTD (ltp and cli) device onboarding
+  hosts: all
+  connection: local
+  tasks:
+    - name: Add FTD to CDO and cdFMC via CLI or LTP
+      when: hostvars[inventory_hostname].device_type == "ftd"
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        add:
+          ftd:
+            device_name: "{{ inventory_hostname }}"
+            onboard_method: "{{ hostvars[inventory_hostname].onboard_method }}"
+            access_control_policy: "{{ hostvars[inventory_hostname].access_control_policy }}"
+            is_virtual: "{{ hostvars[inventory_hostname].is_virtual }}"
+            performance_tier: "{{ hostvars[inventory_hostname].performance_tier }}"
+            license: "{{ hostvars[inventory_hostname].license }}"
+            serial: "{{ hostvars[inventory_hostname].serial | default(omit) }}"
+            password: "{{ hostvars[inventory_hostname].password | default(omit) }}"
+      register: added_device
+      failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
+
+    - name: Add ASA or IOS device to CDO
+      when: hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        add:
+          asa_ios:
+            sdc: "{{ hostvars[inventory_hostname].sdc if hostvars[inventory_hostname].sdc is defined }}"
+            device_name: "{{ inventory_hostname }}"
+            ipv4: "{{ hostvars[inventory_hostname].ipv4 }}"
+            mgmt_port: "{{ hostvars[inventory_hostname].mgmt_port }}"
+            device_type: "{{ hostvars[inventory_hostname].device_type }}"
+            username: "{{ hostvars[inventory_hostname].username }}"
+            password: "{{ hostvars[inventory_hostname].password }}"
+            ignore_cert: "{{ hostvars[inventory_hostname].ignore_cert }}"
+      register: added_device
+      failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
+
+    - name: Test - FTD was added successfully
+      ansible.builtin.assert:
+        that:
+          - "'generatedCommand' in added_device.cdo.metadata"
+          - "'configure manager add' in added_device.cdo.metadata.generatedCommand"
+        success_msg: "FTD added successfully - config manager string was generated"
+      when: >
+        hostvars[inventory_hostname].device_type == "ftd" and
+        hostvars[inventory_hostname].onboard_method == "cli" and
+        added_device.cdo.metadata is defined
+
+    - name: Test - Return values from adding FTD
+      ansible.builtin.assert:
+        that:
+          - "'sudiSerialNumber' in added_device.cdo.sseDeviceSerialNumberRegistration"
+          - "added_device.cdo.sseDeviceSerialNumberRegistration.sudiSerialNumber | length > 0"
+        success_msg: "FTD added successfully via LTP - Serial number added"
+      when: >
+        hostvars[inventory_hostname].device_type == "ftd" and
+        hostvars[inventory_hostname].onboard_method == "ltp" and
+        added_device.cdo.sseDeviceSerialNumberRegistration is defined
+
+    - name: Test - Return values from adding ASA or IOS device
+      ansible.builtin.assert:
+        that:
+          - "'serial' in added_device.cdo"
+          - "added_device.cdo.serial | length > 5"
+        success_msg: "{{ hostvars[inventory_hostname].device_type }} added successfully"
+      when: >
+        (hostvars[inventory_hostname].device_type == "asa" or
+        hostvars[inventory_hostname].device_type == "ios") and
+        added_device.cdo.serial is defined
+
+    - name: Get device from CDO (also tests gather function in module)
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        gather:
+          device_type: "{{ hostvars[inventory_hostname].device_type }}"
+          filter: "{{ inventory_hostname }}"
+      register: cdo_inventory
+      failed_when: (cdo_inventory.stderr is defined) and (cdo_inventory.stderr | length > 0)
+
+    - name: Test - ASA or IOS device was added successfully
+      ansible.builtin.assert:
+        that:
+          - "cdo_inventory.cdo | length == 1"
+          - "'name' in cdo_inventory.cdo[0]"
+          - "cdo_inventory.cdo[0]['name'] == inventory_hostname"
+        success_msg: "{{ inventory_hostname }} found in CDO inventory"
+        fail_msg: "Fail message: {{ cdo_inventory }} "

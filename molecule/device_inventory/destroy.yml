@@ -1,0 +1,30 @@
+---
+- name: Destroy molecule containers
+  hosts: molecule
+  gather_facts: false
+  tasks:
+    - name: Delete test devices from CDO inventory
+      cisco.cdo.device_inventory:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        delete:
+          device_name: "{{ inventory_hostname }}"
+          device_type: "{{ hostvars[inventory_hostname].device_type }}"
+      register: deleted_device
+      failed_when: (deleted_device.stderr is defined) and (deleted_device.stderr | length > 0)
+
+    - name: Stop and remove container
+      delegate_to: localhost
+      containers.podman.podman_container:
+        name: "{{ inventory_hostname }}"
+        state: absent
+        auto_remove: true
+
+- name: Remove dynamic molecule inventory
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Remove dynamic inventory file
+      ansible.builtin.file:
+        path: "{{ molecule_ephemeral_directory }}/inventory/molecule_inventory.yml"
+        state: absent

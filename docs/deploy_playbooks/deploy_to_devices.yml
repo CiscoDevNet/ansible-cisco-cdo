@@ -17,4 +17,4 @@
     - name: Print All Results
       ansible.builtin.debug:
         msg:
-          "{{ deploy }}"
+          "{{ deploy.cdo }}"
