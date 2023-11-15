@@ -249,7 +249,7 @@ EXAMPLES = r"""
   connection: local
   tasks:
     - name: Add ASA to CDO
-      when:  hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
+      when: hostvars[inventory_hostname].device_type == "asa" or hostvars[inventory_hostname].device_type == "ios"
       cisco.cdo.device_inventory:
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
@@ -274,7 +274,7 @@ EXAMPLES = r"""
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         delete:
           device_name: "{{ inventory_hostname }}"
-          device_type:  "{{ hostvars[inventory_hostname].device_type }}"
+          device_type: "{{ hostvars[inventory_hostname].device_type }}"
 """
 
 # fmt: off

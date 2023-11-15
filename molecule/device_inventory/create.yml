@@ -65,7 +65,7 @@
         item.container.State.ExitCode != 0 or
         not item.container.State.Running
       ansible.builtin.include_tasks:
-        file: tasks/create-fail.yml
+        file: "{{ molecule_scenario_directory }}/tasks/create-fail.yml"
       loop: "{{ result.results }}"
       loop_control:
         label: "{{ item.container.Name }}"
