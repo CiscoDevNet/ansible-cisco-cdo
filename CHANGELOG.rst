@@ -52,7 +52,8 @@ v1.1.5
 v1.1.6
 ======
 - Added molecule integration testing
-- Changed module output from [stdout] to [cdo]
+- Changed module output from [stdout] to [cdo] (See sample playbooks in docs)
 - removed jmsepath from requirements
 - added dataclasses-json to requirements
+- refined inventory output fields
 - Bug fixes
