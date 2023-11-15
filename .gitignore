@@ -12,3 +12,4 @@ MANIFEST
 .DS_Store
 tests/output/
 .env
+Docs/.inventory.yml

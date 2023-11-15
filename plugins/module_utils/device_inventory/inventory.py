@@ -14,18 +14,6 @@ import urllib.parse
 import requests
 import uuid
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('helper')
-fh = logging.FileHandler('/tmp/helper.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("helper Logger started......")
-# fmt: on
-
 
 class Inventory:
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):

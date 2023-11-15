@@ -21,19 +21,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
 )
 
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('cli')
-fh = logging.FileHandler('/tmp/cli.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("Logger started cli.py......")
-# fmt: on
-
-
 class CLI:
     # TODO: Trigger OOB check before write operations
     # TODO: get running config and process it into needed parts

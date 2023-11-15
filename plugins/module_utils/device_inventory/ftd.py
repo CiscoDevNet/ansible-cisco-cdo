@@ -16,18 +16,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.invento
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, AddDeviceFailure, DuplicateObject, ObjectNotFound
 # fmt: on
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('ftd_util')
-fh = logging.FileHandler('/tmp/ftd_util.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("ftd_util Logger started......")
-# fmt: on
-
 
 class FTD_Inventory:
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):

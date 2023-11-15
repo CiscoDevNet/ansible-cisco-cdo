@@ -11,18 +11,6 @@ from enum import Enum
 from functools import wraps
 from .errors import DuplicateObject, APIError, DeviceNotFound, CredentialsFailure
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('api')
-fh = logging.FileHandler('/tmp/api.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("api Logger started......")
-# fmt: on
-
 
 class CDORegions(Enum):
     """CDO API Endpoints by Region"""

@@ -307,18 +307,6 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
-# fmt: off
-# Remove for publishing....
-import logging
-logging.basicConfig()
-logger = logging.getLogger('inventory')
-fh = logging.FileHandler('/tmp/inventory.log')
-fh.setLevel(logging.DEBUG)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
-logger.debug("inventory Logger started......")
-# fmt: on
-
 
 def normalize_device_output(results: list):
     """From the json data returned from the CDO API, use the models defined in
