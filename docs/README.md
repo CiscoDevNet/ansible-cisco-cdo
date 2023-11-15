@@ -23,7 +23,7 @@ e.g. `--limit=Austin`
 ## Notes
 - Use the sample Ansible inventory file `inventory.yml` for inventory definition examples of devices to add to CDO and general operations
 - Use the sample Ansible inventory file `inventory_to_delete.yml` for inventory definition examples of devices to delete from CDO
-- Passwords and API keys should NEVER be stored in clear text in inventory or playbooks. Use Ansible vault, environment variables, or other best practices to sote passwords and API keys
+- Passwords and API keys should NEVER be stored in clear text in inventory or playbooks. Use Ansible vault, environment variables, or other best practices to store passwords and API keys
 - `device_inventory_playbooks/add_asa_ios.yml` and `device_inventory_playbooks/add_ftd.yml` are playbook examples of how to use the sample inventory file `inventory.yml` to add devices to CDO
   - Adds:
     - ASA devices

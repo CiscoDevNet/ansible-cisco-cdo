@@ -77,7 +77,6 @@ class FTD_Inventory:
                     initialProvisionData=base64.b64encode('{"nkey":""}'.encode("ascii")).decode("ascii"),
                     sudiSerialNumber=self.module_params.get("serial"),
                 )
-
             ftd_device["sseEnabled"] = True
             new_ftd_device = CDORequests.post(
                 self.http_session, f"https://{self.endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device

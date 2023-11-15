@@ -1,12 +1,12 @@
 ---
 # TODO: Move credentials to vault. Here for demo purposes
-CDO_cisco_aahackne:
+CDO_cisco_tenant_name:
   hosts:
     Austin:
       device_type: asa
       ipv4: 172.30.4.101
       mgmt_port: 8443
-      sdc: CDO_cisco_aahackne-SDC-1
+      sdc: CDO_cisco_SDC-1
       username: cisco
       password: Admin123!!
       ignore_cert: true
@@ -14,7 +14,7 @@ CDO_cisco_aahackne:
       device_type: asa
       ipv4: 172.30.4.119
       mgmt_port: 8443
-      sdc: CDO_cisco_aahackne-SDC-1
+      sdc: CDO_cisco_SDC-1
       username: cisco
       password: Admin123!!
       ignore_cert: true
@@ -22,7 +22,7 @@ CDO_cisco_aahackne:
       device_type: ios
       ipv4: 172.30.4.250
       mgmt_port: 22
-      sdc: CDO_cisco_aahackne-SDC-1
+      sdc: CDO_SDC-1
       username: cisco
       password: Admin123!!
       ignore_cert: true
