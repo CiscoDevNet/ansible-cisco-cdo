@@ -281,7 +281,7 @@ EXAMPLES = r"""
 import json
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import FTD_Inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import FTDInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import ASA_IOS_Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import DeleteInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
@@ -347,7 +347,7 @@ def main():
     # Add devices to CDO inventory and return a json dictionary of the new device attributes
     if module.params.get("add"):
         if module.params.get("add", {}).get("ftd"):
-            ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
+            ftd_client = FTDInventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
             try:
                 add_result = ftd_client.add_ftd()
                 result["cdo"] = normalize_device_output(add_result)

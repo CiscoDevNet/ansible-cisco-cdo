@@ -15,6 +15,7 @@ import requests
 # fmt: on
 
 class DeleteInventory(Inventory):
+    """Class used to remove ASA/IOS/FTD devices from CDO/cdFMC (Extends the Inventory base class in inventory.py)"""
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session

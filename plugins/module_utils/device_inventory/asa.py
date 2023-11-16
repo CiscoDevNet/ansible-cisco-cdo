@@ -23,21 +23,19 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
 )
 
 
-class ASA_IOS_Inventory:
-    """Class to add/remove ASA and IOS devices from CDO inventory"""
+class ASA_IOS_Inventory(Inventory):
+    """Class used for CDO ASA Operations (Extends the Inventory base class in inventory.py)"""
 
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
         self.endpoint = endpoint
         self.changed = False
-        self.inventory_client = Inventory(module_params, http_session, endpoint)
-        # TODO: Inherit this class from the inventory class
 
     def connectivity_poll(self, uid: str) -> bool:
         """Check device connectivity or fail after retry attempts have expired"""
         for i in range(self.module_params.get("retry")):
-            device = self.inventory_client.get_device(uid)
+            device = self.get_device(uid)
             if device["connectivityState"] == -2:
                 if self.module_params.get("ignore_cert"):
                     self.update_device(uid, data={"ignoreCertificate": True})
@@ -73,7 +71,7 @@ class ASA_IOS_Inventory:
     def ios_credentials_polling(self, uid: str) -> dict:
         """Check to see if the supplied credentials are accepted by the live device"""
         for i in range(self.module_params.get("retry")):
-            device = self.inventory_client.get_device(uid)
+            device = self.get_device(uid)
             if device["connectivityState"] == -5:
                 sleep(self.module_params.get("delay"))
             elif device["connectivityError"] is not None:
@@ -90,7 +88,7 @@ class ASA_IOS_Inventory:
 
     def add_asa_ios(self):
         """Add ASA or IOS device to CDO"""
-        lar_list = self.inventory_client.get_lar_list()
+        lar_list = self.get_lar_list()
         if not lar_list:
             raise (SDCNotFound("Could not find SDC"))
         else:
@@ -124,11 +122,11 @@ class ASA_IOS_Inventory:
 
         if self.module_params.get("device_type").upper() == "ASA":
             creds_crypto["state"] = "CERT_VALIDATED"
-            specific_device = self.inventory_client.get_specific_device(device["uid"])
+            specific_device = self.get_specific_device(device["uid"])
             path = f"{CDOAPI.ASA_CONFIG.value}/{specific_device['uid']}"
             CDORequests.put(self.http_session, f"https://{self.endpoint}", path=path, data=creds_crypto)
             self.asa_credentials_polling(specific_device["uid"])
-            return self.inventory_client.get_device(device["uid"])
+            return self.get_device(device["uid"])
         elif self.module_params.get("device_type").upper() == "IOS":
             creds_crypto["stateMachineContext"] = {"acceptCert": True}
             path = f"{CDOAPI.DEVICES.value}/{device['uid']}"
