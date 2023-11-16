@@ -70,7 +70,7 @@ provisioner:
         device_type: asa
         ipv4: 172.30.4.101
         mgmt_port: 8443
-        sdc: CDO_cisco_aahackne-SDC-1
+        sdc: ${SDC}
         username: ${ASA_USERNAME}
         password: ${ASA_PASSWORD}
         ignore_cert: true
@@ -79,7 +79,7 @@ provisioner:
         device_type: ios
         ipv4: 172.30.4.250
         mgmt_port: 22
-        sdc: CDO_cisco_aahackne-SDC-1
+        sdc: ${SDC}
         username: ${IOS_USERNAME}
         password: ${IOS_PASSWORD}
         ignore_cert: true
