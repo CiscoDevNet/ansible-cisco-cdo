@@ -16,6 +16,7 @@ import uuid
 
 
 class Inventory:
+    """Base class for CDO inventory operations"""
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
@@ -29,7 +30,7 @@ class Inventory:
         return True
 
     def generate_uuid(self):
-        # move to utility
+        """Generate a random UUID"""
         raw_uuid = uuid.uuid4().hex
         return f"{raw_uuid[0:8]}-{raw_uuid[8:12]}-{raw_uuid[12:16]}-{raw_uuid[16:20]}-{raw_uuid[20:]}"
 
@@ -92,7 +93,6 @@ class Inventory:
         offset: int = 0,
         access_list_name=None,
     ):
-        # TODO: move to ftd library
         """Given the domain uuid of the cdFMC, retrieve the list of access policies"""
         # TODO: use the FMC collection to retrieve this
         self.http_session.headers["fmc-hostname"] = cdfmc_host

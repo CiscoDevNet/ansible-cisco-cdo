@@ -17,20 +17,19 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotF
 # fmt: on
 
 
-class FTD_Inventory:
+class FTDInventory(Inventory):
+    """Class used for CDO FTD Operations (Extends the Inventory base class in inventory.py)"""
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
         self.endpoint = endpoint
         self.changed = False
-        self.inventory_client = Inventory(module_params, http_session, endpoint)
-        # TODO: Inherit this class from the inventory class
 
     def new_ftd_polling(self, uid: str):
         """Check that the new FTD specific device has been created before attempting move to the onboarding step"""
         for i in range(self.module_params.get("retry")):
             try:
-                return self.inventory_client.get_specific_device(uid)
+                return self.get_specific_device(uid)
             except DeviceNotFound:
                 sleep(self.module_params.get("delay"))
                 continue
@@ -44,10 +43,9 @@ class FTD_Inventory:
 
     def add_ftd_ltp(self, ftd_device: dict, fmc_uid: str):
         """Onboard an FTD to cdFMC using LTP (serial number onboarding)"""
-
-        if not self.inventory_client.inventory_count(
+        if not self.inventory_count(
             filter=f"serial:{self.module_params.get('serial')}"
-        ) and not self.inventory_client.inventory_count(filter=f"name:{self.module_params.get('serial')}"):
+        ) and not self.inventory_count(filter=f"name:{self.module_params.get('serial')}"):
             ftd_device["larType"] = "CDG"
             ftd_device["name"] = self.module_params.get("device_name")
             ftd_device["serial"] = self.module_params.get("serial")
@@ -69,8 +67,8 @@ class FTD_Inventory:
             new_ftd_device = CDORequests.post(
                 self.http_session, f"https://{self.endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device
             )
-            ftd_specific_device = self.inventory_client.get_specific_device(new_ftd_device["uid"])
-            new_ftd_device = self.inventory_client.get_device(new_ftd_device["uid"])
+            ftd_specific_device = self.get_specific_device(new_ftd_device["uid"])
+            new_ftd_device = self.get_device(new_ftd_device["uid"])
             CDORequests.put(
                 self.http_session,
                 f"https://{self.endpoint}",
@@ -85,9 +83,9 @@ class FTD_Inventory:
     def add_ftd(self):
         """Add an FTD to CDO via CLI or LTP process"""
         try:
-            cdfmc = self.inventory_client.get_cdfmc()
-            cdfmc_specific_device = self.inventory_client.get_specific_device(cdfmc["uid"])
-            access_policy = self.inventory_client.get_cdfmc_access_policy_list(
+            cdfmc = self.get_cdfmc()
+            cdfmc_specific_device = self.get_specific_device(cdfmc["uid"])
+            access_policy = self.get_cdfmc_access_policy_list(
                 cdfmc["host"],
                 cdfmc_specific_device["domainUid"],
                 access_list_name=self.module_params.get("access_control_policy"),

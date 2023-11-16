@@ -281,7 +281,7 @@ EXAMPLES = r"""
 import json
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
-from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import FTD_Inventory
+from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import FTDInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import ASA_IOS_Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import DeleteInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
@@ -347,10 +347,10 @@ def main():
     # Add devices to CDO inventory and return a json dictionary of the new device attributes
     if module.params.get("add"):
         if module.params.get("add", {}).get("ftd"):
-            ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
+            ftd_client = FTDInventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
             try:
                 add_result = ftd_client.add_ftd()
-                result["cdo"] = add_result
+                result["cdo"] = normalize_device_output(add_result)
                 result["changed"] = True
             except DuplicateObject as e:
                 result["cdo"] = f"Device Not added: {e.message}"
@@ -373,14 +373,16 @@ def main():
                 result["stderr"] = f"ERROR: {e.message}"
                 result["changed"] = False
                 result["failed"] = True
-    # Delete an ASA, FTD, or IOS device from CDO/cdFMC
-    # TODO: not found should not fail....
-    if module.params.get("delete"):
+    if module.params.get("delete"):# Delete an ASA, FTD, or IOS device from CDO/cdFMC
         try:
             delete_client = DeleteInventory(module.params.get("delete"), http_session, endpoint)
             delete_client.delete_device()
             result["changed"] = True
-        except (DeviceNotFound, TooManyMatches) as e:
+        except DeviceNotFound as e:
+            result["cdo"] = f"Device Not deleted: {e.message}"
+            result["changed"] = False
+            result["failed"] = False
+        except (TooManyMatches) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)

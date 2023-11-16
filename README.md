@@ -12,35 +12,51 @@ This collection has been tested against following Ansible versions: **>=2.9.10**
 
 ## External requirements
 ### Python libraries
-The needed python libraries are in requirements.txt
+The needed python libraries are in requirements.txt. From the collection root:
 ```
 pip3 install -r requirements.txt
 ```
+or
+```
+pip3 install requests pycryptodome dataclasses-json
+```
 
-### Cisco Defense Orchestrator API Key
-This module is for interacting with the Cisco Defense Orchestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommended that you do NOT store your API key or other passwords in your playbooks. Use environment variables, ansible vault, or other best practices for safe password/API key usage.
-In the sample playbooks under `/docs`, we are getting this API key from an environment variable. You will also need to supply the CDO regional instance where this API key was generated (us, eu, apj).
+
+## Environment Variables
+### Secrets: Cisco Defense Orchestrator API Key, FTD and ASA Credentials
+This module is for interacting with the Cisco Defense Orchestrator (CDO) platform and as such the module requires a CDO API key for each CDO tenant in which you wish to operate. It is STRONGLY recommended that you do NOT store your API key or other passwords in your playbooks.
+
+Use environment variables, ansible vault, or other best practices for safe password/API key usage.
+
+In the sample playbooks under `/docs`, we are getting the CDO API key and ASA/FTD credentials from environment variables.
 
 In the sample inventory file, you will see where we are also pulling the username/password for devices from environment variables as well. If you wish to get started by modeling the sample inventory and playbooks found in `/Docs` then you will also need to supply those credentials via an environment variable.
 
-In a bash shell, you will add something like this to your `.bashrc` file or other bash profile settings:
+In a bash shell, you will add something like this to your `~/.bashrc` file or your shell's profile settings:
 ```
 export CDO_API_KEY="xxxxx"
-export CDO_REGION="us"
 export ASA_PASSWORD='xxxxxxx'
 export FTD_PASSWORD='xxxxxxx'
 export IOS_PASSWORD='xxxxxxx'
 export ASA_USERNAME="xxxxxxx"
 export IOS_USERNAME="xxxxxxx"
 ```
+Then either relaunch your shell or do something like `source ~/.bashrc`
+### Other Environment Variables
+Again, for the sample playbooks in `/docs`, you will also need to supply the CDO regional instance where this API key was generated (us, eu, apj) and the NAME of your Secure Device Connector (if you are using the sample playbooks for ASA and IOS onboarding).
+
+```
+export CDO_REGION="us"
+export SDC="CDO_cisco_aahackne-SDC-1"
+```
 
 ## Included content
 <!--start collection content-->
 ### Modules
-| Name             | Description                                             |
-| ---------------- | ------------------------------------------------------- |
-| device_inventory | gather, add, or delete an FTD, ASA or IOS device to CDO |
-| deploy           | Deploy staged ASA or IOS configurations to live devices |
+| Name             | Description                                                     |
+| ---------------- | --------------------------------------------------------------- |
+| device_inventory | get inventory, add, and delete FTDs, ASAs or IOS devices to CDO |
+| deploy           | Deploy staged ASA or IOS configurations to live devices         |
 <!--end collection content-->
 
 ## Installing this collection
@@ -57,7 +73,7 @@ collections:
 ```
 ## Using the collection
 **"Show don't tell"**
-See the docs directory and README for practical usage of this collection.
+See the `docs` directory for practical usage of this collection. But in general, supply an inventory with the needed host or group attributes and run your playbooks.
 
 ## Docker
 If you prefer to run this in a docker container, we have included a Dockerfile that will install all of the needed python libraries and the CDO Ansible collection `cisco.cdo`
@@ -70,13 +86,18 @@ docker build --tag cisco_cdo_collection:latest .
 ```
 
 ### Run the Docker Container interactively
-This presumes that your shell currently has environment variables CDO_API_KEY and CDO_REGION. If not, you could always pass those as literals in the `docker run` statement.
+This presumes that your shell currently has environment variables CDO_API_KEY and CDO_REGION. If not, you could always pass those as literals in the `docker run` statement. In this example we are using the sample playbooks in the `docs` directory, so we are passing all of the usernames, passwords, and SDC variables that are references in the sample inventory and playbooks.
 ```
 docker run -e CDO_API_KEY=$CDO_API_KEY \
            -e CDO_REGION=$CDO_REGION \
+           -e ASA_PASSWORD=$ASA_PASSWORD \
+           -e FTD_PASSWORD=$FTD_PASSWORD \
+           -e IOS_PASSWORD=$IOS_PASSWORD \
+           -e ASA_USERNAME=$ASA_USERNAME \
+           -e IOS_USERNAME=$IOS_USERNAME \
+           -e SDC=$SDC \
            -it cisco_cdo_collection:latest /bin/bash
 ```
-
 
 ### Test the collection
 You can test that the collection in installed and working by getting the CDO inventory directly from CDO without even creating an inventory file by using one of the sample playbooks in the docs directory.
@@ -86,8 +107,8 @@ ansible-playbook docs/device_inventory_playbooks/get_cdo_inventory.yml
 ```
 ## Contributing to this collection
 We welcome community contributions to this collection. If you find problems, please open an issue or create a PR against the [Cisco Defense Orchestrator collection repository](https://github.com/CiscoDevNet/ansible-cisco-cdo). See [Contributing to Ansible-maintained collections](https://docs.ansible.com/ansible/devel/community/contributing_maintained_collections.html#contributing-maintained-collections) for complete details.
-### Gitleaks
 
+### Gitleaks
 We use [Gitleaks](https://github.com/gitleaks/gitleaks) to catch secrets being committed to the repository by accident. The first line of defense is before you ever push to GitHub using a pre-commit hook.
 
 Please enable the pre-commit hook before you commit anything to this repository, even in a branch.

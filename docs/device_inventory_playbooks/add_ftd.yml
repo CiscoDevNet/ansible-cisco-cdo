@@ -21,19 +21,8 @@
       register: added_device
       failed_when: (added_device.stderr is defined) and (added_device.stderr | length > 0)
 
-    - name: Print CLI FTD results
-      when: added_device.cdo['metadata'] is defined and hostvars[inventory_hostname].device_type == "ftd"
-      ansible.builtin.debug:
-        msg:
-          "{{ added_device.cdo['metadata']['generatedCommand'] }}"
-
-    - name: Print CLI FTD results
+    - name: Print Add FTD results
+      when: added_device['cdo'] is defined
       ansible.builtin.debug:
         msg:
           "{{ added_device.cdo }}"
-
-    - name: Print LTP FTD results
-      when: added_device.cdo['metadata'] is not defined and hostvars[inventory_hostname].device_type == "ftd"
-      ansible.builtin.debug:
-        msg:
-          "{{ added_device }}"
