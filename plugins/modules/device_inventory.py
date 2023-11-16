@@ -285,7 +285,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd imp
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import ASA_IOS_Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import DeleteInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
-from ansible_collections.cisco.cdo.plugins.module_utils.device_models import ASA_IOS, FTD, FMC
+from ansible_collections.cisco.cdo.plugins.module_utils.cdo_models import ASA_IOS, FTD, FMC
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     DeviceNotFound,
     AddDeviceFailure,
@@ -310,7 +310,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 def normalize_device_output(results: list):
     """From the json data returned from the CDO API, use the models defined in
-    module_utils/device_models.py to determine what data we return to the calling playbook"""
+    module_utils/cdo_models.py to determine what data we return to the calling playbook"""
     results = [results] if isinstance(results, dict) else results  # we expect a list
     normalized_devices = list()
     if results:
