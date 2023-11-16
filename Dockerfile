@@ -8,12 +8,12 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt && pip install ansible
 RUN ansible-galaxy collection install cisco.cdo
 RUN mkdir /opt/venv/app
-RUN cd /opt/venv/app && git clone https://github.com/CiscoDevNet/ansible-cisco-cdo.git
-WORKDIR /opt/venv/app/ansible-cisco-cdo
+RUN cd /opt/venv/app && git clone https://github.com/CiscoDevNet/ansible-cisco-cdo.git cdo
+WORKDIR /opt/venv/app/cdo
 
 # Final stage
 FROM python:3.10 AS build-image
 COPY --from=compile-image /opt/venv /opt/venv
 COPY --from=compile-image /root/.ansible /root/.ansible
 ENV PATH="/opt/venv/bin:$PATH"
-WORKDIR /opt/venv/app/ansible-cisco-cdo
+WORKDIR /opt/venv/app/cdo

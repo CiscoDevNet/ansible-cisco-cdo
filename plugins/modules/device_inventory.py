@@ -350,7 +350,7 @@ def main():
             ftd_client = FTD_Inventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
             try:
                 add_result = ftd_client.add_ftd()
-                result["cdo"] = add_result
+                result["cdo"] = normalize_device_output(add_result)
                 result["changed"] = True
             except DuplicateObject as e:
                 result["cdo"] = f"Device Not added: {e.message}"

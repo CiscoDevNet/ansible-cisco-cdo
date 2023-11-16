@@ -14,7 +14,7 @@
       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
 
     - name: Print inventory results
+      when: inventory.cdo is defined
       ansible.builtin.debug:
         msg:
           "{{ inventory.cdo }}"
-      when: inventory.cdo is defined
