@@ -19,15 +19,13 @@ from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.invento
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, TooManyMatches
 # fmt: on
 
-# TODO: Document and Link with cdFMC Ansible module to deploy staged FTD configs
+# TODO: Link with cdFMC Ansible module to deploy staged FTD configs
 
-
-class Deploy:
+class Deploy(Inventory):
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
         self.endpoint = endpoint
-        self.inventory_client = Inventory(module_params, http_session, endpoint)
         self.changed = False
         self.pending_changes = None
 
@@ -59,7 +57,7 @@ class Deploy:
 
         # Deploy the pending config
         self.module_params["filter"] = self.module_params.get("device_name")
-        device = self.inventory_client.gather_inventory()
+        device = self.gather_inventory()
         if len(device) == 0:
             raise (DeviceNotFound(f"Could not find device {self.module_params.get('device_name')}"))
         elif len(device) == 0:
