@@ -154,7 +154,11 @@ def main():
             result["cdo"] = deploy_client.deploy_changes()
             if result["cdo"]:
                 result["changed"] = True
-        except (DeviceNotFound, TooManyMatches, APIError, CredentialsFailure) as e:
+        except DeviceNotFound as e:
+            result["cdo"] = f"Device not found: {e.message}"
+            result["changed"] = False
+            result["failed"] = False
+        except (TooManyMatches, APIError, CredentialsFailure) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     # Get pending changes for devices
@@ -162,7 +166,11 @@ def main():
         try:
             deploy_client = Deploy(module.params.get("pending"), http_session, endpoint)
             result["cdo"] = deploy_client.get_pending_deploy()
-        except (DeviceNotFound, APIError, CredentialsFailure) as e:
+        except DeviceNotFound as e:
+            result["cdo"] = f"Device not found: {e.message}"
+            result["changed"] = False
+            result["failed"] = False
+        except (APIError, CredentialsFailure) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)
