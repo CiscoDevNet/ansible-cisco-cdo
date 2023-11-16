@@ -373,14 +373,16 @@ def main():
                 result["stderr"] = f"ERROR: {e.message}"
                 result["changed"] = False
                 result["failed"] = True
-    # Delete an ASA, FTD, or IOS device from CDO/cdFMC
-    # TODO: not found should not fail....
-    if module.params.get("delete"):
+    if module.params.get("delete"):# Delete an ASA, FTD, or IOS device from CDO/cdFMC
         try:
             delete_client = DeleteInventory(module.params.get("delete"), http_session, endpoint)
             delete_client.delete_device()
             result["changed"] = True
-        except (DeviceNotFound, TooManyMatches) as e:
+        except DeviceNotFound as e:
+            result["cdo"] = f"Device Not deleted: {e.message}"
+            result["changed"] = False
+            result["failed"] = False
+        except (TooManyMatches) as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)
