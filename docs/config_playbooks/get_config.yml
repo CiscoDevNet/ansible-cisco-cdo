@@ -1,0 +1,17 @@
+---
+- name: Get device inventory details from CDO irrespective of the Ansible inventory
+  hosts: localhost
+  tasks:
+    - name: Get the CDO inventory for this tenant
+      cisco.cdo.config:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        config:
+          device_uid: "edee72d7-616f-47b1-ba68-caa0128d1bc5"
+      register: config
+      failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)
+
+    - name: Print config results
+      ansible.builtin.debug:
+        msg:
+          "{{ config }}"

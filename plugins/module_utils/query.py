@@ -118,3 +118,15 @@ class CDOQuery:
         for key, value in query_payload.items():
             encoded_payload[key] = urllib.parse.quote_plus(value, safe=safe_chars)
         return encoded_payload
+
+    @staticmethod
+    def asa_configs(uid: str) -> dict:
+        """Given a UID of an Object Reference, generate a query to return the diff details of the config
+                q: uid:070b38b4-5ddf-455c-adfb-075908d6024a
+        resolve: [asa/configs.{name,namespace,type,version,state,stateDate,tags,tagKeys,tagValues,asaInterfaces,cryptoChecksum,selectedInterfaceObject,selectedInterfaceIP,securityContextMode,metadata}]
+        """
+        r = (
+            "[asa/configs.{name,namespace,type,version,state,stateDate,tags,tagKeys,tagValues,asaInterfaces,"
+            "cryptoChecksum,selectedInterfaceObject,selectedInterfaceIP,securityContextMode,metadata}]"
+        )
+        return CDOQuery.url_encode_query_data({"q": f"uid:{uid}", "resolve": r}, safe_chars=":,")

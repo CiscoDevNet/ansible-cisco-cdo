@@ -14,7 +14,7 @@ COMMON_SPEC = {
 }
 
 #############################
-# Inventory
+# Inventory module
 INVENTORY_ARGUMENT_SPEC = COMMON_SPEC | {
     "gather": {
         "type": "dict",
@@ -80,7 +80,7 @@ INVENTORY_REQUIRED_TOGETHER = []
 INVENTORY_REQUIRED_IF = []
 
 #############################
-# Network Objects
+# Network Objects module
 NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
     "gather": {
         "type": "dict",
@@ -116,7 +116,7 @@ NET_OBJS_REQUIRED_TOGETHER = []
 NET_OBJS_REQUIRED_IF = []
 
 #############################
-# Deploy Changes
+# Deploy Changes module
 DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
     "deploy": {
         "type": "dict",
@@ -143,7 +143,7 @@ DEPLOY_REQUIRED_TOGETHER = []
 DEPLOY_REQUIRED_IF = []
 
 #############################
-# Commands
+# Commands module
 CMD_ARGUMENT_SPEC = COMMON_SPEC | {
     "exec_command": {
         "type": "dict",
@@ -170,3 +170,41 @@ CMD_MUTUALLY_REQUIRED_ONE_OF = ["exec_command", "load_config", "clear_config", "
 CMD_MUTUALLY_EXCLUSIVE = []
 CMD_REQUIRED_TOGETHER = []
 CMD_REQUIRED_IF = []
+
+#############################
+# Config module
+CONFIG_ARGUMENT_SPEC = COMMON_SPEC | {
+    "config": {
+        "type": "dict",
+        "options": {
+            "device_uid": {"type": "str"},
+        },
+    },
+}
+CONFIG_MUTUALLY_REQUIRED_ONE_OF = ["config"]
+CONFIG_MUTUALLY_EXCLUSIVE = []
+CONFIG_REQUIRED_TOGETHER = []
+CONFIG_REQUIRED_IF = []
+
+#############################
+# Tenant module
+#############################
+# Config module
+TENANT_ARGUMENT_SPEC = COMMON_SPEC | {
+    "info": {
+        "type": "dict",
+        "options": {
+            "features": {"default": True, "type": "bool"},
+        },
+    },
+    "users": {
+        "type": "dict",
+        "options": {
+            "get": {"default": True, "type": "bool"},
+        },
+    },
+}
+TENANT_MUTUALLY_REQUIRED_ONE_OF = ["info", "users"]
+TENANT_MUTUALLY_EXCLUSIVE = []
+TENANT_REQUIRED_TOGETHER = []
+TENANT_REQUIRED_IF = []

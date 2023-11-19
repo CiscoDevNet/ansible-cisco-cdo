@@ -10,16 +10,19 @@ from enum import Enum
 
 
 class CDOAPI(Enum):
-    SVCS = "aegis/rest/v1/services"
-    DEVICES = f"{SVCS}/targets/devices"
-    WORKSET = f"{SVCS}/common/workingset"
-    FTDS = f"{SVCS}/firepower/ftds"
-    FMC = f"{SVCS}/fmc/appliance"
-    OBJS = f"{SVCS}/targets/objects"
-    LARS = f"{SVCS}/targets/proxies"
-    ASA_CONFIG = f"{SVCS}/asa/configs"
-    SPECIFIC_DEVICE = "aegis/rest/v1/device/{uid}/specific-device"  # {UID} with be replaced when using
+    AEGIS = "aegis/rest/v1"
+    ASA_CONFIGS = f"{AEGIS}/services/asa/configs"
+    ASA_DEVICE_CONFIGS = f"{AEGIS}/services/asa/devices-configs"
+    CLI_EXECUTIONS = f"{AEGIS}/services/cli/executions"
+    DEPLOY = f"{AEGIS}/services/targets/device-changelog"
+    DEVICES = f"{AEGIS}/services/targets/devices"
+    FEATURES = f"{AEGIS}/features"
+    FMC = f"{AEGIS}/services/fmc/appliance"
     FMC_ACCESS_POLICY = "fmc/api/fmc_config/v1/domain/{domain_uid}/policy/accesspolicies"  # {domain_uid} when using
-    DEPLOY = f"{SVCS}/targets/device-changelog"
-    JOBS = f"{SVCS}/state-machines/jobs"
-    CLI_EXECUTIONS = f"{SVCS}/cli/executions"
+    FTDS = f"{AEGIS}/services/firepower/ftds"
+    JOBS = f"{AEGIS}/services/state-machines/jobs"
+    LARS = f"{AEGIS}/services/targets/proxies"
+    OBJS = f"{AEGIS}/services/targets/objects"
+    SPECIFIC_DEVICE = f"{AEGIS}/device/{{uid}}/specific-device"  # {UID} with be replaced when using
+    WORKSET = f"{AEGIS}/services/common/workingset"
+    USERS = "anubis/rest/v1/users"

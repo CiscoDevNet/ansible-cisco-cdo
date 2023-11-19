@@ -33,6 +33,7 @@ class Device:
     tags: dict
     tagKeys: list
     tagValues: list
+    uid: str
 
 
 @dataclass_json
