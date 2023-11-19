@@ -55,7 +55,7 @@ class ASA_IOS_Inventory(Inventory):
         """Check credentials have been used successfully  or fail after retry attempts have expired"""
         for i in range(self.module_params.get("retry")):
             result = CDORequests.get(
-                self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.ASA_CONFIG.value}/{uid}"
+                self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.ASA_CONFIGS.value}/{uid}"
             )
             if result["state"] == "BAD_CREDENTIALS":
                 raise CredentialsFailure(
@@ -123,7 +123,7 @@ class ASA_IOS_Inventory(Inventory):
         if self.module_params.get("device_type").upper() == "ASA":
             creds_crypto["state"] = "CERT_VALIDATED"
             specific_device = self.get_specific_device(device["uid"])
-            path = f"{CDOAPI.ASA_CONFIG.value}/{specific_device['uid']}"
+            path = f"{CDOAPI.ASA_CONFIGS.value}/{specific_device['uid']}"
             CDORequests.put(self.http_session, f"https://{self.endpoint}", path=path, data=creds_crypto)
             self.asa_credentials_polling(specific_device["uid"])
             return self.get_device(device["uid"])

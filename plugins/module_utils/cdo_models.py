@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+from typing import Optional
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
 
@@ -52,5 +53,17 @@ class FTD(Device):
 
 @dataclass_json
 @dataclass
-class ASA_IOS(Device):
+class ASA(Device):
     liveAsaDevice: bool
+    asaInterfaces: Optional[list] = None
+    licenseFeatures: Optional[dict] = None
+    failover: Optional[str] = None
+    failoverMode: Optional[str] = None
+    failoverStateThis: Optional[str] = None
+    failoverStateOther: Optional[str] = None
+    failoverPrimaryState: Optional[str] = None
+    failoverSecondaryState: Optional[str] = None
+    failoverMateVersion: Optional[str] = None
+    failoverMateSerialNumber: Optional[str] = None
+    contextMode: Optional[str] = None
+    uptimeHumanReadable: Optional[str] = None

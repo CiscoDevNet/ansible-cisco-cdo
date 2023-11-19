@@ -285,7 +285,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd imp
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import ASA_IOS_Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import DeleteInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
-from ansible_collections.cisco.cdo.plugins.module_utils.cdo_models import ASA_IOS, FTD, FMC
+from ansible_collections.cisco.cdo.plugins.module_utils.cdo_models import ASA, Device, FTD, FMC
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     DeviceNotFound,
     AddDeviceFailure,
@@ -307,6 +307,18 @@ from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
 
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('inv')
+fh = logging.FileHandler('/tmp/inv.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("inv logger started......")
+# fmt: on
+
 
 def normalize_device_output(results: list):
     """From the json data returned from the CDO API, use the models defined in
@@ -315,13 +327,41 @@ def normalize_device_output(results: list):
     normalized_devices = list()
     if results:
         for device in results:
-            if device.get("deviceType") == "ASA" or device.get("deviceType") == "IOS":
-                normalized_devices.append(ASA_IOS.from_json(json.dumps(device)).to_dict())
+            if device.get("deviceType") == "ASA":
+                normalized_devices.append(ASA.from_json(json.dumps(device)).to_dict())
+            elif device.get("deviceType") == "IOS":
+                normalized_devices.append(Device.from_json(json.dumps(device)).to_dict())
             elif device.get("deviceType") == "FTDC":
                 normalized_devices.append(FTD.from_json(json.dumps(device)).to_dict())
             elif device.get("deviceType") == "FMCE":
                 normalized_devices.append(FMC.from_json(json.dumps(device)).to_dict())
     return normalized_devices
+
+
+def get_asa_extended_attributes(results: list, inventory_client: Inventory) -> list:
+    return_list = list()
+    if results:
+        for device in results:
+            if device.get("deviceType") == "ASA":
+                extended_inventory_details = inventory_client.get_asa_extended_inventory(device.get("uid"))
+                device["asaInterfaces"] = extended_inventory_details.get("asaInterfaces")
+                new_attribs = [
+                    "licenseFeatures",
+                    "failover",
+                    "failoverMode",
+                    "failoverStateThis",
+                    "failoverStateOther",
+                    "failoverPrimaryState",
+                    "failoverSecondaryState",
+                    "failoverMateVersion",
+                    "failoverMateSerialNumber",
+                    "contextMode",
+                    "uptimeHumanReadable",
+                ]
+                for attrib in new_attribs:
+                    device[attrib] = extended_inventory_details.get("metadata").get(attrib)
+            return_list.append(device)
+    return return_list
 
 
 def main():
@@ -340,7 +380,8 @@ def main():
     if module.params.get("gather"):
         try:
             inventory_client = Inventory(module.params.get("gather"), http_session, endpoint)
-            result["cdo"] = normalize_device_output(inventory_client.gather_inventory())
+            raw_inventory = get_asa_extended_attributes(inventory_client.gather_inventory(), inventory_client)
+            result["cdo"] = normalize_device_output(raw_inventory)
             result["changed"] = False
         except (CredentialsFailure, APIError) as e:
             result["stderr"] = f"ERROR: {e.message}"
@@ -373,7 +414,8 @@ def main():
                 result["stderr"] = f"ERROR: {e.message}"
                 result["changed"] = False
                 result["failed"] = True
-    if module.params.get("delete"):# Delete an ASA, FTD, or IOS device from CDO/cdFMC
+    # Delete an ASA, FTD, or IOS device from CDO/cdFMC
+    if module.params.get("delete"):
         try:
             delete_client = DeleteInventory(module.params.get("delete"), http_session, endpoint)
             delete_client.delete_device()
@@ -382,7 +424,7 @@ def main():
             result["cdo"] = f"Device Not deleted: {e.message}"
             result["changed"] = False
             result["failed"] = False
-        except (TooManyMatches) as e:
+        except TooManyMatches as e:
             result["stderr"] = f"ERROR: {e.message}"
 
     module.exit_json(**result)

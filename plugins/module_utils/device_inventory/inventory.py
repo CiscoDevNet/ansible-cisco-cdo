@@ -9,14 +9,27 @@ __metaclass__ = type
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
+from ansible_collections.cisco.cdo.plugins.module_utils.config.config import Config
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, ObjectNotFound
 import urllib.parse
 import requests
 import uuid
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('inv_helper')
+fh = logging.FileHandler('/tmp/inv_helper.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("inv_helper logger started......")
+# fmt: on
 
 
 class Inventory:
     """Base class for CDO inventory operations"""
+
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
@@ -103,3 +116,11 @@ class Inventory:
             if access_list_name is not None:
                 raise ObjectNotFound(f"Access Policy {access_list_name} not found on cdFMC.")
         return response
+
+    def get_asa_extended_inventory(self, uid):
+        config_client = Config(self.module_params, self.http_session, self.endpoint)
+        config_client.module_params["device_uid"] = uid
+        asa_devices_config = config_client.get_asa_devices_configs()
+        logger.debug(f"get_asa_devices_configs(): {asa_devices_config}")
+        if asa_devices_config:
+            return config_client.get_device_asa_configs(uid=asa_devices_config[0].get("target").get("uid"))

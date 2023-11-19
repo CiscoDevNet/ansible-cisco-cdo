@@ -45,14 +45,11 @@ class Config:
 
     def get_asa_config_old_model(self):
         """For the "old" ASA model, return the ASA (CDO) configuration"""
-        logger.debug(f"device uid type: {type(self.module_params)}")
-        logger.debug(f"device uid: {self.module_params.get('device_uid')}")
         device_data = CDORequests.get(
             self.http_session,
             f"https://{self.endpoint}",
             path=f"{CDOAPI.DEVICES.value}/{self.module_params.get('device_uid')}",
         )
-        logger.debug(f"ASA Config: {device_data.get('deviceConfig')}")
         return device_data.get("deviceConfig")
 
     def get_cdo_asa_model_type(self):
@@ -69,12 +66,19 @@ class Config:
         device_configs = CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.ASA_DEVICE_CONFIGS.value}", query=query
         )
-        logger.debug(f"get_asa_devices_configs {device_configs}")
         return device_configs
+
+    def get_device_asa_configs(self, uid=""):
+        """Get the basic information for the ASA device including license, interfaces, HA mode, etc
+        uid gets just that device, no uid returns all devices."""
+        path = f"{CDOAPI.ASA_CONFIGS.value}/{uid}" if uid else CDOAPI.ASA_CONFIGS.value
+        return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
 
     def get_asa_configs(self) -> list:
         # TODO: Add this to the inventory output!
         """Given a target uid from self.get_asa_devices_configs() return portion of the current configuration"""
+        # TODO: Determine if the tenant is using the old model or the new model and then call the appropriate
+        # TODO: function from get_asa_config()
         return self.get_asa_config_old_model()
         # asa_configs = list()
         # asa_device_configs = self.get_asa_devices_configs()
