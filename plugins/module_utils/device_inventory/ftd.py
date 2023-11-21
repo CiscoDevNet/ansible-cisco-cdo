@@ -19,6 +19,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotF
 
 class FTDInventory(Inventory):
     """Class used for CDO FTD Operations (Extends the Inventory base class in inventory.py)"""
+
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
@@ -43,42 +44,42 @@ class FTDInventory(Inventory):
 
     def add_ftd_ltp(self, ftd_device: dict, fmc_uid: str):
         """Onboard an FTD to cdFMC using LTP (serial number onboarding)"""
-        if not self.inventory_count(
-            filter=f"serial:{self.module_params.get('serial')}"
-        ) and not self.inventory_count(filter=f"name:{self.module_params.get('serial')}"):
-            ftd_device["larType"] = "CDG"
-            ftd_device["name"] = self.module_params.get("device_name")
-            ftd_device["serial"] = self.module_params.get("serial")
-            if self.module_params.get("password"):  # Set the initial admin password
-                ftd_device["sseDeviceSerialNumberRegistration"] = dict(
-                    initialProvisionData=(
-                        base64.b64encode(f'{{"nkey": "{self.module_params.get("password")}"}}'.encode("ascii")).decode(
-                            "ascii"
-                        )
-                    ),
-                    sudiSerialNumber=self.module_params.get("serial"),
-                )
-            else:  # initial password has already been set by the CLI
-                ftd_device["sseDeviceSerialNumberRegistration"] = dict(
-                    initialProvisionData=base64.b64encode('{"nkey":""}'.encode("ascii")).decode("ascii"),
-                    sudiSerialNumber=self.module_params.get("serial"),
-                )
-            ftd_device["sseEnabled"] = True
-            new_ftd_device = CDORequests.post(
-                self.http_session, f"https://{self.endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device
-            )
-            ftd_specific_device = self.get_specific_device(new_ftd_device["uid"])
-            new_ftd_device = self.get_device(new_ftd_device["uid"])
-            CDORequests.put(
-                self.http_session,
-                f"https://{self.endpoint}",
-                path=f"{CDOAPI.FTDS.value}/{ftd_specific_device['uid']}",
-                data={"queueTriggerState": "SSE_CLAIM_DEVICE"},
-            )  # Trigger device claiming
-            return new_ftd_device
-
-        else:
+        if self.inventory_count(filter=f"serial:{self.module_params.get('serial')}") or self.inventory_count(
+            filter=f"name:{self.module_params.get('serial')}"
+        ):
             raise DuplicateObject(f"Device with serial number {self.module_params.get('serial')} exists in tenant")
+
+        ftd_device["larType"] = "CDG"
+        ftd_device["name"] = self.module_params.get("device_name")
+        ftd_device["serial"] = self.module_params.get("serial")
+        if self.module_params.get("password"):  # Set the initial admin password
+            ftd_device["sseDeviceSerialNumberRegistration"] = dict(
+                initialProvisionData=(
+                    base64.b64encode(f'{{"nkey": "{self.module_params.get("password")}"}}'.encode("ascii")).decode(
+                        "ascii"
+                    )
+                ),
+                sudiSerialNumber=self.module_params.get("serial"),
+            )
+        else:  # initial password has already been set by the CLI
+            ftd_device["sseDeviceSerialNumberRegistration"] = dict(
+                initialProvisionData=base64.b64encode('{"nkey":""}'.encode("ascii")).decode("ascii"),
+                sudiSerialNumber=self.module_params.get("serial"),
+            )
+        ftd_device["sseEnabled"] = True
+        new_ftd_device = CDORequests.post(
+            self.http_session, f"https://{self.endpoint}", path=CDOAPI.DEVICES.value, data=ftd_device
+        )
+        ftd_specific_device = self.new_ftd_polling(new_ftd_device["uid"])
+        new_ftd_device = self.get_device(new_ftd_device["uid"])
+
+        CDORequests.put(
+            self.http_session,
+            f"https://{self.endpoint}",
+            path=f"{CDOAPI.FTDS.value}/{ftd_specific_device['uid']}",
+            data={"queueTriggerState": "SSE_CLAIM_DEVICE"},
+        )  # Trigger device claiming
+        return new_ftd_device
 
     def add_ftd(self):
         """Add an FTD to CDO via CLI or LTP process"""
