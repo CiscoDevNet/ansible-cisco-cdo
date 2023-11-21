@@ -17,4 +17,4 @@
       when: deleted_device['cdo'] is defined
       ansible.builtin.debug:
         msg:
-          "{{ deleted_device.cdo }}"
+          "{{ deleted_device.cdo | default('') }}"

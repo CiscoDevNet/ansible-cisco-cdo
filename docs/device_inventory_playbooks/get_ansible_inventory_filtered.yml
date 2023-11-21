@@ -17,4 +17,4 @@
       when: inventory.cdo is defined
       ansible.builtin.debug:
         msg:
-          "{{ inventory.cdo }}"
+          "{{ inventory.cdo | default('') }}"
