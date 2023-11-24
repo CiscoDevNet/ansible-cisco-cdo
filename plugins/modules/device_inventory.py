@@ -279,15 +279,17 @@ EXAMPLES = r"""
 
 # fmt: off
 import json
+import requests
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORegions, CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils._version import __version__
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.ftd import FTDInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.asa import ASA_IOS_Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.delete import DeleteInventory
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
-from ansible_collections.cisco.cdo.plugins.module_utils.cdo_models import ASA, Device, FTD, FMC
+from ansible_collections.cisco.cdo.plugins.module_utils.models.cdo_models import ASA, Device, FTD, FMC
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     DeviceNotFound,
+    DeviceTypeUnknown,
     AddDeviceFailure,
     DuplicateObject,
     ObjectNotFound,
@@ -296,7 +298,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     DeviceUnreachable,
     APIError,
     CredentialsFailure,
-    TooManyMatches
+    TooManyMatches,
 )
 from ansible_collections.cisco.cdo.plugins.module_utils.args_common import (
     INVENTORY_ARGUMENT_SPEC,
@@ -320,48 +322,34 @@ logger.debug("inv logger started......")
 # fmt: on
 
 
-def normalize_device_output(results: list):
-    """From the json data returned from the CDO API, use the models defined in
+def normalize_device(device: dict, extended_attribs: dict = None) -> dict:
+    """From the inventory data returned from the CDO API, use the models defined in
     module_utils/cdo_models.py to determine what data we return to the calling playbook"""
-    results = [results] if isinstance(results, dict) else results  # we expect a list
-    normalized_devices = list()
-    if results:
-        for device in results:
-            if device.get("deviceType") == "ASA":
-                normalized_devices.append(ASA.from_json(json.dumps(device)).to_dict())
-            elif device.get("deviceType") == "IOS":
-                normalized_devices.append(Device.from_json(json.dumps(device)).to_dict())
-            elif device.get("deviceType") == "FTDC":
-                normalized_devices.append(FTD.from_json(json.dumps(device)).to_dict())
-            elif device.get("deviceType") == "FMCE":
-                normalized_devices.append(FMC.from_json(json.dumps(device)).to_dict())
-    return normalized_devices
+    if device.get("deviceType") == "ASA":
+        asa = ASA.from_dict(device)
+        asa.extended_attributes(extended_attribs)
+        return asa.to_dict()
+    elif device.get("deviceType") == "IOS":
+        return Device.from_dict(device).to_dict()
+    elif device.get("deviceType") == "FTDC":
+        return FTD.from_dict(device).to_dict()
+    elif device.get("deviceType") == "FMCE":
+        return FMC.from_dict(device).to_dict()
+    else:
+        raise DeviceTypeUnknown
 
 
-def get_asa_extended_attributes(results: list, inventory_client: Inventory) -> list:
-    return_list = list()
-    if results:
-        for device in results:
-            if device.get("deviceType") == "ASA":
-                extended_inventory_details = inventory_client.get_asa_extended_inventory(device.get("uid"))
-                device["asaInterfaces"] = extended_inventory_details.get("asaInterfaces")
-                new_attribs = [
-                    "licenseFeatures",
-                    "failover",
-                    "failoverMode",
-                    "failoverStateThis",
-                    "failoverStateOther",
-                    "failoverPrimaryState",
-                    "failoverSecondaryState",
-                    "failoverMateVersion",
-                    "failoverMateSerialNumber",
-                    "contextMode",
-                    "uptimeHumanReadable",
-                ]
-                for attrib in new_attribs:
-                    device[attrib] = extended_inventory_details.get("metadata").get(attrib)
-            return_list.append(device)
-    return return_list
+def get_inventory(module_params: dict, http_session: requests.session, endpoint: str):
+    normalized_inventory = []
+    inventory_client = Inventory(module_params, http_session, endpoint)
+    inventory = inventory_client.gather_inventory()
+    for device in inventory or []:
+        if device.get("deviceType") == "ASA":
+            extended_attribs = inventory_client.get_asa_extended_inventory(device.get("uid"))
+            normalized_inventory.append(normalize_device(device, extended_attribs.get("metadata")))
+        else:
+            normalized_inventory.append(normalize_device(device))
+    return normalized_inventory
 
 
 def main():
@@ -379,11 +367,9 @@ def main():
     # Get inventory from CDO and return a list of dict(s) - Devices and attributes
     if module.params.get("gather"):
         try:
-            inventory_client = Inventory(module.params.get("gather"), http_session, endpoint)
-            raw_inventory = get_asa_extended_attributes(inventory_client.gather_inventory(), inventory_client)
-            result["cdo"] = normalize_device_output(raw_inventory)
+            result["cdo"] = get_inventory(module.params.get("gather"), http_session, endpoint)
             result["changed"] = False
-        except (CredentialsFailure, APIError) as e:
+        except (CredentialsFailure, APIError, DeviceTypeUnknown) as e:
             result["stderr"] = f"ERROR: {e.message}"
     # Add devices to CDO inventory and return a json dictionary of the new device attributes
     if module.params.get("add"):
@@ -391,26 +377,33 @@ def main():
             ftd_client = FTDInventory(module.params.get("add", {}).get("ftd"), http_session, endpoint)
             try:
                 add_result = ftd_client.add_ftd()
-                result["cdo"] = normalize_device_output(add_result)
+                result["cdo"] = normalize_device(add_result)
                 result["changed"] = True
             except DuplicateObject as e:
                 result["cdo"] = f"Device Not added: {e.message}"
                 result["changed"] = False
                 result["failed"] = False
-            except (AddDeviceFailure, DeviceNotFound, ObjectNotFound, CredentialsFailure) as e:
+            except (AddDeviceFailure, DeviceNotFound, ObjectNotFound, CredentialsFailure, DeviceTypeUnknown) as e:
                 result["stderr"] = f"ERROR: {e.message}"
                 result["changed"] = False
                 result["failed"] = True
         if module.params.get("add", {}).get("asa_ios"):
             try:
                 asa_ios_client = ASA_IOS_Inventory(module.params.get("add", {}).get("asa_ios"), http_session, endpoint)
-                result["cdo"] = normalize_device_output(asa_ios_client.add_asa_ios())
+                result["cdo"] = normalize_device(asa_ios_client.add_asa_ios())
                 result["changed"] = True
             except DuplicateObject as e:
                 result["cdo"] = f"Device Not added: {e.message}"
                 result["changed"] = False
                 result["failed"] = False
-            except (SDCNotFound, InvalidCertificate, DeviceUnreachable, CredentialsFailure, APIError) as e:
+            except (
+                SDCNotFound,
+                InvalidCertificate,
+                DeviceUnreachable,
+                CredentialsFailure,
+                DeviceTypeUnknown,
+                APIError,
+            ) as e:
                 result["stderr"] = f"ERROR: {e.message}"
                 result["changed"] = False
                 result["failed"] = True

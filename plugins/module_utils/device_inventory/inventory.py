@@ -42,12 +42,12 @@ class Inventory:
             return False
         return True
 
-    def generate_uuid(self):
+    def generate_uuid(self) -> str:
         """Generate a random UUID"""
         raw_uuid = uuid.uuid4().hex
         return f"{raw_uuid[0:8]}-{raw_uuid[8:12]}-{raw_uuid[12:16]}-{raw_uuid[16:20]}-{raw_uuid[20:]}"
 
-    def get_lar_list(self):
+    def get_lar_list(self) -> list:
         """Return a list of lars (SDC/CDG from CDO)"""
         path = CDOAPI.LARS.value
         query = CDOQuery.get_lar_query(self.module_params)
@@ -55,7 +55,7 @@ class Inventory:
             path = f"{path}?q={urllib.parse.quote_plus(query)}"
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
 
-    def inventory_count(self, filter: str = None):
+    def inventory_count(self, filter: str = None) -> int:
         """Given a filter criteria, return the number of devices that match the criteria"""
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}?agg=count&q={filter}"
@@ -66,11 +66,11 @@ class Inventory:
         path = CDOAPI.SPECIFIC_DEVICE.value.replace("{uid}", uid)
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
 
-    def get_device(self, uid: str):
+    def get_device(self, uid: str) -> dict:
         """Given a device uid, retrieve the specific device model of the device"""
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{uid}")
 
-    def get_cdfmc(self):
+    def get_cdfmc(self) -> dict:
         """Get the cdFMC object for this tenant if one exists"""
         query = CDOQuery.get_cdfmc_query()
         response = CDORequests.get(
@@ -80,7 +80,7 @@ class Inventory:
             raise DeviceNotFound("A cdFMC was not found in this tenant")
         return response[0]
 
-    def working_set(self, uid: str):
+    def working_set(self, uid: str) -> dict:
         """Return a working set object"""
         data = {
             "selectedModelObjects": [{"modelClassKey": "targets/devices", "uuids": [uid]}],
@@ -121,6 +121,5 @@ class Inventory:
         config_client = Config(self.module_params, self.http_session, self.endpoint)
         config_client.module_params["device_uid"] = uid
         asa_devices_config = config_client.get_asa_devices_configs()
-        logger.debug(f"get_asa_devices_configs(): {asa_devices_config}")
         if asa_devices_config:
             return config_client.get_device_asa_configs(uid=asa_devices_config[0].get("target").get("uid"))
