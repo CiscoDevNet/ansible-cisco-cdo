@@ -130,3 +130,18 @@ class CDOQuery:
             "cryptoChecksum,selectedInterfaceObject,selectedInterfaceIP,securityContextMode,metadata}]"
         )
         return CDOQuery.url_encode_query_data({"q": f"uid:{uid}", "resolve": r}, safe_chars=":,")
+
+    @staticmethod
+    def device_objects(object_type: str,working_set: str,  limit=50, offset=0) -> dict:
+        """ Generate a query by object-name that return objects for a specific device
+        Object types:[NETWORK, PROTOCOL, SERVICE, ICMP, URL]"""
+
+        return {
+            "q": (f'((cdoInternal:false) AND (isReadOnly:false OR metadata.CDO_FMC_READONLY:true OR objectType:SGT_GROUP))
+             AND ((objectType:*{object_type}*)) AND (references:"$isNull") AND (NOT deviceType:FMC_MANAGED_DEVICE AND
+             NOT deviceType:FMC)'),
+            "workingSet": working_set,
+            "sort": "name:asc",
+            "limit": limit,
+            "offset": offset,
+        }

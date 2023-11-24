@@ -24,4 +24,4 @@
     - name: Print results
       when: added_device['cdo'] is defined
       ansible.builtin.debug:
-        msg: "{{ added_device.cdo | default('')}}"
+        msg: "{{ added_device.cdo | default('') }}"

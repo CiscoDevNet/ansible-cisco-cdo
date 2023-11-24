@@ -345,7 +345,7 @@ def get_inventory(module_params: dict, http_session: requests.session, endpoint:
     inventory = inventory_client.gather_inventory()
     for device in inventory or []:
         if device.get("deviceType") == "ASA":
-            extended_attribs = inventory_client.get_asa_extended_inventory(device.get("uid"))
+            extended_attribs = inventory_client.get_asa_extended_attributes(device.get("uid"))
             normalized_inventory.append(normalize_device(device, extended_attribs.get("metadata")))
         else:
             normalized_inventory.append(normalize_device(device))
@@ -364,6 +364,7 @@ def main():
     )
     endpoint = CDORegions[module.params.get("region")].value
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
+
     # Get inventory from CDO and return a list of dict(s) - Devices and attributes
     if module.params.get("gather"):
         try:

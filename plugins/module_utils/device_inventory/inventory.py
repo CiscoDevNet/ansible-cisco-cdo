@@ -6,14 +6,15 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import uuid
+import requests
+import urllib.parse
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.config.config import Config
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, ObjectNotFound
-import urllib.parse
-import requests
-import uuid
+
 # fmt: off
 # Remove for publishing....
 import logging
@@ -51,15 +52,14 @@ class Inventory:
         """Return a list of lars (SDC/CDG from CDO)"""
         path = CDOAPI.LARS.value
         query = CDOQuery.get_lar_query(self.module_params)
-        if query is not None:
-            path = f"{path}?q={urllib.parse.quote_plus(query)}"
+        path = f"{path}?q={urllib.parse.quote_plus(query)}" if query else None
         return CDORequests.get(self.http_session, f"https://{self.endpoint}", path=path)
 
     def inventory_count(self, filter: str = None) -> int:
         """Given a filter criteria, return the number of devices that match the criteria"""
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}?agg=count&q={filter}"
-        )["aggregationQueryResult"]
+        ).get("aggregationQueryResult")
 
     def get_specific_device(self, uid: str) -> str:
         """Given a device uid, retrieve the device specific details"""
@@ -76,9 +76,9 @@ class Inventory:
         response = CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}?q={query['q']}"
         )
-        if len(response) == 0:
-            raise DeviceNotFound("A cdFMC was not found in this tenant")
-        return response[0]
+        if response:
+            return response[0]
+        raise DeviceNotFound("A cdFMC was not found in this tenant")
 
     def working_set(self, uid: str) -> dict:
         """Return a working set object"""
@@ -90,7 +90,7 @@ class Inventory:
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.WORKSET.value}", data=data
         )
 
-    def gather_inventory(self, limit: int = 50, offset: int = 0) -> str:
+    def gather_inventory(self, limit: int = 50, offset: int = 0) -> list:
         """Get CDO inventory"""
         query = CDOQuery.get_inventory_query(self.module_params)
         q = urllib.parse.quote_plus(query["q"])
@@ -105,7 +105,7 @@ class Inventory:
         limit: int = 50,
         offset: int = 0,
         access_list_name=None,
-    ):
+    ) -> dict:
         """Given the domain uuid of the cdFMC, retrieve the list of access policies"""
         # TODO: use the FMC collection to retrieve this
         self.http_session.headers["fmc-hostname"] = cdfmc_host
@@ -117,7 +117,8 @@ class Inventory:
                 raise ObjectNotFound(f"Access Policy {access_list_name} not found on cdFMC.")
         return response
 
-    def get_asa_extended_inventory(self, uid):
+    def get_asa_extended_attributes(self, uid: str) -> dict:
+        """Get extended attributes for ASA like uptime, license, etc."""
         config_client = Config(self.module_params, self.http_session, self.endpoint)
         config_client.module_params["device_uid"] = uid
         asa_devices_config = config_client.get_asa_devices_configs()

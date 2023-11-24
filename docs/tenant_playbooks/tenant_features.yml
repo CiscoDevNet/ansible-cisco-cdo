@@ -7,7 +7,7 @@
         api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         info:
-          features: True
+          features: true
 
       register: tenant_info
       failed_when: (inventory.stderr is defined) and (inventory.stderr | length > 0)

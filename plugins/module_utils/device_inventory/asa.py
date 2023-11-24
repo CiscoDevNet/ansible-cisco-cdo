@@ -24,7 +24,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
 
 
 class ASA_IOS_Inventory(Inventory):
-    """Class used for CDO ASA Operations (Extends the Inventory base class in inventory.py)"""
+    """Class used for CDO ASA Operations"""
 
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
@@ -80,13 +80,13 @@ class ASA_IOS_Inventory(Inventory):
                 return device
         raise CredentialsFailure(f"Device remains in connectivity state {device.get('connectivityState')}")
 
-    def update_device(self, uid: str, data: dict):
+    def update_device(self, uid: str, data: dict) -> dict:
         """Update an existing device's attributes"""
         return CDORequests.put(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{uid}", data=data
         )
 
-    def add_asa_ios(self):
+    def add_asa_ios(self) -> dict:
         """Add ASA or IOS device to CDO"""
         lar_list = self.get_lar_list()
         if not lar_list:

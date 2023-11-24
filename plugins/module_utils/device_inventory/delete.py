@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+
 # fmt: off
 from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDOAPI
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
@@ -14,17 +15,18 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotF
 import requests
 # fmt: on
 
+
 class DeleteInventory(Inventory):
     """Class used to remove ASA/IOS/FTD devices from CDO/cdFMC (Extends the Inventory base class in inventory.py)"""
+
     def __init__(self, module_params: dict, http_session: requests.session, endpoint: str):
         self.module_params = module_params
         self.http_session = http_session
         self.endpoint = endpoint
         self.changed = False
 
-    def find_device_for_deletion(self):
+    def find_device_for_deletion(self) -> dict:
         """Find the object we intend to delete"""
-        # TODO: Paging for large device lists
         self.module_params["filter"] = self.module_params.get("device_name")
         device_list = self.gather_inventory()
         if not device_list:
@@ -38,7 +40,7 @@ class DeleteInventory(Inventory):
         else:
             return device_list[0]
 
-    def delete_device(self):
+    def delete_device(self) -> int:
         """Orchestrate deleting the device"""
         try:
             device = self.find_device_for_deletion()
@@ -51,7 +53,6 @@ class DeleteInventory(Inventory):
                     self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.DEVICES.value}/{device['uid']}"
                 )
                 return response
-
             elif self.module_params.get("device_type").upper() == "FTD":
                 cdfmc = self.get_cdfmc()
                 cdfmc_specific_device = self.get_specific_device(cdfmc["uid"])
@@ -65,6 +66,7 @@ class DeleteInventory(Inventory):
                     path=f"{CDOAPI.FMC.value}/{cdfmc_specific_device['uid']}",
                     data=data,
                 )
-                return response
+                if response:
+                    return 200
         except DeviceNotFound as e:
             raise e

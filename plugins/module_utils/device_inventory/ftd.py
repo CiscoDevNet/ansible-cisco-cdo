@@ -16,6 +16,18 @@ from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.invento
 from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, AddDeviceFailure, DuplicateObject, ObjectNotFound
 # fmt: on
 
+# fmt: off
+# Remove for publishing....
+import logging
+logging.basicConfig()
+logger = logging.getLogger('ftd')
+fh = logging.FileHandler('/tmp/ftd.log')
+fh.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+logger.debug("ftd logger started......")
+# fmt: on
+
 
 class FTDInventory(Inventory):
     """Class used for CDO FTD Operations (Extends the Inventory base class in inventory.py)"""
@@ -26,7 +38,7 @@ class FTDInventory(Inventory):
         self.endpoint = endpoint
         self.changed = False
 
-    def new_ftd_polling(self, uid: str):
+    def new_ftd_polling(self, uid: str) -> dict:
         """Check that the new FTD specific device has been created before attempting move to the onboarding step"""
         for i in range(self.module_params.get("retry")):
             try:
@@ -36,13 +48,13 @@ class FTDInventory(Inventory):
                 continue
         raise AddDeviceFailure(f"Failed to add FTD {self.module_params.get('device_name')}")
 
-    def update_ftd_device(self, uid: str, data: dict):
+    def update_ftd_device(self, uid: str, data: dict) -> dict:
         """Update an FTD object"""
         return CDORequests.put(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FTDS.value}/{uid}", data=data
         )
 
-    def add_ftd_ltp(self, ftd_device: dict, fmc_uid: str):
+    def add_ftd_ltp(self, ftd_device: dict, fmc_uid: str) -> dict:
         """Onboard an FTD to cdFMC using LTP (serial number onboarding)"""
         if self.inventory_count(filter=f"serial:{self.module_params.get('serial')}") or self.inventory_count(
             filter=f"name:{self.module_params.get('serial')}"
@@ -80,7 +92,7 @@ class FTDInventory(Inventory):
         )  # Trigger device claiming
         return new_ftd_device
 
-    def add_ftd(self):
+    def add_ftd(self) -> dict:
         """Add an FTD to CDO via CLI or LTP process"""
         try:
             cdfmc = self.get_cdfmc()

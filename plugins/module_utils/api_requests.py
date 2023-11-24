@@ -27,7 +27,6 @@ class CDOAPIWrapper(object):
     Note that the response from the API calls are a tuple. Example:
     """
 
-    # Add handler for bad certificate
     def __call__(self, fn):
         @wraps(fn)
         def new_func(*args, **kwargs):
@@ -49,7 +48,7 @@ class CDOAPIWrapper(object):
 
 class CDORequests:
     @staticmethod
-    def create_session(token: str, version: str) -> str:
+    def create_session(token: str, version: str) -> requests.Session:
         """Helper function to set the auth token and accept headers in the API request"""
         http_session = requests.Session()
         http_session.headers = {
@@ -62,7 +61,7 @@ class CDORequests:
 
     @CDOAPIWrapper()
     @staticmethod
-    def get(http_session: requests.Session, url: str, path: str = None, query: dict = None):
+    def get(http_session: requests.Session, url: str, path: str = None, query: dict = None) -> dict | list:
         """Given the CDO endpoint, path, and query, return the json payload from the API"""
         # TODO: convert dictionary of query to encoded string with safe values..
         # params = urllib.parse.quote(query.encode('utf-8'), safe='()/')
@@ -75,32 +74,26 @@ class CDORequests:
         result.raise_for_status()
         if result.json():
             return result.json()
-        # else:
-        #     return result.text
 
     @CDOAPIWrapper()
     @staticmethod
-    def post(http_session: requests.Session, url: str, path: str = None, data: dict = None, query: dict = None) -> str:
+    def post(http_session: requests.Session, url: str, path: str = None, data: dict = None, query: dict = None) -> dict:
         """Given the CDO endpoint, path, and query, post the json data and return the json payload from the API"""
         uri = url if path is None else f"{url}/{path}"
         result = http_session.post(url=uri, params=query, json=data)
         result.raise_for_status()
         if result.text and result.status_code in range(200, 300):
             return result.json()
-        else:
-            return
 
     @CDOAPIWrapper()
     @staticmethod
-    def put(http_session: requests.Session, url: str, path: str = None, data: dict = None, query: dict = None) -> str:
+    def put(http_session: requests.Session, url: str, path: str = None, data: dict = None, query: dict = None) -> dict:
         """Given the CDO endpoint, path, and query, return the json payload from the API"""
         uri = url if path is None else f"{url}/{path}"
         result = http_session.put(url=uri, headers=http_session.headers, params=query, json=data)
         result.raise_for_status()
         if result.text and result.status_code in range(200, 300):
             return result.json()
-        else:
-            return
 
     @CDOAPIWrapper()
     @staticmethod
