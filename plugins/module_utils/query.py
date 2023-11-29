@@ -10,7 +10,8 @@ import urllib.parse
 
 
 class CDOQuery:
-    """Helpers for building complex inventory queries"""
+    """Helpers for building complex inventory queries. All parameters for the query should be passed through
+    module_params"""
 
     @staticmethod
     def get_inventory_query(module_params: dict) -> dict:
@@ -123,7 +124,8 @@ class CDOQuery:
     def asa_configs(uid: str) -> dict:
         """Given a UID of an Object Reference, generate a query to return the diff details of the config
                 q: uid:070b38b4-5ddf-455c-adfb-075908d6024a
-        resolve: [asa/configs.{name,namespace,type,version,state,stateDate,tags,tagKeys,tagValues,asaInterfaces,cryptoChecksum,selectedInterfaceObject,selectedInterfaceIP,securityContextMode,metadata}]
+        resolve: [asa/configs.{name,namespace,type,version,state,stateDate,tags,tagKeys,tagValues,asaInterfaces,
+        cryptoChecksum,selectedInterfaceObject,selectedInterfaceIP,securityContextMode,metadata}]
         """
         r = (
             "[asa/configs.{name,namespace,type,version,state,stateDate,tags,tagKeys,tagValues,asaInterfaces,"
@@ -132,16 +134,41 @@ class CDOQuery:
         return CDOQuery.url_encode_query_data({"q": f"uid:{uid}", "resolve": r}, safe_chars=":,")
 
     @staticmethod
-    def device_objects(object_type: str,working_set: str,  limit=50, offset=0) -> dict:
-        """ Generate a query by object-name that return objects for a specific device
+    def device_objects(object_type: str, working_set: str, limit=50, offset=0) -> dict:
+        """Generate a query by object-name that return objects for a specific device
         Object types:[NETWORK, PROTOCOL, SERVICE, ICMP, URL]"""
 
         return {
-            "q": (f'((cdoInternal:false) AND (isReadOnly:false OR metadata.CDO_FMC_READONLY:true OR objectType:SGT_GROUP))
-             AND ((objectType:*{object_type}*)) AND (references:"$isNull") AND (NOT deviceType:FMC_MANAGED_DEVICE AND
-             NOT deviceType:FMC)'),
+            "q": (
+                f"((cdoInternal:false) AND (isReadOnly:false OR metadata.CDO_FMC_READONLY:true OR objectType:SGT_GROUP)) "
+                'AND ((objectType:*{object_type}*)) AND (references:"$isNull") AND (NOT deviceType:FMC_MANAGED_DEVICE AND '
+                "NOT deviceType:FMC)"
+            ),
             "workingSet": working_set,
             "sort": "name:asc",
             "limit": limit,
             "offset": offset,
         }
+
+    @staticmethod
+    def config_summaries(uid: str) -> dict:
+        return {"q": f"deviceUid:{uid}", "resolve": "%5Bftd%2Fsummaries.%7BstagedConfigurationUid%7D%5D"}
+
+    @staticmethod
+    def access_policy(ruleset_uid: str, limit: int = 50, offset: int = 0, sort: str = "index:asc") -> dict:
+        return {
+            "q": f"ruleSetUid:{ruleset_uid}",
+            "sort": sort,
+            "offset": offset,
+            "limit": limit,
+        }
+
+    @staticmethod
+    def rulesets(configuration_uid: str, name: str = "", count: bool = True) -> dict:
+        query = {"q": ""}
+        query["q"] = f"configurationUid:{configuration_uid}"
+        if name:
+            query["q"] += f" AND name:{name}"
+        elif count:
+            query["agg"] = "count"
+        return query

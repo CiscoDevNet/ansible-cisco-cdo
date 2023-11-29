@@ -1,0 +1,20 @@
+---
+- name: Get device inventory details from CDO based on the devices in Ansible inventory
+  hosts: all
+  connection: local
+  tasks:
+    - name: Get the specified access-control-list
+      cisco.cdo.acp:
+        api_key: "{{ lookup('ansible.builtin.env', 'CDO_API_KEY') }}"
+        region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
+        gather:
+          name: "{{ inventory_hostname }}"
+          acp_name: "dmz"
+      register: access_policy
+      failed_when: (access_policy.stderr is defined) and (access_policy.stderr | length > 0)
+
+    - name: Print access-control-list results
+      when: access_policy.cdo is defined
+      ansible.builtin.debug:
+        msg:
+          "{{ access_policy.cdo | default('') }}"

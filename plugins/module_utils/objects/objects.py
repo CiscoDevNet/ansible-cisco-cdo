@@ -57,5 +57,5 @@ def get_device_objects(
     """Given a UID and a device type, return the list of object associated with that device of that device type"""
     inventory_client = Inventory(module_params, http_session, endpoint)
     working_set = inventory_client.working_set(module_params.get("uid"))
-    q = CDOQuery.device_objects("NETWORK", working_set.get("uid"))
+    q = CDOQuery.device_objects(module_params.get("object_type"), working_set.get("uid"))
     return CDORequests.get(http_session, f"https://{endpoint}", path=CDOAPI.OBJS.value, query=q)

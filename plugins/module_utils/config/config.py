@@ -91,3 +91,10 @@ class Config:
         #         )
         #     )
         # return asa_configs
+
+    def get_config_summaries(self, uid):
+        """Given the inventory device uid, return the stagedConfigurationUid"""
+        query = CDOQuery.config_summaries(uid)
+        return CDORequests.get(
+            self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.CONFIG_SUMMARIES.value}", query=query
+        )

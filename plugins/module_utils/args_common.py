@@ -80,42 +80,6 @@ INVENTORY_REQUIRED_TOGETHER = []
 INVENTORY_REQUIRED_IF = []
 
 #############################
-# Network Objects module
-NET_OBJS_ARGUMENT_SPEC = COMMON_SPEC | {
-    "gather": {
-        "type": "dict",
-        "options": {
-            "device_name": {"type": "str"},
-            "network": {"type": "str"},
-            "tags": {"type": "list"},
-            "limit": {"default": 50, "type": "int"},
-            "offset": {"default": 0, "type": "int"},
-        },
-    },
-    "add": {
-        "type": "dict",
-        "options": {
-            "device_name": {"required": True, "type": "str"},
-            "network": {"required": True, "type": "str"},
-            # Descriptions will be reworked in future CDO work fall of 2023 so omitting for meow
-            # "description": {"required": True, "type": "str"},
-        },
-    },
-    "update": {"type": "dict", "options": {"device_name": {"default": "ftd", "type": "str"}}},
-    "delete": {
-        "type": "dict",
-        "options": {
-            "device_name": {"required": True, "type": "str"},
-            "device_type": {"required": True, "choices": ["asa", "ios", "ftd"], "type": "str"},
-        },
-    },
-}
-NET_OBJS_REQUIRED = ["gather", "add", "update", "delete"]
-NET_OBJS_MUTUALLY_EXCLUSIVE = []
-NET_OBJS_REQUIRED_TOGETHER = []
-NET_OBJS_REQUIRED_IF = []
-
-#############################
 # Deploy Changes module
 DEPLOY_ARGUMENT_SPEC = COMMON_SPEC | {
     "deploy": {
@@ -208,3 +172,20 @@ TENANT_MUTUALLY_REQUIRED_ONE_OF = ["info", "users"]
 TENANT_MUTUALLY_EXCLUSIVE = []
 TENANT_REQUIRED_TOGETHER = []
 TENANT_REQUIRED_IF = []
+
+###############################
+# Access Control Policy module
+###############################
+ACP_ARGUMENT_SPEC = COMMON_SPEC | {
+    "gather": {
+        "type": "dict",
+        "options": {
+            "name": {"required": True, "type": "str"},
+            "acp_name": {"type": "str"},
+        },
+    },
+}
+ACP_MUTUALLY_REQUIRED_ONE_OF = ["gather"]
+ACP_MUTUALLY_EXCLUSIVE = []
+ACP_REQUIRED_TOGETHER = []
+ACP_REQUIRED_IF = []
