@@ -9,7 +9,7 @@
         region: "{{ lookup('ansible.builtin.env', 'CDO_REGION') }}"
         gather:
           name: "{{ inventory_hostname }}"
-          acp_name: "dmz"
+          acp_name: "outside"
       register: access_policy
       failed_when: (access_policy.stderr is defined) and (access_policy.stderr | length > 0)
 

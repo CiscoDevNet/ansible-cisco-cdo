@@ -82,9 +82,13 @@ def main():
             acp_client = AccessPolicies(module.params.get("gather"), http_session, endpoint)
             logger.debug(f"Device UID: {device_uid}")
             logger.debug(f'ACL name: {module.params.get("gather").get("acp_name")}')
-            result["cdo"] = acp_client.get_access_control_policies(
+            result["cdo"] = acp_client.get_access_policy(
                 device_uid, acl_name=module.params.get("gather").get("acp_name")
             )
+            # logger.debug(f"complete acl: {output}")
+            # result["cdo"] = acp_client.get_access_control_policies(
+            #     device_uid, acl_name=module.params.get("gather").get("acp_name")
+            # )
             result["changed"] = False
     except (
         DeviceNotFound,

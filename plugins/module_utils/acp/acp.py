@@ -38,9 +38,12 @@ class AccessPolicies:
         self.inventory_client = Inventory(self.module_params, self.http_session, self.endpoint)
         self.config_client = Config(self.module_params, self.http_session, self.endpoint)
         self.device_uid = None
+        self.ruleset_uid = None
+        self.ruleset_length = None
+        self.limit = 50
 
-    def get_access_control_policies(self, uid: str, acl_name: str = "") -> list:
-        """Return a list of the ASA access control lists. If a name is provided, only return that ACL"""
+    # TODO: move the checks to the called functions and simplify this....
+    def get_access_policy(self, uid: str, acl_name: str = ""):
         config_summary = self.config_client.get_config_summaries(uid)
         if not config_summary:
             raise ObjectNotFound(f"Could not find a config summary for device {self.module_params.get('name')}")
@@ -49,7 +52,9 @@ class AccessPolicies:
             raise ObjectNotFound(f"Access-Policy {acl_name} was not found")
         elif not rulesets:
             raise ObjectNotFound(f"No access-lists found on this ASA")
-        return self.get_access_policy(rulesets[0].get("uid"))
+        self.ruleset_uid = rulesets[0].get("uid")
+        self.ruleset_length = self.get_access_policy_length().get("aggregationQueryResult")
+        return self.get_pages(self.ruleset_length, self.limit, self._get_access_policy)
 
     def get_rulesets_count(self, configuration_uid: str) -> dict:
         query = CDOQuery.rulesets(configuration_uid, count=True)
@@ -57,7 +62,7 @@ class AccessPolicies:
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.RULESETS.value}", query=query
         )
 
-    # TODO: Paging if rulesets are more than 50
+    # TODO: Set up paging...
     def get_rulesets(self, configuration_uid: str, name="") -> list:
         """Given a configuration uid, return a list of ACL descriptors and, if they are applied to interfaces,
         the access-group settings. You can also return a list of just 1 ACL based on the ACL name"""
@@ -66,38 +71,28 @@ class AccessPolicies:
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.RULESETS.value}", query=query
         )
 
-    def get_access_policy_length(self, ruleset_uid: str) -> dict:
+    def get_access_policy_length(self) -> dict:
         """Given the Access Policy ruleSetUid, return the number of rules in that policy"""
-        query = {"q": f"ruleSetUid:{ruleset_uid}", "agg": "count"}
+        query = {"q": f"ruleSetUid:{self.ruleset_uid}", "agg": "count"}
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FIREWALL_RULES.value}", query=query
         )
 
-    # TODO: Set up paging...
-    def get_access_policy(self, ruleset_uid: str, offset=0, limit=50, count: bool = False):
-        query = CDOQuery.access_policy(ruleset_uid, limit=limit, offset=offset)
+    def _get_access_policy(self, offset=0):
+        query = CDOQuery.access_policy(self.ruleset_uid, limit=self.limit, offset=offset)
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FIREWALL_RULES.value}", query=query
         )
 
-    # TODO make this a generic paging for any fn (Using args/kwargs?)
-    def get_access_policy_rules(total_records: int, limit: int, api_fn: Callable) -> list:
-        # Using the total number of records and the limit, call the fcn to get
-        # the results in a loop until we have all of the records and then return
-        # them
+    # TODO: Make this a utility function for reuse in other libs
+    def get_pages(self, total_records: int, limit: int, api_fn: Callable) -> list:
+        """Loop through the pages of data until we have all of the data records."""
         result_list = list()
         iterations = total_records // limit
         if total_records % limit != 0:
             iterations += 1
         offset = 0
-
-        if total_records < limit:
-            return api_fn()
-        else:
-            for i in range(iterations):
-                result_list.append(api_fn(offset=offset).json())
-                offset += limit
+        for i in range(iterations):
+            result_list.append(api_fn(offset=offset))
+            offset += limit
         return result_list
-
-
-# https://www.defenseorchestrator.com/aegis/rest/v1/services/targets/firewallrules?q=ruleSetUid%3A32442140-79f9-406a-9ea7-c47022d47d58&agg=count
