@@ -12,6 +12,7 @@ from ansible_collections.cisco.cdo.plugins.module_utils.api_endpoints import CDO
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.tenant.tenant import Tenant
 from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import ObjectNotFound
 
 
 # fmt: off
@@ -95,6 +96,9 @@ class Config:
     def get_config_summaries(self, uid):
         """Given the inventory device uid, return the stagedConfigurationUid"""
         query = CDOQuery.config_summaries(uid)
-        return CDORequests.get(
+        config_summary = CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.CONFIG_SUMMARIES.value}", query=query
         )
+        if not config_summary:
+            raise ObjectNotFound(f"Could not find a config summary for {uid}")
+        return config_summary

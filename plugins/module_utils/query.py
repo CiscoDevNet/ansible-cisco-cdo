@@ -164,11 +164,12 @@ class CDOQuery:
         }
 
     @staticmethod
-    def rulesets(configuration_uid: str, name: str = "", count: bool = True) -> dict:
+    def rulesets(configuration_uid: str, name: str = "", count: bool = True, limit=50, offset=0) -> dict:
         query = {"q": ""}
         query["q"] = f"configurationUid:{configuration_uid}"
         if name:
             query["q"] += f" AND name:{name}"
         elif count:
             query["agg"] = "count"
-        return query
+            return query
+        return query | {"offset": offset, "limit": limit}

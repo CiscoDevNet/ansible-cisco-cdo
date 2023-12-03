@@ -181,7 +181,7 @@ ACP_ARGUMENT_SPEC = COMMON_SPEC | {
         "type": "dict",
         "options": {
             "name": {"required": True, "type": "str"},
-            "acp_name": {"type": "str"},
+            "acp_name": {"type": "str", "default": ""},
         },
     },
 }

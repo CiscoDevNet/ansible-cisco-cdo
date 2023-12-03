@@ -79,12 +79,10 @@ def main():
         if module.params.get("gather"):
             logger.debug("Entering ACP gather...")
             device_uid = get_device_uid(module.params.get("gather"), http_session, endpoint)
-            acp_client = AccessPolicies(module.params.get("gather"), http_session, endpoint)
+            acp_client = AccessPolicies(device_uid, module.params.get("gather"), http_session, endpoint)
             logger.debug(f"Device UID: {device_uid}")
             logger.debug(f'ACL name: {module.params.get("gather").get("acp_name")}')
-            result["cdo"] = acp_client.get_access_policy(
-                device_uid, acl_name=module.params.get("gather").get("acp_name")
-            )
+            result["cdo"] = acp_client.get_access_policy()
             # logger.debug(f"complete acl: {output}")
             # result["cdo"] = acp_client.get_access_control_policies(
             #     device_uid, acl_name=module.params.get("gather").get("acp_name")

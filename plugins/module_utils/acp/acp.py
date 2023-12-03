@@ -29,49 +29,63 @@ logger.debug("acl_helper.log logger started......")
 
 
 class AccessPolicies:
-    def __init__(self, module_params: dict, http_session: requests.session, endpoint: str) -> None:
-        self.module_params = module_params
+    def __init__(self, device_uid: str, module_params: dict, http_session: requests.session, endpoint: str) -> None:
         self.http_session = http_session
         self.endpoint = endpoint
-        self.staged_config_uid = ""
         self.features = None
-        self.inventory_client = Inventory(self.module_params, self.http_session, self.endpoint)
-        self.config_client = Config(self.module_params, self.http_session, self.endpoint)
-        self.device_uid = None
+        self.inventory_client = Inventory(module_params, self.http_session, self.endpoint)
+        self.config_client = Config(module_params, self.http_session, self.endpoint)
+        self.staged_config_uid = None
+        self.device_uid = device_uid
         self.ruleset_uid = None
-        self.ruleset_length = None
+        self.acp_name = module_params.get("acp_name")
         self.limit = 50
 
-    # TODO: move the checks to the called functions and simplify this....
-    def get_access_policy(self, uid: str, acl_name: str = ""):
-        config_summary = self.config_client.get_config_summaries(uid)
-        if not config_summary:
-            raise ObjectNotFound(f"Could not find a config summary for device {self.module_params.get('name')}")
-        rulesets = self.get_rulesets(config_summary[0].get("stagedConfigurationUid"), name=acl_name)
-        if not rulesets and acl_name:
-            raise ObjectNotFound(f"Access-Policy {acl_name} was not found")
-        elif not rulesets:
-            raise ObjectNotFound(f"No access-lists found on this ASA")
-        self.ruleset_uid = rulesets[0].get("uid")
-        self.ruleset_length = self.get_access_policy_length().get("aggregationQueryResult")
-        return self.get_pages(self.ruleset_length, self.limit, self._get_access_policy)
+    # TODO: make this a post_init call?
+    def get_staged_config_uid(self):
+        self.staged_config_uid = self.config_client.get_config_summaries(self.device_uid)[0].get(
+            "stagedConfigurationUid"
+        )
 
-    def get_rulesets_count(self, configuration_uid: str) -> dict:
-        query = CDOQuery.rulesets(configuration_uid, count=True)
+    def get_access_policy(self):
+        """Get access-control-list in it's entirety by paging through the api calls until all lines are retrieved."""
+        self.get_staged_config_uid()
+        rulesets = self.get_rulesets()
+        self.ruleset_uid = rulesets.pop().get("uid")
+        acp_count = self.get_access_policy_count().get("aggregationQueryResult")
+        return self.get_pages(acp_count, self.limit, self._get_access_policy)
+
+    def get_rulesets_count(self) -> dict:
+        """Get a count of the number of ACLs on a device"""
+        self.get_staged_config_uid()
+        query = CDOQuery.rulesets(self.staged_config_uid, count=True)
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.RULESETS.value}", query=query
         )
 
-    # TODO: Set up paging...
-    def get_rulesets(self, configuration_uid: str, name="") -> list:
+    def get_rulesets(self) -> list:
+        """Given a device uid and ruleset name, return information about that one ruleset. If no name
+        is provided, return information on all rulesets after paging through all of them"""
+        if not self.acp_name:
+            rulesets_count = self.get_rulesets_count().get("aggregationQueryResult")
+        else:
+            rulesets_count = 1
+        return self.get_pages(rulesets_count, self.limit, self._get_rulesets).pop()
+
+    def _get_rulesets(self, offset=0) -> list:
         """Given a configuration uid, return a list of ACL descriptors and, if they are applied to interfaces,
         the access-group settings. You can also return a list of just 1 ACL based on the ACL name"""
-        query = CDOQuery.rulesets(configuration_uid, name=name)
-        return CDORequests.get(
+        query = CDOQuery.rulesets(self.staged_config_uid, name=self.acp_name, limit=self.limit, offset=offset)
+        rulesets = CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.RULESETS.value}", query=query
         )
+        if not rulesets and self.acp_name:
+            raise ObjectNotFound(f"Access-Policy {self.acp_name} was not found")
+        elif not rulesets:
+            raise ObjectNotFound(f"No access-lists found on this ASA")
+        return rulesets
 
-    def get_access_policy_length(self) -> dict:
+    def get_access_policy_count(self) -> dict:
         """Given the Access Policy ruleSetUid, return the number of rules in that policy"""
         query = {"q": f"ruleSetUid:{self.ruleset_uid}", "agg": "count"}
         return CDORequests.get(
@@ -84,7 +98,6 @@ class AccessPolicies:
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FIREWALL_RULES.value}", query=query
         )
 
-    # TODO: Make this a utility function for reuse in other libs
     def get_pages(self, total_records: int, limit: int, api_fn: Callable) -> list:
         """Loop through the pages of data until we have all of the data records."""
         result_list = list()
