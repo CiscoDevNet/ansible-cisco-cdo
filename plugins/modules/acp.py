@@ -37,7 +37,8 @@ from ansible_collections.cisco.cdo.plugins.module_utils.errors import (
     TooManyMatches,
     APIError,
     CredentialsFailure,
-    DeviceNotInSync
+    DeviceNotInSync,
+    DeviceNotNewACLModel
 )
 from ansible.module_utils.basic import AnsibleModule
 # fmt: on
@@ -55,12 +56,18 @@ logger.debug("acp_module.log logger started......")
 # fmt: on
 
 
-def get_device_uid(module_params, http_session, endpoint):
+def is_asa_acl_new_model(device: dict):
+    """Determine if the ASA is using the CDO "new" access-control policy model"""
+    if not device.get("metadata").get("isNewPolicyObjectModel"):
+        raise DeviceNotNewACLModel("This ASA is not using the new CDO ACL model")
+
+
+def get_device(module_params, http_session, endpoint):
     inv_client = Inventory(module_params, http_session, endpoint)
     devices = inv_client.gather_inventory()
     for device in devices:
         if device.get("name") == module_params.get("name"):
-            return device.get("uid")
+            return device
     raise DeviceNotFound(f'The specified device {device.get("name")} was not found in CDO inventory')
 
 
@@ -74,19 +81,13 @@ def main():
     )
     endpoint = CDORegions[module.params.get("region")].value
     http_session = CDORequests.create_session(module.params.get("api_key"), __version__)
-    logger.debug(f"module parameters {module.params}")
     try:
         if module.params.get("gather"):
-            logger.debug("Entering ACP gather...")
-            device_uid = get_device_uid(module.params.get("gather"), http_session, endpoint)
-            acp_client = AccessPolicies(device_uid, module.params.get("gather"), http_session, endpoint)
-            logger.debug(f"Device UID: {device_uid}")
-            logger.debug(f'ACL name: {module.params.get("gather").get("acp_name")}')
-            result["cdo"] = acp_client.get_access_policy()
-            # logger.debug(f"complete acl: {output}")
-            # result["cdo"] = acp_client.get_access_control_policies(
-            #     device_uid, acl_name=module.params.get("gather").get("acp_name")
-            # )
+            device = get_device(module.params.get("gather"), http_session, endpoint)
+            logger.debug(f"Device: {device}")
+            is_asa_acl_new_model(device)
+            acp_client = AccessPolicies(device.get("uid"), module.params.get("gather"), http_session, endpoint)
+            result["cdo"] = acp_client.get_firewall_rules()
             result["changed"] = False
     except (
         DeviceNotFound,
@@ -96,6 +97,7 @@ def main():
         RetriesExceeded,
         CmdExecutionError,
         DeviceNotInSync,
+        DeviceNotNewACLModel,
     ) as e:
         result["cdo"] = f"{e.message}"
     module.exit_json(**result)

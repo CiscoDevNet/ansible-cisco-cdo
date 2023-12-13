@@ -13,7 +13,8 @@ from ansible_collections.cisco.cdo.plugins.module_utils.query import CDOQuery
 from ansible_collections.cisco.cdo.plugins.module_utils.api_requests import CDORequests
 from ansible_collections.cisco.cdo.plugins.module_utils.device_inventory.inventory import Inventory
 from ansible_collections.cisco.cdo.plugins.module_utils.config.config import Config
-from ansible_collections.cisco.cdo.plugins.module_utils.errors import DeviceNotFound, ObjectNotFound
+from ansible_collections.cisco.cdo.plugins.module_utils.errors import ObjectNotFound
+from ansible_collections.cisco.cdo.plugins.module_utils.models.asa_rule_detail import FirewallRule
 
 # fmt: off
 # Remove for publishing....
@@ -33,13 +34,14 @@ class AccessPolicies:
         self.http_session = http_session
         self.endpoint = endpoint
         self.features = None
-        self.inventory_client = Inventory(module_params, self.http_session, self.endpoint)
+        # self.inventory_client = Inventory(module_params, self.http_session, self.endpoint)
         self.config_client = Config(module_params, self.http_session, self.endpoint)
         self.staged_config_uid = None
         self.device_uid = device_uid
         self.ruleset_uid = None
         self.acp_name = module_params.get("acp_name")
         self.limit = 50
+        self.get_staged_config_uid()
 
     # TODO: make this a post_init call?
     def get_staged_config_uid(self):
@@ -47,17 +49,19 @@ class AccessPolicies:
             "stagedConfigurationUid"
         )
 
-    def get_access_policy(self):
+    def get_firewall_rules(self) -> list:
         """Get access-control-list in it's entirety by paging through the api calls until all lines are retrieved."""
-        self.get_staged_config_uid()
         rulesets = self.get_rulesets()
-        self.ruleset_uid = rulesets.pop().get("uid")
-        acp_count = self.get_access_policy_count().get("aggregationQueryResult")
-        return self.get_pages(acp_count, self.limit, self._get_access_policy)
+        self.ruleset_uid = rulesets.get("uid")
+        firewall_rules_count = self.get_firewall_rules_count().get("aggregationQueryResult")
+        access_control_list = self.get_pages(firewall_rules_count, self.limit, self._get_firewall_rules)
+        return_acl = list()
+        for acl in access_control_list:  # Normalize the API output to a FirewallRule datatype
+            return_acl.append(FirewallRule.from_dict(acl).to_dict())  # Then export as a dict
+        return return_acl
 
     def get_rulesets_count(self) -> dict:
         """Get a count of the number of ACLs on a device"""
-        self.get_staged_config_uid()
         query = CDOQuery.rulesets(self.staged_config_uid, count=True)
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.RULESETS.value}", query=query
@@ -85,14 +89,14 @@ class AccessPolicies:
             raise ObjectNotFound(f"No access-lists found on this ASA")
         return rulesets
 
-    def get_access_policy_count(self) -> dict:
+    def get_firewall_rules_count(self) -> dict:
         """Given the Access Policy ruleSetUid, return the number of rules in that policy"""
         query = {"q": f"ruleSetUid:{self.ruleset_uid}", "agg": "count"}
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FIREWALL_RULES.value}", query=query
         )
 
-    def _get_access_policy(self, offset=0):
+    def _get_firewall_rules(self, offset=0):
         query = CDOQuery.access_policy(self.ruleset_uid, limit=self.limit, offset=offset)
         return CDORequests.get(
             self.http_session, f"https://{self.endpoint}", path=f"{CDOAPI.FIREWALL_RULES.value}", query=query
@@ -108,4 +112,4 @@ class AccessPolicies:
         for i in range(iterations):
             result_list.append(api_fn(offset=offset))
             offset += limit
-        return result_list
+        return sum(result_list, [])  # Return a list of dictionaries (remove nested list byproducts)
